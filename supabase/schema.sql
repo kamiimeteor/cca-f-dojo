@@ -102,6 +102,8 @@ create trigger progress_touch_updated_at
 -- ─────────────────────────────────────────────
 -- 6. 自检：跑完应该看到 4 条策略、rls_enabled = true、anon 无权限
 -- ─────────────────────────────────────────────
+-- ⚠️ 写成单条语句：Supabase SQL Editor 只渲染最后一条语句的结果，
+--    拆成多条的话前面的结果会被覆盖掉，看不到。
 select
   (select count(*) from pg_policies
      where schemaname = 'public' and tablename = 'progress')            as policy_count,
@@ -109,16 +111,12 @@ select
      where oid = 'public.progress'::regclass)                           as rls_enabled,
   (select count(*) from information_schema.role_table_grants
      where table_name = 'progress' and grantee = 'anon')                as anon_grants,
-  (select count(*) from information_schema.role_table_grants
-     where table_name = 'progress' and grantee = 'authenticated')       as authenticated_grants,
-  (select count(*) from information_schema.role_table_grants
-     where table_name = 'progress' and grantee = 'authenticated'
-       and privilege_type = 'TRUNCATE')                                 as has_truncate;
--- 期望：policy_count = 4 | rls_enabled = true | anon_grants = 0
---       authenticated_grants = 4 | has_truncate = 0
+  (select string_agg(privilege_type, ', ' order by privilege_type)
+     from information_schema.role_table_grants
+     where table_name = 'progress' and grantee = 'authenticated')       as auth_privs;
 
--- 逐项列出 authenticated 的权限，确认只剩 DELETE / INSERT / SELECT / UPDATE
-select privilege_type
-from information_schema.role_table_grants
-where table_name = 'progress' and grantee = 'authenticated'
-order by privilege_type;
+-- 期望：
+--   policy_count = 4
+--   rls_enabled  = true
+--   anon_grants  = 0
+--   auth_privs   = 'DELETE, INSERT, SELECT, UPDATE'   ← 出现 TRUNCATE 就是权限没收干净
