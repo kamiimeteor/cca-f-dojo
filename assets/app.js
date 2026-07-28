@@ -99,6 +99,72 @@ let S = (() => {
 })();
 function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
 
+/** 字段级合并两份进度，谁都不丢。
+ *  两台设备各刷各的时用「后写覆盖」会吃掉数据，所以逐字段取并集/最大值。
+ *  以后接云同步复用同一个函数。 */
+function mergeState(a, b) {
+  const out = DEFAULT_STATE();
+
+  // 做题统计：次数取大；last 采信 seen 更多的那侧（它更新）
+  for (const id of new Set([...Object.keys(a.qstats), ...Object.keys(b.qstats)])) {
+    const x = a.qstats[id], y = b.qstats[id];
+    if (!x || !y) { out.qstats[id] = { ...(x || y) }; continue; }
+    out.qstats[id] = {
+      seen: Math.max(x.seen, y.seen),
+      ok: Math.max(x.ok, y.ok),
+      no: Math.max(x.no, y.no),
+      streak: Math.max(x.streak, y.streak),
+      last: (x.seen >= y.seen ? x : y).last,
+    };
+  }
+
+  // 错题：并集。streak 取小 —— 宁可多做两遍，也不要提前毕业
+  for (const id of new Set([...Object.keys(a.wrong), ...Object.keys(b.wrong)])) {
+    const x = a.wrong[id], y = b.wrong[id];
+    if (!x || !y) { out.wrong[id] = { ...(x || y) }; continue; }
+    out.wrong[id] = {
+      added: Math.min(x.added, y.added),
+      streak: Math.min(x.streak, y.streak),
+      times: Math.max(x.times, y.times),
+    };
+  }
+
+  // 模考：按时间戳去重，倒序留最新 50 条
+  const seenTs = new Set();
+  out.exams = [...a.exams, ...b.exams]
+    .sort((p, q) => q.ts - p.ts)
+    .filter((e) => (seenTs.has(e.ts) ? false : (seenTs.add(e.ts), true)))
+    .slice(0, 50);
+
+  out.marks = [...new Set([...a.marks, ...b.marks])];
+  out.read = [...new Set([...a.read, ...b.read])];
+  out.prefs = { ...a.prefs, ...b.prefs };   // b 视作较新的一侧
+  return out;
+}
+
+/** 进度摘要，用于文件名与导入前对比 */
+function digest(st) {
+  let seen = 0, attempts = 0, right = 0;
+  for (const id of Object.keys(st.qstats)) {
+    const v = st.qstats[id];
+    if (!v.seen) continue;
+    seen++; attempts += v.seen; right += v.ok;
+  }
+  return {
+    seen, rate: pct(right, attempts),
+    wrong: Object.keys(st.wrong).length,
+    read: st.read.length,
+    exams: st.exams.length,
+  };
+}
+
+/** cca-f-dojo-progress-2026-07-28-76q-72pct.json */
+function progressFilename(st) {
+  const d = digest(st);
+  const day = new Date().toISOString().slice(0, 10);
+  return `cca-f-dojo-progress-${day}-${d.seen}q-${d.rate}pct.json`;
+}
+
 /* ---------------- i18n ---------------- */
 const LANG = () => S.prefs.lang;
 /** 取界面文案；{0} {1} 按参数顺序替换。缺失的 key 回退中文。 */
@@ -271,9 +337,9 @@ function paintChrome() {
   $('#navExam').textContent = t('nav_exam');
   $('#brandSub').textContent = t('brand_sub');
   $('#footPrivacy').textContent = t('foot_privacy');
-  $('#exportBtn').textContent = t('foot_export');
-  $('#importBtn').textContent = t('foot_import');
-  $('#resetBtn').textContent = t('foot_reset');
+  $('#progBtn').textContent = t('prog_open');
+  $('#progTitle').textContent = t('prog_title');
+  $('#progClose').setAttribute('aria-label', t('prog_close'));
   $('#themeBtn').title = t('theme_toggle');
   // 按钮显示"当前"语言，下拉里勾出当前项
   $('#langCur').textContent = t('lang_name');
@@ -1297,37 +1363,149 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#langMenu').hidden) { setLangMenu(false); $('#langBtn').focus(); }
 });
 
-$('#exportBtn').onclick = () => {
-  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ccae-progress-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
+/* ================================================================
+   进度管理面板
+   导出（下载 / 复制）· 导入（拖拽 / 选择 / 粘贴）· 导入前对比 · 合并或替换
+   ================================================================ */
+let PENDING = null;   // 待导入的 state，等用户选合并还是替换
 
-$('#importBtn').onclick = () => $('#importFile').click();
+function openProgress() {
+  const d = digest(S);
+  $('#progModal').hidden = false;
+  $('#progBody').innerHTML = `
+    <p class="sub" style="margin-top:0">${esc(t('prog_sub'))}</p>
+
+    <h3>${esc(t('prog_current'))}</h3>
+    <div class="chips">
+      <span class="chip">${esc(t('prog_stat_q', d.seen, QUESTIONS.length))}</span>
+      <span class="chip">${esc(t('prog_stat_rate', d.rate))}</span>
+      <span class="chip">${esc(t('prog_stat_wrong', d.wrong))}</span>
+      <span class="chip">${esc(t('prog_stat_notes', d.read))}</span>
+      <span class="chip">${esc(t('prog_stat_exams', d.exams))}</span>
+    </div>
+    ${d.seen === 0 && d.read === 0 ? `<p class="sub" style="color:var(--warn)">${esc(t('prog_empty_warn'))}</p>` : ''}
+
+    <h3>${esc(t('prog_export_h'))}</h3>
+    <div class="row">
+      <button class="btn primary" id="pDownload">${esc(t('prog_download'))}</button>
+      <button class="btn" id="pCopy">${esc(t('prog_copy'))}</button>
+    </div>
+    <p class="sub" style="margin:8px 0 0;font-size:12px">${esc(t('prog_filename', progressFilename(S)))}</p>
+
+    <h3>${esc(t('prog_import_h'))}</h3>
+    <div class="dropzone" id="pDrop">
+      <div class="dz-main">${esc(t('prog_drop'))}</div>
+      <div class="dz-sub">${esc(t('prog_drop_or'))} <button class="link-btn" id="pPick">${esc(t('prog_pick'))}</button></div>
+    </div>
+    <details style="margin-top:10px">
+      <summary style="cursor:pointer;font-size:13px;color:var(--ink-3)">${esc(t('prog_paste'))}</summary>
+      <textarea id="pPaste" class="fld" rows="3" style="margin-top:8px" placeholder='{"qstats":…}'></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm" id="pPasteGo">${esc(t('prog_paste_btn'))}</button>
+      </div>
+    </details>
+
+    <h3 style="color:var(--bad)">${esc(t('prog_danger_h'))}</h3>
+    <div class="row"><button class="btn ghost" id="pReset">${esc(t('foot_reset'))}</button></div>
+  `;
+
+  $('#pDownload').onclick = () => {
+    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = progressFilename(S);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  $('#pCopy').onclick = async () => {
+    const btn = $('#pCopy');
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(S));
+      btn.textContent = t('prog_copied');
+      btn.classList.add('ok-flash');
+      setTimeout(() => { btn.textContent = t('prog_copy'); btn.classList.remove('ok-flash'); }, 1800);
+    } catch { btn.textContent = t('prog_copy_fail'); }
+  };
+
+  $('#pPick').onclick = () => $('#importFile').click();
+  $('#pPasteGo').onclick = () => stageImport($('#pPaste').value);
+
+  const dz = $('#pDrop');
+  ['dragenter', 'dragover'].forEach((ev) => dz.addEventListener(ev, (e) => {
+    e.preventDefault(); dz.classList.add('over'); $('.dz-main', dz).textContent = t('prog_dropping');
+  }));
+  ['dragleave', 'drop'].forEach((ev) => dz.addEventListener(ev, (e) => {
+    e.preventDefault(); dz.classList.remove('over'); $('.dz-main', dz).textContent = t('prog_drop');
+  }));
+  dz.addEventListener('drop', (e) => {
+    const f = e.dataTransfer.files[0];
+    if (f) f.text().then(stageImport);
+  });
+
+  $('#pReset').onclick = () => {
+    if (!confirm(t('confirm_reset'))) return;
+    const { lang, theme } = S.prefs;
+    S = DEFAULT_STATE();
+    S.prefs.lang = lang; S.prefs.theme = theme;   // 清空进度不该顺带重置界面偏好
+    save(); applyTheme(); paintChrome(); updateWrongPill(); router();
+    openProgress();
+  };
+}
+
+/** 解析待导入内容并展示对比，让用户选合并还是替换 */
+function stageImport(text) {
+  let incoming;
+  try { incoming = sanitizeState(JSON.parse(text)); }
+  catch { alert(t('import_bad')); return; }
+
+  PENDING = incoming;
+  const f = digest(incoming), n = digest(S), m = digest(mergeState(S, incoming));
+  const row = (label, key, suffix = '') =>
+    `<tr><td>${esc(label)}</td><td>${num(f[key])}${suffix}</td><td>${num(n[key])}${suffix}</td>
+     <td><b>${num(m[key])}${suffix}</b></td></tr>`;
+
+  $('#progBody').innerHTML = `
+    <h3 style="margin-top:0">${esc(t('prog_preview_h'))}</h3>
+    <p class="sub">${esc(t('prog_preview_sub'))}</p>
+    <table class="hist">
+      <thead><tr><th></th><th>${esc(t('prog_col_file'))}</th><th>${esc(t('prog_col_now'))}</th>
+        <th>${esc(t('prog_col_after'))}</th></tr></thead>
+      <tbody>
+        ${row(t('prog_row_q'), 'seen')}
+        ${row(t('prog_row_wrong'), 'wrong')}
+        ${row(t('prog_row_notes'), 'read')}
+        ${row(t('prog_row_exams'), 'exams')}
+      </tbody>
+    </table>
+    <p class="sub" style="font-size:12.5px">${esc(t('prog_merge_note'))}</p>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="pMerge">${esc(t('prog_do_merge'))}</button>
+      <button class="btn" id="pReplace">${esc(t('prog_do_replace'))}</button>
+      <span class="spacer"></span>
+      <button class="link-btn" id="pCancel">${esc(t('prog_cancel'))}</button>
+    </div>`;
+
+  const finish = (msg) => {
+    save(); applyTheme(); paintChrome(); updateWrongPill(); router();
+    PENDING = null; openProgress(); alert(msg);
+  };
+  $('#pMerge').onclick = () => { S = mergeState(S, PENDING); finish(t('prog_merged')); };
+  $('#pReplace').onclick = () => { S = PENDING; finish(t('prog_replaced')); };
+  $('#pCancel').onclick = () => { PENDING = null; openProgress(); };
+}
+
+$('#progBtn').onclick = openProgress;
+$('#progClose').onclick = () => { $('#progModal').hidden = true; };
+$('#progModal').onclick = (e) => { if (e.target.id === 'progModal') $('#progModal').hidden = true; };
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#progModal').hidden) $('#progModal').hidden = true;
+});
+
 $('#importFile').onchange = (ev) => {
   const f = ev.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try {
-      S = sanitizeState(JSON.parse(r.result)); // 白名单 + 强制类型，防止导入文件注入
-      save(); applyTheme(); paintChrome(); updateWrongPill(); router();
-      alert(t('import_ok'));
-    } catch { alert(t('import_bad')); }
-    ev.target.value = '';
-  };
-  r.readAsText(f);
-};
-
-$('#resetBtn').onclick = () => {
-  if (!confirm(t('confirm_reset'))) return;
-  const lang = S.prefs.lang, theme = S.prefs.theme;
-  S = DEFAULT_STATE();
-  S.prefs.lang = lang; S.prefs.theme = theme;   // 清空进度不该顺带重置界面偏好
-  save(); applyTheme(); paintChrome(); updateWrongPill(); router();
+  if (f) f.text().then(stageImport);
+  ev.target.value = '';
 };
 
 applyTheme();

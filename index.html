@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Certified Architect — 备考站</title>
-<link rel="stylesheet" href="assets/styles.css?v=11">
+<link rel="stylesheet" href="assets/styles.css?v=12">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◆</text></svg>">
 </head>
 <body>
@@ -40,18 +40,26 @@
 
 <footer class="foot">
   <span id="footPrivacy">数据全部保存在本机浏览器 localStorage，不上传任何服务器。</span>
-  <button class="link-btn" id="exportBtn">导出进度</button>
-  <button class="link-btn" id="importBtn">导入进度</button>
-  <button class="link-btn danger" id="resetBtn">清空进度</button>
-  <input type="file" id="importFile" accept="application/json" hidden>
+  <button class="btn sm" id="progBtn">管理进度</button>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
 </footer>
 
-<script src="assets/data/notes.js?v=11"></script>
-<script src="assets/data/questions.js?v=11"></script>
-<script src="assets/data/i18n.js?v=11"></script>
-<script src="assets/data/content.en.js?v=11"></script>
-<script src="assets/data/content.en.q1.js?v=11"></script>
-<script src="assets/data/content.en.q2.js?v=11"></script>
-<script src="assets/app.js?v=11"></script>
+<div class="modal" id="progModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="progTitle">
+    <div class="modal-head">
+      <h2 id="progTitle">进度管理</h2>
+      <button class="icon-btn" id="progClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body" id="progBody"></div>
+  </div>
+</div>
+
+<script src="assets/data/notes.js?v=12"></script>
+<script src="assets/data/questions.js?v=12"></script>
+<script src="assets/data/i18n.js?v=12"></script>
+<script src="assets/data/content.en.js?v=12"></script>
+<script src="assets/data/content.en.q1.js?v=12"></script>
+<script src="assets/data/content.en.q2.js?v=12"></script>
+<script src="assets/app.js?v=12"></script>
 </body>
 </html>

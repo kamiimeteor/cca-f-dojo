@@ -412,6 +412,44 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 
 .hl { background: var(--warn-bg); border-radius: 3px; padding: 0 2px; }
 
+/* ---------- 进度管理弹层 ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 100;
+  background: color-mix(in srgb, var(--ink) 42%, transparent);
+  backdrop-filter: blur(3px);
+  display: grid; place-items: center; padding: 22px;
+}
+.modal[hidden] { display: none; }
+.modal-card {
+  width: 100%; max-width: 560px; max-height: 86vh; overflow: auto;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.22);
+}
+.modal-head {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.modal-head h2 { margin: 0; font-family: var(--serif); font-size: 19px; flex: 1; }
+.modal-body { padding: 18px 20px 22px; }
+.modal-body h3 { margin: 22px 0 9px; font-size: 14px; }
+.modal-body h3:first-of-type { margin-top: 0; }
+.modal-body .chips .chip { cursor: default; }
+.modal-body .chips .chip:hover { border-color: var(--line); color: var(--ink-2); }
+
+/* 拖拽导入区 */
+.dropzone {
+  border: 2px dashed var(--line); border-radius: var(--radius);
+  padding: 22px 16px; text-align: center; transition: .15s;
+  background: var(--paper-2);
+}
+.dropzone.over { border-color: var(--coral); background: var(--paper-3); }
+.dz-main { font-size: 14px; color: var(--ink-2); }
+.dz-sub { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+
+.ok-flash { border-color: var(--ok) !important; color: var(--ok) !important; }
+
 /* history table */
 .hist { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .hist th, .hist td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; }

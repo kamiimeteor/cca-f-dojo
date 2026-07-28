@@ -24,16 +24,20 @@ Practice · missed-question queue · official-spec mock exam · jump straight to
 
 There are 190+ CCA-F repos on GitHub, but they cluster into two groups with a gap in the middle:
 
-| | Chinese | Interactive practice | Official-spec mock | Question → note link |
-| --- | :---: | :---: | :---: | :---: |
-| [cca-f-complete-guide-cn](https://github.com/cyrus-tt/cca-f-complete-guide-cn) (10★) | ✅ | ❌ | ❌ | ❌ |
-| [cca-f-study-zh](https://github.com/tigerbojo/cca-f-study-zh) | ✅ trad. | ❌ | ❌ | ❌ |
-| [cca-f-exam-console](https://github.com/Jeffd789/cca-f-exam-console) | ❌ | ✅ | ✅ | ❌ |
-| [cca-f-exam-prep](https://github.com/abiodedeyi/cca-f-exam-prep) | ❌ | ✅ skill | ❌ | ❌ |
-| **cca-f-dojo (this project)** | ✅ | ✅ | ✅ | ✅ |
+- **The Chinese ones are reading material** — Markdown or static HTML study guides. You read them
+  and that is it: no practice engine, no missed-question tracking, no timed official-spec mock.
+- **The ones you can actually practise on are English-only** — so a Chinese-speaking candidate is
+  parsing English stems and learning unfamiliar material at the same time.
 
-**The Chinese ones are reading material; the ones you can actually practise on are English-only.**
-This project sits in that intersection — and the English side is complete, not an afterthought.
+| | Chinese guides | English practice apps | **cca-f-dojo** |
+| --- | :---: | :---: | :---: |
+| Chinese | ✅ | ❌ | ✅ |
+| Interactive practice | ❌ | ✅ | ✅ |
+| Missed-question tracking | ❌ | some | ✅ |
+| Official-spec mock exam | ❌ | some | ✅ |
+| Question → note link | ❌ | ❌ | ✅ |
+
+**This project sits in that intersection** — and the English side is complete, not an afterthought.
 
 Three things you will not find elsewhere:
 
@@ -52,8 +56,8 @@ Traceable accuracy matters more than another fifty questions.
 Grinding a question bank quietly trains you to *recognise* the answer — obvious once you see the
 choices, blank without them. This mode shows the stem only, makes you write down your reasoning
 first, then reveals the options, and afterwards puts what you wrote next to the explanation.
-Not seen elsewhere. It and "judgement of degree" are **optional**, tucked into their own block on
-the practice page, and never interfere with normal practice.
+It and "judgement of degree" are **optional**, tucked into their own block on the practice page,
+and never interfere with normal practice.
 
 ---
 
@@ -139,11 +143,20 @@ Six items are multiple-response, matching the official format.
 ## Data and privacy
 
 Progress lives in **your own browser's** `localStorage` (key `ccae.v2`).
-**No network calls, no upload, no tracking, no cookies.** The footer lets you
-**export / import / reset** — use the exported JSON to move between devices or browsers.
+**No network calls, no upload, no tracking, no cookies.**
 
-Imports go through `sanitizeState()`: unknown fields are dropped, question and section ids are
-allow-listed, and every number is coerced, so a hand-edited JSON file cannot inject anything.
+"Manage progress" in the footer gives you:
+
+- **Export** — download a file or copy to the clipboard; the filename carries the date and a
+  progress summary (`cca-f-dojo-progress-2026-07-28-76q-75pct.json`) so you can tell versions apart
+- **Import** — drag a file in, pick one, or paste the JSON directly
+- **A diff before you commit** — a three-column table (file / now / merged), then your choice:
+  - **Merge** (recommended): attempt counts take the higher value, missed queues are unioned,
+    mock exams de-duplicated by timestamp — neither device loses anything
+  - **Replace**: discard what is here and take the file as-is
+
+Every import goes through `sanitizeState()`: unknown fields are dropped, question and section ids
+are allow-listed, and every number is coerced, so a hand-edited JSON file cannot inject anything.
 
 ## Layout
 
