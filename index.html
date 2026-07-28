@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Certified Architect — 备考站</title>
+<link rel="stylesheet" href="assets/styles.css?v=11">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◆</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#/">
+    <span class="brand-mark">◆</span>
+    <span class="brand-text">
+      <b>Claude Certified Architect</b>
+      <em id="brandSub">Foundations · 备考站</em>
+    </span>
+  </a>
+  <nav class="nav" id="nav">
+    <a href="#/" id="navHome">总览</a>
+    <a href="#/notes" id="navNotes">复习笔记</a>
+    <a href="#/practice" id="navPractice">刷题</a>
+    <a href="#/wrong"><span id="navWrongLabel">错题集</span><span class="pill" id="wrongPill" hidden>0</span></a>
+    <a href="#/exam" id="navExam">模拟考试</a>
+    <div class="lang-wrap">
+      <button class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false">
+        <span id="langCur">中文</span><span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-menu" id="langMenu" role="listbox" hidden>
+        <button class="lang-opt" data-lang="zh" role="option">中文</button>
+        <button class="lang-opt" data-lang="en" role="option">English</button>
+      </div>
+    </div>
+  </nav>
+  <button class="icon-btn" id="themeBtn" title="切换深浅色">◐</button>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <span id="footPrivacy">数据全部保存在本机浏览器 localStorage，不上传任何服务器。</span>
+  <button class="link-btn" id="exportBtn">导出进度</button>
+  <button class="link-btn" id="importBtn">导入进度</button>
+  <button class="link-btn danger" id="resetBtn">清空进度</button>
+  <input type="file" id="importFile" accept="application/json" hidden>
+</footer>
+
+<script src="assets/data/notes.js?v=11"></script>
+<script src="assets/data/questions.js?v=11"></script>
+<script src="assets/data/i18n.js?v=11"></script>
+<script src="assets/data/content.en.js?v=11"></script>
+<script src="assets/data/content.en.q1.js?v=11"></script>
+<script src="assets/data/content.en.q2.js?v=11"></script>
+<script src="assets/app.js?v=11"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# 参考底本 —— 仅本地保留，不进公开仓库
+#   exam_notes.pdf / .txt  第三方编写的中文突击手册，版权不属于本项目
+#   official_exam_guide.txt  Anthropic 官方 Exam Guide 全文，其版权归 Anthropic
+# 站点运行不依赖这些文件；它们只是撰写笔记时的对照材料。
+source/
+
+# Python 虚拟环境（当初只用于从 PDF 提取文本）
+.venv/
+
+# 本地工具配置
+.claude/settings.local.json
+
+# macOS
+.DS_Store
