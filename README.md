@@ -8,7 +8,7 @@
 
 **中文** · [English](README.en.md)
 
-[![在线试用](https://img.shields.io/badge/▶_在线试用-kamiimeteor.github.io-c8553d?style=for-the-badge)](https://kamiimeteor.github.io/cca-f-dojo/)
+[![在线试用](https://img.shields.io/badge/▶_在线试用-signal0.net-c8553d?style=for-the-badge)](https://signal0.net)
 
 [![License](https://img.shields.io/badge/License-MIT-3f7d58)](LICENSE)
 ![题库](https://img.shields.io/badge/题库-163_题-6b5b95)
@@ -69,7 +69,7 @@ GitHub 上 CCA-F 相关仓库有 190+，但它们基本落在两类里，中间�
 
 ## 启动
 
-在线直接用：**<https://kamiimeteor.github.io/cca-f-dojo/>**
+在线直接用：**<https://signal0.net>**
 
 想本地跑（完全离线）：
 

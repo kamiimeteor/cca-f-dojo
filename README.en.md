@@ -8,7 +8,7 @@ Practice · missed-question queue · official-spec mock exam · jump straight to
 
 [中文](README.md) · **English**
 
-[![Try it live](https://img.shields.io/badge/▶_Try_it_live-kamiimeteor.github.io-c8553d?style=for-the-badge)](https://kamiimeteor.github.io/cca-f-dojo/)
+[![Try it live](https://img.shields.io/badge/▶_Try_it_live-signal0.net-c8553d?style=for-the-badge)](https://signal0.net)
 
 [![License](https://img.shields.io/badge/License-MIT-3f7d58)](LICENSE)
 ![Questions](https://img.shields.io/badge/questions-163-6b5b95)
@@ -74,7 +74,7 @@ only — the real exam uses equated scaled scoring; this app approximates it lin
 
 ## Run it
 
-Online: **<https://kamiimeteor.github.io/cca-f-dojo/>**
+Online: **<https://signal0.net>**
 
 Locally (fully offline):
 
