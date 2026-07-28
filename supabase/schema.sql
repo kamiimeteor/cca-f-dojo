@@ -65,10 +65,21 @@ create policy "progress_delete_own" on public.progress
 
 -- ─────────────────────────────────────────────
 -- 4. 显式授权
---    只给 authenticated；anon 一个权限都不给
+--    只给 authenticated 四项；anon 一个权限都不给
+--
+--    ⚠️ 必须先 REVOKE ALL 再 GRANT。原因：Supabase 预设了
+--       alter default privileges ... grant all on tables to authenticated
+--    即使建项目时关掉了「Automatically expose new tables」，那个开关也只挡住
+--    anon —— authenticated 仍会拿到完整 7 项权限（含 TRUNCATE / REFERENCES / TRIGGER）。
+--
+--    其中 TRUNCATE 尤其不能留：它是表级操作，**不受 RLS 约束**，
+--    一旦被调用会清空所有用户的行，而不只是调用者自己那一行。
 -- ─────────────────────────────────────────────
+revoke all on table public.progress from anon, authenticated;
 grant select, insert, update, delete on table public.progress to authenticated;
-revoke all on table public.progress from anon;
+
+-- 同时收掉 default privileges，避免以后新建的表重蹈覆辙
+alter default privileges in schema public revoke all on tables from anon;
 
 -- ─────────────────────────────────────────────
 -- 5. updated_at 自动维护（同步冲突判断要用）
@@ -99,5 +110,15 @@ select
   (select count(*) from information_schema.role_table_grants
      where table_name = 'progress' and grantee = 'anon')                as anon_grants,
   (select count(*) from information_schema.role_table_grants
-     where table_name = 'progress' and grantee = 'authenticated')       as authenticated_grants;
--- 期望：policy_count = 4 | rls_enabled = true | anon_grants = 0 | authenticated_grants = 4
+     where table_name = 'progress' and grantee = 'authenticated')       as authenticated_grants,
+  (select count(*) from information_schema.role_table_grants
+     where table_name = 'progress' and grantee = 'authenticated'
+       and privilege_type = 'TRUNCATE')                                 as has_truncate;
+-- 期望：policy_count = 4 | rls_enabled = true | anon_grants = 0
+--       authenticated_grants = 4 | has_truncate = 0
+
+-- 逐项列出 authenticated 的权限，确认只剩 DELETE / INSERT / SELECT / UPDATE
+select privilege_type
+from information_schema.role_table_grants
+where table_name = 'progress' and grantee = 'authenticated'
+order by privilege_type;
