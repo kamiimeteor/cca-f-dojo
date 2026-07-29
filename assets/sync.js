@@ -18,6 +18,7 @@
 
 const CLOUD = {
   sb: null,          // supabase client，懒加载
+  sdkPromise: null,  // SDK 的加载中 promise，避免并发重复插 <script>
   user: null,        // 当前登录用户
   status: 'off',     // off | loading | signedout | signedin | syncing | error
   error: '',
@@ -34,10 +35,38 @@ const CLOUD_FLAG = 'ccae.cloud';
 const hadSession = () => localStorage.getItem(CLOUD_FLAG) === '1';
 const setSessionFlag = (v) => v ? localStorage.setItem(CLOUD_FLAG, '1') : localStorage.removeItem(CLOUD_FLAG);
 
-/** 动态加载 supabase-js。只在真正需要时才发生。 */
+/* supabase-js 自托管在仓库里，**不走 CDN**。原先用的是
+ *   import('https://esm.sh/@supabase/supabase-js@2')
+ * 换掉的原因见 assets/vendor/README.md，简单说是三条：中国大陆访问 esm.sh
+ * 不稳定（本站主要面向中文用户，登录会直接挂）、那是隐私政策里没披露的
+ * 第三方请求、以及多一个运行时外部依赖就多一类线上故障。
+ *
+ * 换成 UMD 构建 + 动态插 <script>，而不是 ESM 动态 import：官方那个
+ * es 模块产物不是自包含的，会再去拉一串子包；UMD 是单文件。 */
+const SDK_PATH = 'assets/vendor/supabase-js-2.111.0.umd.js';
+
+/** 把 SDK 塞进页面。重复调用只会加载一次。 */
+function loadSdk() {
+  if (window.supabase?.createClient) return Promise.resolve();
+  if (CLOUD.sdkPromise) return CLOUD.sdkPromise;
+
+  CLOUD.sdkPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = SDK_PATH;
+    s.onload = () => window.supabase?.createClient
+      ? resolve()
+      : reject(new Error('supabase-js loaded but exposed no createClient'));
+    s.onerror = () => { CLOUD.sdkPromise = null; reject(new Error('sdk_load_failed')); };
+    document.head.appendChild(s);
+  });
+  return CLOUD.sdkPromise;
+}
+
+/** 拿到 client。只在真正需要时才加载 SDK。 */
 async function loadSupabase() {
   if (CLOUD.sb) return CLOUD.sb;
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  await loadSdk();
+  const { createClient } = window.supabase;
   CLOUD.sb = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key, {
     auth: {
       flowType: 'pkce',          // 回调走 ?code=，不占用 hash

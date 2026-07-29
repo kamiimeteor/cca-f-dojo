@@ -1594,6 +1594,7 @@ function bindCloudSection() {
   const sendFail = (e) => {
     const raw = (e && e.message) || '';
     const status = e && e.status;
+    if (raw === 'sdk_load_failed') return t('cloud_sdk_fail');
     if (/rate|limit|too many/i.test(raw) || status === 429) return t('cloud_rate');
     if (status >= 500 || /^\{\}?$/.test(raw.trim()) || e?.name === 'AuthRetryableFetchError')
       return t('cloud_send_5xx');
