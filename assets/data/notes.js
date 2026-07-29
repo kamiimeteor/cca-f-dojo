@@ -31,7 +31,7 @@ const EXAM_META = {
     'CI/CD 集成',
     '结构化数据提取',
   ],
-  scenarioNote: '6 个场景随机抽 4 个',
+  scenarioNote: '优先从随机抽中的 4 个场景出题；某个 Domain 题量不足时，从其余场景补齐',
   mnemonic: '架构 27 提示 20 代码 20 工具 18 可靠 15（前两大 Domain 占 47%，拿下就稳了）',
   guideUrl: 'https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification',
 };

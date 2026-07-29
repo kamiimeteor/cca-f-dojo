@@ -15,3 +15,6 @@ source/
 
 # Supabase CLI 本地状态（项目 ref / 组织 id，非密钥但不必公开）
 supabase/.temp/
+
+# Codex 协作用的临时提示词文件，不入库
+.codex-*.md

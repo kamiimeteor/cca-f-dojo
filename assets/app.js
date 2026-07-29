@@ -30,8 +30,17 @@ const LTR = ['A', 'B', 'C', 'D', 'E'];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** 数值插值统一走这里：非有限数一律归零，杜绝字符串注入 */
-const num = (v, dflt = 0) => (Number.isFinite(+v) ? +v : dflt);
+/** 数值插值统一走这里：非有限数、负数归默认值，超大值钳到安全整数上限 */
+const num = (v, dflt = 0, max = Number.MAX_SAFE_INTEGER) => {
+  const n = +v;
+  return Number.isFinite(n) && n >= 0 ? Math.min(n, max) : dflt;
+};
+
+/** hash 可能包含畸形百分号编码；解码失败时保留原字符串 */
+function safeDecode(s) {
+  try { return decodeURIComponent(s); }
+  catch { return s; }
+}
 
 /** 极简行内 markdown —— 先 esc 再还原受控标记，故输出安全 */
 function md(s) {
@@ -42,8 +51,27 @@ function md(s) {
 
 /* 已知 id 白名单 —— 导入的数据只认这些 */
 const VALID_Q = new Set(QUESTIONS.map((q) => q.id));
+const QUESTION_OPTION_COUNTS = new Map(QUESTIONS.map((q) => [q.id, q.o.length]));
 const VALID_SEC = new Set(Object.keys(SECTION_INDEX));
 const VALID_DOM = new Set(NOTES.map((d) => d.id));
+
+function uniqueKnown(values, valid) {
+  const out = [], seen = new Set();
+  for (const value of values) {
+    if (!valid.has(value) || seen.has(value)) continue;
+    seen.add(value);
+    out.push(value);
+    if (out.length >= valid.size) break;
+  }
+  return out;
+}
+
+function sanitizePick(value, optionCount) {
+  if (value === null || value === undefined) return null;
+  const valid = (n) => Number.isInteger(n) && n >= 0 && n < optionCount;
+  if (Array.isArray(value)) return [...new Set(value.filter(valid))];
+  return valid(value) ? value : null;
+}
 
 /** 把任意 JSON 收紧成合法 state：白名单 key + 强制类型 */
 function sanitizeState(raw) {
@@ -53,7 +81,10 @@ function sanitizeState(raw) {
   if (raw.qstats && typeof raw.qstats === 'object') {
     for (const [k, v] of Object.entries(raw.qstats)) {
       if (!VALID_Q.has(k) || !v || typeof v !== 'object') continue;
-      S.qstats[k] = { seen: num(v.seen), ok: num(v.ok), no: num(v.no), streak: num(v.streak), last: v.last === true };
+      const ok = num(v.ok), no = num(v.no);
+      const seen = Math.max(num(v.seen), ok + no);
+      const streak = Math.min(num(v.streak), ok);
+      S.qstats[k] = { seen, ok, no, streak, last: v.last === true };
     }
   }
   if (raw.wrong && typeof raw.wrong === 'object') {
@@ -68,24 +99,32 @@ function sanitizeState(raw) {
       const byDom = {};
       if (e.byDom && typeof e.byDom === 'object') {
         for (const [d, v] of Object.entries(e.byDom)) {
-          if (VALID_DOM.has(d) && v && typeof v === 'object') byDom[d] = { n: num(v.n), ok: num(v.ok) };
+          if (VALID_DOM.has(d) && v && typeof v === 'object') {
+            const n = num(v.n);
+            byDom[d] = { n, ok: Math.min(num(v.ok), n) };
+          }
         }
       }
-      const detail = Array.isArray(e.detail)
-        ? e.detail.filter((x) => x && VALID_Q.has(x.qid)).map((x) => ({
+      const detail = [];
+      if (Array.isArray(e.detail)) {
+        for (const x of e.detail) {
+          if (!x || !VALID_Q.has(x.qid)) continue;
+          detail.push({
             qid: x.qid,
             // pick 可能是数字（单选）或数字数组（多选）
-            pick: x.pick === null || x.pick === undefined ? null
-                : Array.isArray(x.pick) ? x.pick.map((n) => num(n)).filter((n) => n >= 0 && n < 8)
-                : num(x.pick, null),
-          }))
-        : [];
-      return { ts: num(e.ts, Date.now()), score: num(e.score), pass: e.pass === true, correct: num(e.correct),
-               total: num(e.total), dur: num(e.dur), timeout: e.timeout === true, byDom, detail };
+            pick: sanitizePick(x.pick, QUESTION_OPTION_COUNTS.get(x.qid) || 0),
+          });
+          if (detail.length >= VALID_Q.size) break;
+        }
+      }
+      const total = num(e.total);
+      const correct = Math.min(num(e.correct), total);
+      return { ts: num(e.ts, Date.now()), score: num(e.score, 0, 1000), pass: e.pass === true, correct,
+               total, dur: num(e.dur), timeout: e.timeout === true, byDom, detail };
     }).filter(Boolean);
   }
-  if (Array.isArray(raw.marks)) S.marks = raw.marks.filter((x) => VALID_Q.has(x));
-  if (Array.isArray(raw.read)) S.read = raw.read.filter((x) => VALID_SEC.has(x));
+  if (Array.isArray(raw.marks)) S.marks = uniqueKnown(raw.marks, VALID_Q);
+  if (Array.isArray(raw.read)) S.read = uniqueKnown(raw.read, VALID_SEC);
   if (raw.prefs && typeof raw.prefs === 'object') {
     S.prefs.theme = raw.prefs.theme === 'dark' ? 'dark' : 'light';
     S.prefs.lang = raw.prefs.lang === 'en' ? 'en' : 'zh';
@@ -97,33 +136,53 @@ let S = (() => {
   try { return sanitizeState(JSON.parse(localStorage.getItem(KEY) || 'null')); }
   catch { return DEFAULT_STATE(); }
 })();
-function save() {
-  localStorage.setItem(KEY, JSON.stringify(S));
+function save(pushOpts = {}) {
+  let saved = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(S));
+  } catch (e) {
+    console.error('Failed to save progress to localStorage:', e);
+    showSaveError();
+    saved = false;
+  }
   // 登录了就顺带排一次云端推送（防抖）。sync.js 没加载时这里是 no-op，
   // 未登录用户完全走不到网络。
-  if (typeof schedulePush === 'function') schedulePush();
+  if (typeof schedulePush === 'function') {
+    schedulePush(saved ? pushOpts : { ...pushOpts, skipLastPushed: true });
+  }
+  return saved;
 }
 
-/** 字段级合并两份进度，谁都不丢。
- *  两台设备各刷各的时用「后写覆盖」会吃掉数据，所以逐字段取并集/最大值。
- *  以后接云同步复用同一个函数。 */
+let saveErrorTimer = null;
+function showSaveError() {
+  let el = $('#saveErrorToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'saveErrorToast';
+    el.className = 'save-error-toast';
+    el.setAttribute('role', 'status');
+    document.body.appendChild(el);
+  }
+  el.textContent = t('save_failed');
+  el.classList.add('show');
+  clearTimeout(saveErrorTimer);
+  saveErrorTimer = setTimeout(() => el.classList.remove('show'), 7000);
+}
+
+/** 合并两份进度。没有操作历史时，qstats 不可能无损合并；
+ *  因此整条保留「练得更多」的一侧，避免拼出不可能的统计数字。 */
 function mergeState(a, b) {
   const out = DEFAULT_STATE();
 
-  // 做题统计：次数取大；last 采信 seen 更多的那侧（它更新）
+  // 做题统计：seen 大者胜；相同时 streak 大者胜；再相同取 a 侧
   for (const id of new Set([...Object.keys(a.qstats), ...Object.keys(b.qstats)])) {
     const x = a.qstats[id], y = b.qstats[id];
     if (!x || !y) { out.qstats[id] = { ...(x || y) }; continue; }
-    out.qstats[id] = {
-      seen: Math.max(x.seen, y.seen),
-      ok: Math.max(x.ok, y.ok),
-      no: Math.max(x.no, y.no),
-      streak: Math.max(x.streak, y.streak),
-      last: (x.seen >= y.seen ? x : y).last,
-    };
+    const winner = y.seen > x.seen || (y.seen === x.seen && y.streak > x.streak) ? y : x;
+    out.qstats[id] = { ...winner };
   }
 
-  // 错题：并集。streak 取小 —— 宁可多做两遍，也不要提前毕业
+  // 错题刻意采取保守并集：added 取小、streak 取小、times 取大，宁可多做两遍
   for (const id of new Set([...Object.keys(a.wrong), ...Object.keys(b.wrong)])) {
     const x = a.wrong[id], y = b.wrong[id];
     if (!x || !y) { out.wrong[id] = { ...(x || y) }; continue; }
@@ -318,18 +377,32 @@ const routes = {};
 const go = (hash) => { location.hash = hash; };
 
 function router() {
-  const raw = (location.hash || '#/').slice(1);
-  const [path, ...rest] = raw.split('/').filter(Boolean);
-  const view = routes[path || 'home'] || routes.home;
-  $$('#nav a').forEach((a) => {
-    const h = a.getAttribute('href').slice(1).split('/').filter(Boolean)[0] || 'home';
-    a.classList.toggle('on', h === (path || 'home'));
-  });
-  const app = $('#app');
-  app.innerHTML = '';
-  app.className = '';
-  view(rest);
-  window.scrollTo(0, 0);
+  try {
+    const raw = (location.hash || '#/').slice(1);
+    const [path, ...rest] = raw.split('/').filter(Boolean);
+    const route = path || 'home';
+    const view = routes[route];
+    $$('#nav a').forEach((a) => {
+      const h = a.getAttribute('href').slice(1).split('/').filter(Boolean)[0] || 'home';
+      a.classList.toggle('on', h === route);
+    });
+    const app = $('#app');
+    app.innerHTML = '';
+    app.className = '';
+    if (view) view(rest);
+    else app.innerHTML = `<div class="empty"><div class="em">◇</div>
+      <h1>${esc(t('page_not_found'))}</h1>
+      <a class="btn primary" href="#/">${esc(t('page_back_home'))}</a></div>`;
+    window.scrollTo(0, 0);
+  } catch (e) {
+    console.error('Router error:', e);
+    const app = $('#app');
+    app.className = '';
+    app.innerHTML = `<div class="empty"><div class="em">◇</div>
+      <h1>${esc(t('page_error'))}</h1>
+      <p class="sub">${esc(t('page_error_detail'))}</p>
+      <a class="btn primary" href="#/">${esc(t('page_back_home'))}</a></div>`;
+  }
 }
 window.addEventListener('hashchange', router);
 
@@ -442,7 +515,7 @@ routes.home = () => {
    VIEW: 复习笔记
    ================================================================ */
 routes.notes = (rest) => {
-  const want = rest.length ? decodeURIComponent(rest.join('/')) : NOTES[0].sections[0].id;
+  const want = rest.length ? safeDecode(rest.join('/')) : NOTES[0].sections[0].id;
   const hit = SECTION_INDEX[want] || SECTION_INDEX[NOTES[0].sections[0].id];
   const sec = secView(hit.section);
   const dom = domView(domOf(hit.domainId));
@@ -622,7 +695,7 @@ routes.practice = (rest) => {
   if (mode === 'go') return practiceRun();
   else if (mode === 'dom')  { if (!VALID_DOM.has(arg)) return go('/practice');
                               list = QUESTIONS.filter((q) => q.d === arg); label = domView(domOf(arg)).title; }
-  else if (mode === 'sec')  { const id = decodeURIComponent(arg || '');
+  else if (mode === 'sec')  { const id = safeDecode(arg || '');
                               if (!VALID_SEC.has(id)) return go('/practice');
                               list = QUESTIONS.filter((q) => q.s === id); label = `${id} ${secTitle(id)}`; }
   else if (mode === 'all')  { list = [...QUESTIONS]; label = t('practice_all'); }
@@ -1098,6 +1171,7 @@ routes.wrong = (rest) => {
    VIEW: 模拟考试（规格固定为官方值，不再提供自定义）
    ================================================================ */
 let EXAM = null;
+let EXAM_PREVIEW = null;
 let examTimerId = null;
 
 routes.exam = (rest) => {
@@ -1136,6 +1210,10 @@ function buildExam(len) {
 
 function examIntro() {
   const len = EXAM_META.items, min = EXAM_META.minutes;
+  const built = EXAM_PREVIEW || (EXAM_PREVIEW = buildExam(len));
+  const byDomain = new Map(NOTES.map((d) => [d.id, built.qs.filter((q) => q.d === d.id).length]));
+  const usedScenarios = Object.keys(SCENARIOS)
+    .filter((sc) => sc !== 'gen' && built.qs.some((q) => q.sc === sc));
   $('#app').innerHTML = `
     <h1>${esc(t('exam_h1'))}</h1>
     <p class="sub">${esc(t('exam_sub', len, min, EXAM_META.fullScore, EXAM_META.passScore))}</p>
@@ -1148,8 +1226,11 @@ function examIntro() {
             <div class="dom-row">
               <div class="nm"><b>${esc(domView(d).title)}</b><span>${num(d.weight)}%</span></div>
               <div class="meter"><i style="width:${num(d.weight) * 3.7}%"></i></div>
-              <div class="pc">${esc(t('exam_n_items', Math.round((d.weight / 100) * len)))}</div>
+              <div class="pc">${esc(t('exam_n_items', byDomain.get(d.id) || 0))}</div>
             </div>`).join('')}
+          <h4>${esc(t('exam_scenarios_used'))}</h4>
+          <div class="chips">${usedScenarios.map((sc) =>
+            `<span class="chip">${esc(scenarioName(sc))}</span>`).join('')}</div>
         </div>
         <div>
           <h3 style="margin-top:0">${esc(t('exam_spec'))}</h3>
@@ -1172,9 +1253,9 @@ function examIntro() {
     </div>`;
 
   $('#startExam').onclick = () => {
-    const built = buildExam(EXAM_META.items);
     EXAM = { qs: built.qs, scenarios: built.scenarios, ans: {}, flags: {}, i: 0,
              start: Date.now(), limit: EXAM_META.minutes * 60000, saved: null };
+    EXAM_PREVIEW = null;
     go('/exam/run');
   };
 }
@@ -1497,10 +1578,16 @@ function renderProgressBody() {
 
   $('#pReset').onclick = () => {
     if (!confirm(t('confirm_reset'))) return;
+    const before = S;
     const { lang, theme } = S.prefs;
     S = DEFAULT_STATE();
     S.prefs.lang = lang; S.prefs.theme = theme;   // 清空进度不该顺带重置界面偏好
-    save(); applyTheme(); paintChrome(); updateWrongPill(); router();
+    if (!save({ authoritative: true })) {
+      S = before;
+      if (typeof cancelPendingPush === 'function') cancelPendingPush();
+      alert(t('save_failed'));
+    }
+    applyTheme(); paintChrome(); updateWrongPill(); router();
     openProgress();
   };
 
@@ -1741,22 +1828,37 @@ function stageImport(text, opts = {}) {
       <button class="link-btn" id="pCancel">${esc(t('prog_cancel'))}</button>
     </div>`;
 
-  const finish = (msg) => {
-    save(); applyTheme(); paintChrome(); updateWrongPill(); router();
+  const finish = (msg, pushOpts = {}) => {
+    const saved = save(pushOpts);
+    applyTheme(); paintChrome(); updateWrongPill(); router();
     PENDING = null;
+    if (!saved) {
+      if (typeof cancelPendingPush === 'function') cancelPendingPush();
+      openProgress();
+      alert(t('save_failed'));
+      return;
+    }
     // 云端来的：用户已经做了选择，把结果推回去，两边收敛到同一份。
     // 冲突解除，推完才把状态置成「已同步」—— 在此之前它一直是 conflict。
     if (opts.fromCloud) CLOUD.conflictRemote = null;
     if (opts.fromCloud && typeof cloudPush === 'function' && CLOUD.status !== 'signedout') {
-      cloudPush()
-        .then(() => setCloudStatus('signedin'))
-        .catch((e) => { CLOUD.error = e.message || String(e); setCloudStatus('error'); });
+      const gen = CLOUD.gen;
+      cloudPush(pushOpts)
+        .then(() => {
+          if (gen !== CLOUD.gen) return;
+          setCloudStatus('signedin');
+        })
+        .catch((e) => {
+          if (gen !== CLOUD.gen) return;
+          CLOUD.error = e.message || String(e);
+          setCloudStatus('error');
+        });
     }
     openProgress();
     alert(msg);
   };
   $('#pMerge').onclick = () => { S = mergeState(S, PENDING); finish(t('prog_merged')); };
-  $('#pReplace').onclick = () => { S = PENDING; finish(t('prog_replaced')); };
+  $('#pReplace').onclick = () => { S = PENDING; finish(t('prog_replaced'), { authoritative: true }); };
   $('#pCancel').onclick = () => { PENDING = null; openProgress(); };
   return true;
 }

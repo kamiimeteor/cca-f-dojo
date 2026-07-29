@@ -92,7 +92,7 @@ Then open <http://localhost:4321>. No dependencies, no build step, no Node.
 | **Study notes** | 33 sections covering all 30 official task statements, plus 4 cheat-sheet appendices. Searchable sidebar (tables and decision trees included). Mark sections read; each links to its own questions. `＋` marks newly emphasised official content. |
 | **Practice** | Instant feedback: explanation on answering, a "why this is wrong" note on each distractor, and a link back to the note section. Filter by domain, section, unseen, weak spots, or bookmarks. |
 | **Missed queue** | Wrong answers are queued automatically and grouped by domain. **Clears after 2 correct in a row** — so you cannot pass by memorising one attempt. |
-| **Mock exam** | Locked to official spec, not configurable: 60 items / 120 minutes, weighted 27/18/20/20/15, 4 scenarios drawn from 6. No feedback until you submit; scored out of 1000 with a **720 pass mark**, plus per-domain breakdown and item-by-item review. |
+| **Mock exam** | Locked to official spec, not configurable: 60 items / 120 minutes, weighted 27/18/20/20/15. Each exam randomly selects 4 of 6 scenarios as the preferred pool; if a domain lacks enough items there, the remaining scenarios fill the gap. No feedback until you submit; scored out of 1000 with a **720 pass mark**, plus per-domain breakdown and item-by-item review. |
 | **Advanced drills (optional)** | A separate block on the practice page that **never affects the normal path**. "Commit before you look" makes you reason before seeing options; "judgement of degree" leaves only the answer and its closest distractor, **hand-tagged per question**. Skip them freely. |
 | **Bilingual** | One dropdown in the header. Interface, all 37 note sections and all 163 questions (stems, options, explanations, distractor notes) exist in both languages. The real exam is in English, so English mode doubles as terminology practice. |
 
@@ -111,7 +111,7 @@ downloadable from the [Anthropic Academy certification page](https://anthropic-p
 | Number of items | 60 |
 | Time limit | 120 minutes |
 | Item format | **Multiple-choice and multiple-response**; each item states how many to select |
-| Structure | 4 scenarios drawn from a bank of 6 |
+| Structure | Items come first from 4 randomly selected scenarios; if a domain lacks enough items, the remaining scenarios fill the gap |
 | Passing score | 720 (scaled 100–1000) |
 | Fee / validity | $125 USD / 12 months |
 | Task statements | **30** across 5 domains |

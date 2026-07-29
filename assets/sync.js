@@ -7,8 +7,8 @@
  *    只有点了「发送验证码」，或本地存在登录标记时，才会去加载 SDK ——
  *    而且 SDK 是自托管的，不走任何第三方 CDN。
  *
- * 2. **合并而非覆盖。** 复用 app.js 里的 mergeState()：两台设备各刷各的，
- *    谁的进度都不会被对方洗掉。
+ * 2. **冲突时先合并再写。** 复用 app.js 里的 mergeState()，并用版本号避免
+ *    一台设备直接覆盖另一台设备刚写入的进度。
  *
  * 3. **失败不能卡住界面。** 断网、限流、链接过期，一律降级为「继续用本地」。
  *
@@ -28,6 +28,10 @@ const CLOUD = {
   conflictRemote: null,  // 云端那份的 JSON，冲突未解决时留着，供用户随时重开对比
   pendingEmail: '',  // 已发出验证码、等待用户输入的那个邮箱
   pushTimer: null,
+  pendingAuthoritative: false,
+  authoritativeFor: null,
+  gen: 0,            // 登录代次；旧代次的防抖回调不得继续推送
+  version: null,     // 最近一次拉取/写入的云端行版本
   lastPushed: '',    // 上次推上去的快照，用于跳过无变化的推送
 };
 
@@ -94,13 +98,17 @@ const cloudState = () => ({
 /* ---------------- 拉取 / 推送 ---------------- */
 
 /** 从云端取这个用户的进度；没有就返回 null */
-async function cloudPull() {
+async function cloudPull(gen = CLOUD.gen) {
   const sb = await loadSupabase();
+  if (gen !== CLOUD.gen || !CLOUD.user) return;
+  const userId = CLOUD.user.id;
   const { data, error } = await sb
-    .from('progress').select('data, updated_at')
-    .eq('user_id', CLOUD.user.id).maybeSingle();
+    .from('progress').select('data, updated_at, version')
+    .eq('user_id', userId).maybeSingle();
+  if (gen !== CLOUD.gen) return;
   if (error) throw error;
-  return data ? { state: sanitizeState(data.data), updatedAt: data.updated_at } : null;
+  CLOUD.version = data ? num(data.version, 1) : null;
+  return data ? { state: sanitizeState(data.data), updatedAt: data.updated_at, version: CLOUD.version } : null;
 }
 
 /**
@@ -118,15 +126,63 @@ function stableStr(v) {
   return JSON.stringify(v);
 }
 
-/** 把本地进度写上去（整行 upsert） */
-async function cloudPush() {
+/** 用版本号做 CAS；冲突时先拉取、合并，再重试，最多 3 轮 */
+async function cloudPush(opts = {}) {
+  const gen = CLOUD.gen;
   const sb = await loadSupabase();
+  if (gen !== CLOUD.gen || !CLOUD.user) return;
   const snapshot = stableStr(S);
-  if (snapshot === CLOUD.lastPushed) return;       // 没变就不推
-  const { error } = await sb.from('progress')
-    .upsert({ user_id: CLOUD.user.id, data: S }, { onConflict: 'user_id' });
-  if (error) throw error;
-  CLOUD.lastPushed = snapshot;
+  if (!opts.authoritative && snapshot === CLOUD.lastPushed) return; // 没变就不推
+  let markLastPushed = opts.skipLastPushed !== true;
+
+  for (let round = 0; round < 3; round++) {
+    if (CLOUD.version !== null) {
+      const nextVersion = CLOUD.version + 1;
+      const attemptSnapshot = stableStr(S);
+      const { data, error } = await sb.from('progress')
+        .update({ data: S })
+        .eq('user_id', CLOUD.user.id)
+        .eq('version', CLOUD.version)
+        .select('version');
+      if (gen !== CLOUD.gen) return;
+      if (error) throw error;
+      if (data?.length) {
+        CLOUD.version = num(data[0].version, nextVersion);
+        if (markLastPushed) CLOUD.lastPushed = attemptSnapshot;
+        CLOUD.pendingAuthoritative = false;
+        CLOUD.authoritativeFor = null;
+        return;
+      }
+    }
+
+    const remote = await cloudPull(gen);
+    if (gen !== CLOUD.gen) return;
+    if (!remote) {
+      const attemptSnapshot = stableStr(S);
+      const { data, error } = await sb.from('progress')
+        .insert({ user_id: CLOUD.user.id, data: S, version: 1 })
+        .select('version');
+      if (gen !== CLOUD.gen) return;
+      if (!error && data?.length) {
+        CLOUD.version = num(data[0].version, 1);
+        if (markLastPushed) CLOUD.lastPushed = attemptSnapshot;
+        CLOUD.pendingAuthoritative = false;
+        CLOUD.authoritativeFor = null;
+        return;
+      }
+      if (error?.code === '23505') continue;
+      if (error) throw error;
+    } else if (!opts.authoritative) {
+      S = mergeState(S, remote.state);
+      if (!save()) {
+        console.warn('Merged cloud progress could not be saved to localStorage; continuing cloud sync.');
+        markLastPushed = false;
+      }
+      CLOUD.version = remote.version;
+    }
+  }
+
+  throw new Error('Cloud progress changed during all CAS retries');
 }
 
 /**
@@ -145,27 +201,53 @@ function isDeadSession(e) {
 
 /** 账号已不存在 → 本地登出，但**保留本机进度**（登出从不删本地数据） */
 async function handleDeadSession() {
+  const uid = CLOUD.user?.id;
   await cloudSignOut();
+  if (CLOUD.user && CLOUD.user.id !== uid) return;
   CLOUD.linkError = { key: 'cloud_account_gone', h: 'cloud_account_gone_h' };
   if (!$('#progModal').hidden && typeof renderProgressBody === 'function') renderProgressBody();
 }
 
 /** 本地有变更 → 防抖后推送。任何失败都只记录，不打断做题。 */
-function schedulePush() {
-  if (CLOUD.status !== 'signedin') return;
+function cancelPendingPush() {
   clearTimeout(CLOUD.pushTimer);
+  CLOUD.pushTimer = null;
+  CLOUD.pendingAuthoritative = false;
+  CLOUD.authoritativeFor = null;
+}
+
+function schedulePush(opts = {}) {
+  if (!CLOUD.user || CLOUD.status === 'conflict') return;
+  if (opts.authoritative) {
+    CLOUD.pendingAuthoritative = true;
+    CLOUD.authoritativeFor = CLOUD.user.id;
+  }
+  clearTimeout(CLOUD.pushTimer);
+  const gen = CLOUD.gen;
   CLOUD.pushTimer = setTimeout(async () => {
+    if (gen !== CLOUD.gen || !CLOUD.user || CLOUD.status === 'conflict') return;
     try {
       setCloudStatus('syncing');
-      await cloudPush();
+      const authoritative = CLOUD.pendingAuthoritative
+        && CLOUD.authoritativeFor === CLOUD.user.id;
+      await cloudPush({ ...opts, authoritative });
+      if (gen !== CLOUD.gen) return;
+      if (authoritative) CLOUD.pendingAuthoritative = false;
       setCloudStatus('signedin');
     } catch (e) {
+      // 失败路径同样要验代次：推送已发出后用户登出，失败响应回来
+      // 不能把 signedout 改成 error（成功路径的对称检查在上面）
+      if (gen !== CLOUD.gen) return;
       if (isDeadSession(e)) return handleDeadSession();
       CLOUD.error = e.message || String(e);
       setCloudStatus('error');
     }
   }, 2500);
 }
+
+window.addEventListener('online', () => {
+  if (CLOUD.user && CLOUD.status === 'error') schedulePush();
+});
 
 function setCloudStatus(s) {
   CLOUD.status = s;
@@ -212,17 +294,30 @@ async function cloudVerifyCode(email, code) {
   return { staged: (await cloudOnSignedIn(data.user)) === true };
 }
 
-async function cloudSignOut() {
-  try {
-    const sb = await loadSupabase();
-    await sb.auth.signOut();
-  } catch { /* 网络问题也要能登出本地 */ }
+function resetCloudLocal() {
+  CLOUD.gen++;
+  clearTimeout(CLOUD.pushTimer);
+  CLOUD.pushTimer = null;
   CLOUD.user = null;
+  CLOUD.version = null;
   CLOUD.lastPushed = '';
+  CLOUD.pendingAuthoritative = false;
+  CLOUD.authoritativeFor = null;
   CLOUD.pendingEmail = '';
   CLOUD.conflictRemote = null;
+}
+
+async function cloudSignOut() {
+  const uid = CLOUD.user?.id;
+  resetCloudLocal();
   setSessionFlag(false);
   setCloudStatus('signedout');
+  try {
+    const sb = await loadSupabase();
+    if (CLOUD.user && CLOUD.user.id !== uid) return;
+    await sb.auth.signOut();
+    if (CLOUD.user && CLOUD.user.id !== uid) return;
+  } catch { /* 网络问题也要能登出本地 */ }
 }
 
 /**
@@ -235,25 +330,39 @@ async function cloudSignOut() {
  * 确认，两边各留各的，界面却显示「进度已同步」。这是实测踩到的坑。
  */
 async function cloudOnSignedIn(user, opts = {}) {
+  CLOUD.gen++;
+  const gen = CLOUD.gen;
+  CLOUD.pendingAuthoritative = false;
+  CLOUD.authoritativeFor = null;
   CLOUD.user = user;
+  CLOUD.version = null;
+  CLOUD.lastPushed = '';
   CLOUD.linkError = null;        // 登上了，之前那条链接的报错就没意义了
   setSessionFlag(true);
   setCloudStatus('syncing');
   try {
-    const remote = await cloudPull();
-    const localHasData = digest(S).seen > 0 || S.read.length > 0 || S.exams.length > 0;
+    const remote = await cloudPull(gen);
+    if (gen !== CLOUD.gen) return;
+    const localHasData = digest(S).seen > 0 || S.read.length > 0 || S.exams.length > 0
+      || S.marks.length > 0 || Object.keys(S.wrong).length > 0;
 
     if (!remote) {
       await cloudPush();                       // 云端空 → 直接把本地传上去
+      if (gen !== CLOUD.gen) return;
     } else if (!localHasData) {
-      S = remote.state; save();                // 本地空 → 直接用云端的
-      CLOUD.lastPushed = stableStr(S);
+      S = remote.state;
+      const saved = save();                    // 本地空 → 直接用云端的
+      if (!saved) console.warn('Pulled cloud progress could not be saved to localStorage.');
+      else CLOUD.lastPushed = stableStr(S);
       applyTheme(); paintChrome(); updateWrongPill(); router();
     } else if (stableStr(remote.state) !== stableStr(S)) {
       // 两边都有且不同 → 让用户选，不自动合并
       if (opts.silent) {                       // 页面刚加载时不打断，先合并保平安
-        S = mergeState(S, remote.state); save();
-        await cloudPush();
+        S = mergeState(S, remote.state);
+        const saved = save();
+        if (!saved) console.warn('Merged cloud progress could not be saved to localStorage.');
+        await cloudPush({ skipLastPushed: !saved });
+        if (gen !== CLOUD.gen) return;
         updateWrongPill(); router();
       } else {
         // 挂起冲突：既不能说「已同步」（没同步），也不能放任后续改动把云端
@@ -265,8 +374,10 @@ async function cloudOnSignedIn(user, opts = {}) {
     } else {
       CLOUD.lastPushed = stableStr(S);
     }
+    if (gen !== CLOUD.gen) return;
     setCloudStatus('signedin');
   } catch (e) {
+    if (gen !== CLOUD.gen) return false;
     if (isDeadSession(e)) { await handleDeadSession(); return false; }
     CLOUD.error = e.message || String(e);
     setCloudStatus('error');
@@ -319,6 +430,8 @@ function stripAuthParams() {
  */
 async function cloudInit() {
   if (!CLOUD_ENABLED) return;
+  const gen = CLOUD.gen;
+  let expectedGen = gen;
 
   const cb = readAuthCallback();
 
@@ -341,23 +454,32 @@ async function cloudInit() {
   try {
     CLOUD.status = 'loading'; paintCloudBadge();
     const sb = await loadSupabase();
+    if (expectedGen !== CLOUD.gen) return;
 
     // detectSessionInUrl 会自动用 ?code= 换 session；换完把 URL 清干净
     if (cb.code) stripAuthParams();
 
     const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) await cloudOnSignedIn(session.user, { silent: true });
-    else { setSessionFlag(false); setCloudStatus('signedout'); }
+    if (expectedGen !== CLOUD.gen) return;
+    if (session?.user) {
+      const signingIn = cloudOnSignedIn(session.user, { silent: true });
+      expectedGen = CLOUD.gen;
+      await signingIn;
+      if (expectedGen !== CLOUD.gen) return;
+    } else {
+      setSessionFlag(false); setCloudStatus('signedout');
+    }
 
     // 跨标签页：一处登出，别处跟着变
     sb.auth.onAuthStateChange((event, sess) => {
       if (event === 'SIGNED_OUT') {
-        CLOUD.user = null; setSessionFlag(false); setCloudStatus('signedout');
+        resetCloudLocal(); setSessionFlag(false); setCloudStatus('signedout');
       } else if (sess?.user && CLOUD.user?.id !== sess.user.id) {
         cloudOnSignedIn(sess.user, { silent: true });
       }
     });
   } catch (e) {
+    if (expectedGen !== CLOUD.gen) return;
     CLOUD.error = e.message || String(e);
     setCloudStatus('error');
   }
@@ -382,7 +504,7 @@ async function cloudDeleteAccount() {
   if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
 
   await sb.auth.signOut().catch(() => {});
-  CLOUD.user = null; CLOUD.lastPushed = '';
+  resetCloudLocal();
   setSessionFlag(false);
   setCloudStatus('signedout');
 }

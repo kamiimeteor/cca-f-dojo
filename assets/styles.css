@@ -458,6 +458,15 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .dz-sub { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
 
 .ok-flash { border-color: var(--ok) !important; color: var(--ok) !important; }
+.save-error-toast {
+  position: fixed; right: 18px; bottom: 18px; z-index: 2000;
+  max-width: 420px; padding: 12px 14px; border: 1px solid var(--bad);
+  border-radius: 10px; background: var(--paper); color: var(--ink);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.save-error-toast.show { opacity: 1; transform: translateY(0); }
 
 /* ---------- 云同步 ---------- */
 /* 顶栏同步状态小圆点：不打扰，但状态一眼可见 */

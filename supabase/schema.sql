@@ -13,8 +13,11 @@
 create table if not exists public.progress (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   data       jsonb       not null default '{}'::jsonb,
+  version    bigint      not null default 1,
   updated_at timestamptz not null default now()
 );
+
+alter table public.progress add column if not exists version bigint not null default 1;
 
 comment on table public.progress is
   'cca-f-dojo 用户进度。一个用户一行，data 是前端 sanitizeState() 后的完整状态。';
@@ -24,7 +27,9 @@ comment on table public.progress is
 do $$
 begin
   if not exists (
-    select 1 from pg_constraint where conname = 'progress_data_size'
+    select 1 from pg_constraint
+      where conname = 'progress_data_size'
+        and conrelid = 'public.progress'::regclass
   ) then
     alter table public.progress
       add constraint progress_data_size
@@ -80,10 +85,26 @@ grant select, insert, update, delete on table public.progress to authenticated;
 
 -- 同时收掉 default privileges，避免以后新建的表重蹈覆辙
 alter default privileges in schema public revoke all on tables from anon;
+alter default privileges in schema public revoke all on tables from authenticated;
 
 -- ─────────────────────────────────────────────
--- 5. updated_at 自动维护（同步冲突判断要用）
+-- 5. version / updated_at 自动维护
 -- ─────────────────────────────────────────────
+create or replace function public.bump_progress_version()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  new.version := old.version + 1;
+  return new;
+end $$;
+
+drop trigger if exists trg_progress_bump_version on public.progress;
+create trigger trg_progress_bump_version
+  before update on public.progress
+  for each row execute function public.bump_progress_version();
+
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
