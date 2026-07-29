@@ -101,13 +101,28 @@ async function cloudPull() {
   return data ? { state: sanitizeState(data.data), updatedAt: data.updated_at } : null;
 }
 
+/**
+ * 稳定序列化：递归按 key 排序后再 stringify。
+ *
+ * 不能直接用 JSON.stringify 比较本地和云端 —— Postgres 的 jsonb **会重排
+ * key**，而本地对象的 key 顺序是按答题先后插入的。两边内容完全一样，
+ * 字符串却不同，于是「有没有变化」永远判成「有」：每次打开页面都会白推
+ * 一次，非静默路径下还会弹出「云端 vs 本地」的三列对比，吓用户一跳。
+ */
+function stableStr(v) {
+  if (Array.isArray(v)) return '[' + v.map(stableStr).join(',') + ']';
+  if (v && typeof v === 'object')
+    return '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + stableStr(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+
 /** 把本地进度写上去（整行 upsert） */
 async function cloudPush() {
   const sb = await loadSupabase();
-  const snapshot = JSON.stringify(S);
+  const snapshot = stableStr(S);
   if (snapshot === CLOUD.lastPushed) return;       // 没变就不推
   const { error } = await sb.from('progress')
-    .upsert({ user_id: CLOUD.user.id, data: JSON.parse(snapshot) }, { onConflict: 'user_id' });
+    .upsert({ user_id: CLOUD.user.id, data: S }, { onConflict: 'user_id' });
   if (error) throw error;
   CLOUD.lastPushed = snapshot;
 }
@@ -203,9 +218,9 @@ async function cloudOnSignedIn(user, opts = {}) {
       await cloudPush();                       // 云端空 → 直接把本地传上去
     } else if (!localHasData) {
       S = remote.state; save();                // 本地空 → 直接用云端的
-      CLOUD.lastPushed = JSON.stringify(S);
+      CLOUD.lastPushed = stableStr(S);
       applyTheme(); paintChrome(); updateWrongPill(); router();
-    } else if (JSON.stringify(remote.state) !== JSON.stringify(S)) {
+    } else if (stableStr(remote.state) !== stableStr(S)) {
       // 两边都有且不同 → 让用户选，不自动合并
       setCloudStatus('signedin');
       if (opts.silent) {                       // 页面刚加载时不打断，先合并保平安
@@ -217,7 +232,7 @@ async function cloudOnSignedIn(user, opts = {}) {
         return;
       }
     } else {
-      CLOUD.lastPushed = JSON.stringify(S);
+      CLOUD.lastPushed = stableStr(S);
     }
     setCloudStatus('signedin');
   } catch (e) {
