@@ -97,7 +97,12 @@ let S = (() => {
   try { return sanitizeState(JSON.parse(localStorage.getItem(KEY) || 'null')); }
   catch { return DEFAULT_STATE(); }
 })();
-function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(S));
+  // 登录了就顺带排一次云端推送（防抖）。sync.js 没加载时这里是 no-op，
+  // 未登录用户完全走不到网络。
+  if (typeof schedulePush === 'function') schedulePush();
+}
 
 /** 字段级合并两份进度，谁都不丢。
  *  两台设备各刷各的时用「后写覆盖」会吃掉数据，所以逐字段取并集/最大值。
@@ -340,6 +345,8 @@ function paintChrome() {
   $('#progBtn').textContent = t('prog_open');
   $('#progTitle').textContent = t('prog_title');
   $('#progClose').setAttribute('aria-label', t('prog_close'));
+  $('#privacyLink').textContent = t('nav_privacy');
+  if (typeof paintCloudBadge === 'function') paintCloudBadge();
   $('#themeBtn').title = t('theme_toggle');
   // 按钮显示"当前"语言，下拉里勾出当前项
   $('#langCur').textContent = t('lang_name');
@@ -502,6 +509,35 @@ routes.notes = (rest) => {
     save(); router();
   };
 };
+
+/* ================================================================
+   VIEW: 隐私政策
+   ================================================================ */
+routes.privacy = () => {
+  const blocks = PRIVACY[LANG()] || PRIVACY.zh;
+  $('#app').innerHTML = `
+    <h1>${esc(t('priv_title'))}</h1>
+    <p class="sub">${esc(t('priv_updated', PRIVACY_UPDATED))}</p>
+    <div class="note-body" style="max-width:760px">
+      ${blocks.map((b) => {
+        if (b.t === 'h') return `<h2>${esc(b.v)}</h2>`;
+        if (b.t === 'list') return `<ul>${b.v.map((x) => `<li>${mdLinks(x)}</li>`).join('')}</ul>`;
+        if (b.t === 'table') return `<table><thead><tr>${
+          b.head.map((h) => `<th>${md(h)}</th>`).join('')}</tr></thead><tbody>${
+          b.rows.map((r) => `<tr>${r.map((c) => `<td>${mdLinks(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+        return `<p>${mdLinks(b.v)}</p>`;
+      }).join('')}
+    </div>
+    <div class="row" style="margin-top:30px;padding-top:18px;border-top:1px solid var(--line)">
+      <a class="btn ghost" href="#/">${esc(t('exam_back_home'))}</a>
+    </div>`;
+};
+
+/** md() 之上再支持 <https://…> 自动链接。链接只允许 http(s)，防止 javascript: 之类。 */
+function mdLinks(s) {
+  return md(s).replace(/&lt;(https?:\/\/[^\s&]+)&gt;/g,
+    (_, url) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`);
+}
 
 /* ================================================================
    共享：单题卡片 + 判分反馈
@@ -1370,10 +1406,18 @@ document.addEventListener('keydown', (e) => {
 let PENDING = null;   // 待导入的 state，等用户选合并还是替换
 
 function openProgress() {
-  const d = digest(S);
   $('#progModal').hidden = false;
+  renderProgressBody();
+}
+
+/** 面板正文。抽成独立函数是为了让 sync.js 在同步状态变化时能重绘。 */
+function renderProgressBody() {
+  const d = digest(S);
+  const c = typeof cloudState === 'function' ? cloudState() : { enabled: false };
   $('#progBody').innerHTML = `
     <p class="sub" style="margin-top:0">${esc(t('prog_sub'))}</p>
+
+    ${c.enabled ? cloudSectionHtml(c) : ''}
 
     <h3>${esc(t('prog_current'))}</h3>
     <div class="chips">
@@ -1451,10 +1495,117 @@ function openProgress() {
     save(); applyTheme(); paintChrome(); updateWrongPill(); router();
     openProgress();
   };
+
+  if (c.enabled) bindCloudSection();
 }
 
-/** 解析待导入内容并展示对比，让用户选合并还是替换 */
-function stageImport(text) {
+/* ---------------- 云同步区块（渲染 + 事件）---------------- */
+
+function cloudSectionHtml(c) {
+  const box = (inner) => `<div class="cloud-box">${inner}</div>`;
+
+  if (c.status === 'signedin' || c.status === 'syncing') {
+    return `<h3>${esc(t('cloud_h'))}</h3>${box(`
+      <div class="row" style="align-items:baseline">
+        <span class="cloud-dot ok"></span>
+        <b>${esc(t('cloud_signed_as'))}</b>
+        <code>${esc(c.email)}</code>
+        <span class="spacer"></span>
+        <span class="sub" style="margin:0;font-size:12.5px">${
+          esc(c.status === 'syncing' ? t('cloud_syncing') : t('cloud_synced', ''))}</span>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sm" id="cSyncNow">${esc(t('cloud_sync_now'))}</button>
+        <button class="btn sm ghost" id="cSignOut">${esc(t('cloud_signout'))}</button>
+      </div>
+      <p class="sub" style="margin:10px 0 0;font-size:12.5px">${md(t('cloud_signout_note'))}</p>
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;font-size:13px;color:var(--bad)">${esc(t('cloud_danger_h'))}</summary>
+        <p class="sub" style="margin:8px 0;font-size:12.5px">${md(t('cloud_danger_note'))}</p>
+        <button class="btn sm ghost" id="cDelete" style="color:var(--bad);border-color:var(--bad)">${
+          esc(t('cloud_delete'))}</button>
+      </details>`)}`;
+  }
+
+  if (c.status === 'error') {
+    return `<h3>${esc(t('cloud_h'))}</h3>${box(`
+      <div class="box warn" style="margin:0"><b class="bt">${esc(t('cloud_err_title', c.error))}</b>
+        <p style="margin:0;font-size:13px">${esc(t('cloud_err_box'))}</p></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sm" id="cRetry">${esc(t('cloud_sync_now'))}</button>
+        <button class="btn sm ghost" id="cSignOut">${esc(t('cloud_signout'))}</button>
+      </div>`)}`;
+  }
+
+  if (c.status === 'loading') {
+    return `<h3>${esc(t('cloud_h'))}</h3>${box(`<p class="sub" style="margin:0">${esc(t('cloud_loading'))}</p>`)}`;
+  }
+
+  // 未登录
+  return `<h3>${esc(t('cloud_h'))}</h3>${box(`
+    <p class="sub" style="margin:0 0 12px">${t('cloud_intro')}</p>
+    <label class="fld-l" for="cEmail">${esc(t('cloud_email_l'))}</label>
+    <input id="cEmail" class="fld" type="email" autocomplete="email"
+           placeholder="${esc(t('cloud_email_ph'))}">
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="cSend">${esc(t('cloud_send'))}</button>
+      <a class="link-btn" href="#/privacy">${esc(t('nav_privacy'))}</a>
+    </div>
+    <div id="cMsg"></div>`)}`;
+}
+
+function bindCloudSection() {
+  const send = $('#cSend');
+  if (send) {
+    send.onclick = async () => {
+      const email = ($('#cEmail').value || '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        $('#cMsg').innerHTML = `<p class="sub" style="color:var(--bad);margin:10px 0 0">${esc(t('cloud_bad_email'))}</p>`;
+        return;
+      }
+      send.disabled = true; send.textContent = t('cloud_sending');
+      try {
+        await cloudSendLink(email);
+        $('#cMsg').innerHTML = `<div class="box tip" style="margin:12px 0 0">
+          <b class="bt">${esc(t('cloud_sent_h'))}</b>
+          <p style="margin:0;font-size:13px">${esc(t('cloud_sent', email))}<br>
+            <span style="color:var(--ink-3)">${esc(t('cloud_sent_spam'))}</span></p></div>`;
+        send.textContent = t('cloud_resend'); send.disabled = false;
+      } catch (e) {
+        const msg = /rate|limit|too many/i.test(e.message || '') ? t('cloud_rate') : t('cloud_send_fail', e.message || e);
+        $('#cMsg').innerHTML = `<p class="sub" style="color:var(--bad);margin:10px 0 0">${esc(msg)}</p>`;
+        send.textContent = t('cloud_send'); send.disabled = false;
+      }
+    };
+  }
+
+  const so = $('#cSignOut');
+  if (so) so.onclick = async () => { await cloudSignOut(); renderProgressBody(); };
+
+  const now = $('#cSyncNow') || $('#cRetry');
+  if (now) now.onclick = async () => {
+    if (CLOUD.user) await cloudOnSignedIn(CLOUD.user, { silent: false });
+    renderProgressBody();
+  };
+
+  const del = $('#cDelete');
+  if (del) del.onclick = async () => {
+    if (!confirm(t('cloud_delete_confirm', CLOUD.user?.email || ''))) return;
+    del.disabled = true;
+    try {
+      await cloudDeleteAccount();
+      alert(t('cloud_deleted'));
+      renderProgressBody();
+    } catch (e) {
+      alert(t('cloud_delete_fail', e.message || e));
+      del.disabled = false;
+    }
+  };
+}
+
+/** 解析待导入内容并展示对比，让用户选合并还是替换。
+ *  opts.fromCloud = true 时，来源列标题改成「云端」，且合并后会回推云端。 */
+function stageImport(text, opts = {}) {
   let incoming;
   try { incoming = sanitizeState(JSON.parse(text)); }
   catch { alert(t('import_bad')); return; }
@@ -1466,10 +1617,11 @@ function stageImport(text) {
      <td><b>${num(m[key])}${suffix}</b></td></tr>`;
 
   $('#progBody').innerHTML = `
-    <h3 style="margin-top:0">${esc(t('prog_preview_h'))}</h3>
-    <p class="sub">${esc(t('prog_preview_sub'))}</p>
+    <h3 style="margin-top:0">${esc(opts.fromCloud ? t('cloud_merge_h') : t('prog_preview_h'))}</h3>
+    <p class="sub">${esc(opts.fromCloud ? t('cloud_merge_sub') : t('prog_preview_sub'))}</p>
     <table class="hist">
-      <thead><tr><th></th><th>${esc(t('prog_col_file'))}</th><th>${esc(t('prog_col_now'))}</th>
+      <thead><tr><th></th><th>${esc(opts.fromCloud ? t('cloud_col_cloud') : t('prog_col_file'))}</th>
+        <th>${esc(t('prog_col_now'))}</th>
         <th>${esc(t('prog_col_after'))}</th></tr></thead>
       <tbody>
         ${row(t('prog_row_q'), 'seen')}
@@ -1488,7 +1640,13 @@ function stageImport(text) {
 
   const finish = (msg) => {
     save(); applyTheme(); paintChrome(); updateWrongPill(); router();
-    PENDING = null; openProgress(); alert(msg);
+    PENDING = null;
+    // 云端来的：用户已经做了选择，把结果推回去，两边收敛到同一份
+    if (opts.fromCloud && typeof cloudPush === 'function' && CLOUD.status !== 'signedout') {
+      cloudPush().catch(() => {});
+    }
+    openProgress();
+    alert(msg);
   };
   $('#pMerge').onclick = () => { S = mergeState(S, PENDING); finish(t('prog_merged')); };
   $('#pReplace').onclick = () => { S = PENDING; finish(t('prog_replaced')); };
@@ -1512,3 +1670,7 @@ applyTheme();
 paintChrome();
 updateWrongPill();
 router();
+
+// sync.js 在本文件之后加载，延一拍再初始化。
+// cloudInit() 内部会判断：没登录过就直接返回，一个网络请求都不发。
+setTimeout(() => { if (typeof cloudInit === 'function') cloudInit(); }, 0);

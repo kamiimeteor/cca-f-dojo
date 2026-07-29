@@ -186,6 +186,49 @@ const I18N = {
 
     prog_row_q: '做过的题', prog_row_wrong: '错题', prog_row_notes: '读完的笔记', prog_row_exams: '模考记录',
     prog_danger_h: '危险操作',
+
+    /* ── 云同步 ── */
+    cloud_h: '云同步（可选）',
+    cloud_intro: '默认<b>不需要登录</b>，进度存在本机就够用。登录只是多一层备份，方便换设备时接着刷。',
+    cloud_email_l: '邮箱',
+    cloud_email_ph: 'you@example.com',
+    cloud_send: '发送登录链接',
+    cloud_sending: '发送中…',
+    cloud_sent_h: '邮件已发出',
+    cloud_sent: '去 {0} 收信，点里面的链接即可登录。链接有效期 1 小时，只能用一次。',
+    cloud_sent_spam: '没收到？看一下垃圾邮件箱。',
+    cloud_resend: '重新发送',
+    cloud_bad_email: '邮箱格式不对。',
+    cloud_send_fail: '发送失败：{0}',
+    cloud_rate: '发送太频繁，请稍等一会儿再试。',
+
+    cloud_signed_as: '已登录',
+    cloud_synced: '进度已同步 · {0}',
+    cloud_syncing: '同步中…',
+    cloud_sync_now: '立即同步',
+    cloud_signout: '登出',
+    cloud_signout_note: '登出后本机进度**不会**删除，仍可继续离线使用。',
+    cloud_err_title: '同步出错：{0}',
+    cloud_err_box: '同步失败，已自动改用本地进度 —— 你的做题记录不会丢。',
+    cloud_offline: '当前离线，进度先存本机，联网后自动上传。',
+    cloud_loading: '正在加载同步模块…',
+
+    cloud_merge_h: '云端也有进度',
+    cloud_merge_sub: '这个账号在云端已有进度，和本机的不一样。要怎么处理？',
+    cloud_col_cloud: '云端',
+
+    cloud_danger_h: '删除账号',
+    cloud_danger_note: '会永久删除你的账号和云端进度，**不可撤销**。本机进度不受影响。',
+    cloud_delete: '删除我的账号',
+    cloud_delete_confirm: '确定永久删除账号「{0}」及其云端进度？\n\n此操作不可撤销。本机进度会保留。',
+    cloud_deleted: '账号已删除。本机进度仍然保留。',
+    cloud_delete_fail: '删除失败：{0}',
+
+    /* ── 隐私政策 ── */
+    nav_privacy: '隐私政策',
+    priv_title: '隐私政策',
+    priv_updated: '最后更新：{0}',
+
     prog_open: '管理进度',
     prog_close: '关闭',
   },
@@ -363,6 +406,49 @@ const I18N = {
 
     prog_row_q: 'Questions attempted', prog_row_wrong: 'Missed queue', prog_row_notes: 'Notes read', prog_row_exams: 'Mock exams',
     prog_danger_h: 'Danger zone',
+
+    /* ── Cloud sync ── */
+    cloud_h: 'Cloud sync (optional)',
+    cloud_intro: 'You <b>do not need an account</b> — local storage is enough. Signing in just adds a backup so you can carry on from another device.',
+    cloud_email_l: 'Email',
+    cloud_email_ph: 'you@example.com',
+    cloud_send: 'Send me a sign-in link',
+    cloud_sending: 'Sending…',
+    cloud_sent_h: 'Check your inbox',
+    cloud_sent: 'A sign-in link is on its way to {0}. It is valid for one hour and can be used once.',
+    cloud_sent_spam: 'Nothing yet? Have a look in your spam folder.',
+    cloud_resend: 'Send again',
+    cloud_bad_email: 'That does not look like an email address.',
+    cloud_send_fail: 'Could not send: {0}',
+    cloud_rate: 'Too many requests — please wait a moment and try again.',
+
+    cloud_signed_as: 'Signed in',
+    cloud_synced: 'Progress synced · {0}',
+    cloud_syncing: 'Syncing…',
+    cloud_sync_now: 'Sync now',
+    cloud_signout: 'Sign out',
+    cloud_signout_note: 'Signing out does **not** delete anything on this device — you can keep using it offline.',
+    cloud_err_title: 'Sync error: {0}',
+    cloud_err_box: 'Sync failed, so we fell back to local progress — nothing you have done is lost.',
+    cloud_offline: 'You are offline. Progress is saved locally and will upload once you reconnect.',
+    cloud_loading: 'Loading the sync module…',
+
+    cloud_merge_h: 'There is progress in the cloud too',
+    cloud_merge_sub: 'This account already has progress stored, and it differs from what is on this device. What would you like to do?',
+    cloud_col_cloud: 'Cloud',
+
+    cloud_danger_h: 'Delete account',
+    cloud_danger_note: 'Permanently deletes your account and everything stored in the cloud. **This cannot be undone.** Local progress is untouched.',
+    cloud_delete: 'Delete my account',
+    cloud_delete_confirm: 'Permanently delete the account "{0}" and all its cloud data?\n\nThis cannot be undone. Progress on this device will be kept.',
+    cloud_deleted: 'Account deleted. Your local progress is still here.',
+    cloud_delete_fail: 'Could not delete: {0}',
+
+    /* ── Privacy ── */
+    nav_privacy: 'Privacy',
+    priv_title: 'Privacy Policy',
+    priv_updated: 'Last updated: {0}',
+
     prog_open: 'Manage progress',
     prog_close: 'Close',
   },

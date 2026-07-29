@@ -450,6 +450,40 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 
 .ok-flash { border-color: var(--ok) !important; color: var(--ok) !important; }
 
+/* ---------- 云同步 ---------- */
+/* 顶栏同步状态小圆点：不打扰，但状态一眼可见 */
+.cloud-badge {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; margin-left: 4px;
+  font-size: 10px; line-height: 1; border-radius: 50%;
+  color: var(--ink-3); cursor: default; user-select: none;
+}
+.cloud-badge[hidden] { display: none; }
+.cloud-badge.ok   { color: var(--ok); }
+.cloud-badge.bad  { color: var(--bad); }
+.cloud-badge.sync { color: var(--coral); animation: cloud-pulse 1.2s ease-in-out infinite; }
+@keyframes cloud-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+
+/* 进度面板里的云同步区块：与本地区块视觉上区分开 */
+.cloud-box {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--paper-2); padding: 14px 16px;
+}
+.cloud-box .fld { background: var(--paper); }
+.cloud-box code {
+  font-size: 12.5px; background: var(--paper-3);
+  border: 1px solid var(--line); padding: 1px 6px; border-radius: 4px;
+}
+.cloud-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: var(--ink-3); display: inline-block;
+}
+.cloud-dot.ok { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
+
+@media (max-width: 560px) {
+  .cloud-badge { margin-left: 0; width: 16px; }
+}
+
 /* history table */
 .hist { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .hist th, .hist td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; }

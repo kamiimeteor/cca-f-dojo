@@ -140,7 +140,14 @@ cd cca-f-dojo && python3 -m http.server 4321
 
 ## 数据与隐私
 
-进度全部存在**你自己浏览器**的 `localStorage`（key: `ccae.v2`），**不联网、不上传、无追踪、无 cookie**。
+**默认不需要账号。** 进度存在**你自己浏览器**的 `localStorage`（key: `ccae.v2`），
+**不联网、不上传、无追踪、无 cookie**。supabase 的 SDK 只在你主动点登录时才按需加载 ——
+不登录的话，整站对外零请求，可完全离线使用。
+
+**可选的云同步**：想换设备接着刷，可以用邮箱收一次性登录链接登录，进度会存到云端。
+数据存在 Supabase 的 **AWS 伦敦区（eu-west-2）**，不出英国境内。
+行级安全策略保证**每个账号只能读写自己那一行**，在数据库层强制而非依赖前端。
+详见[隐私政策](https://signal0.net/#/privacy)与 `supabase/schema.sql`。
 
 页脚的「管理进度」提供：
 
@@ -166,6 +173,11 @@ assets/data/i18n.js           界面文案 zh/en
 assets/data/content.en.js     英文内容层：domains + 37 节笔记
 assets/data/content.en.q1.js  英文题库 D1+D2
 assets/data/content.en.q2.js  英文题库 D3+D4+D5
+assets/data/privacy.js        隐私政策正文 zh/en
+assets/data/config.js         Supabase 连接配置（publishable key，可公开）
+assets/sync.js                云同步：懒加载 SDK + 登录 + 合并推拉
+supabase/schema.sql           建表 + RLS 策略 + 显式授权
+supabase/functions/           Edge Function（账号删除）
 source/                       参考底本（已 gitignore，不随仓库分发）
 ```
 
