@@ -88,7 +88,9 @@ a { color: inherit; }
 .brand-text b { font-family: var(--serif); font-size: 15px; letter-spacing: .01em; }
 .brand-text em { font-style: normal; font-size: 11px; color: var(--ink-3); letter-spacing: .06em; }
 
-.nav { display: flex; gap: 4px; margin-left: auto; }
+/* align-items 必须显式 center：默认的 stretch 会把导航链接拉满行高，
+   而账号胶囊是固定 26px 拉不动，就会顶在上边和其他项错位。 */
+.nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 .nav a {
   padding: 7px 13px; border-radius: 7px; text-decoration: none;
   font-size: 14px; color: var(--ink-2); white-space: nowrap;
