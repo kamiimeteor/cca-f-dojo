@@ -142,8 +142,26 @@ Six items are multiple-response, matching the official format.
 
 ## Data and privacy
 
-Progress lives in **your own browser's** `localStorage` (key `ccae.v2`).
-**No network calls, no upload, no tracking, no cookies.**
+**No account required.** Progress lives in **your own browser's** `localStorage` (key `ccae.v2`) —
+**no upload, no tracking, no cookies.** The Supabase SDK is loaded on demand only when you actively
+sign in, so without an account the site makes zero outbound requests and works fully offline.
+
+**Optional cloud sync**: to carry on from another device, sign in with a one-time code sent to your
+email and your progress is stored in the cloud. Progress and email address live in Supabase on
+**AWS London (eu-west-2)**; sign-in emails are delivered by Resend from **Ireland (EEA)** and
+contain nothing but the one-time code. Row-level security means **each account can only read and
+write its own row**, enforced in the database rather than trusted to front-end code, and the
+unauthenticated role has zero privileges on the table.
+
+Would you rather nothing left your device? Then do not sign in — every feature works without an
+account, and that is the default. If you do sign in, "Manage progress → Delete my account" erases
+the account and all cloud progress immediately and irreversibly.
+See the [privacy policy](https://signal0.net/#/privacy) and `supabase/schema.sql`.
+
+> ⚠️ **Change `assets/data/config.js` before you deploy a fork.** The two values in this repo point
+> at *this* site's Supabase project, so a fork deployed as-is would register your users' emails and
+> progress into **our** database, not yours. Either swap in your own project's values, or leave both
+> empty — empty hides the whole cloud-sync block and leaves a purely local site.
 
 "Manage progress" in the footer gives you:
 
@@ -170,6 +188,11 @@ assets/data/i18n.js           UI strings, zh/en
 assets/data/content.en.js     English content layer: domains + 37 note sections
 assets/data/content.en.q1.js  English questions, D1+D2
 assets/data/content.en.q2.js  English questions, D3+D4+D5
+assets/data/privacy.js        privacy policy text, zh/en
+assets/data/config.js         Supabase connection (publishable key — safe to publish)
+assets/sync.js                cloud sync: lazy-loaded SDK + sign-in + merge push/pull
+supabase/schema.sql           table + RLS policies + explicit grants
+supabase/functions/           Edge Function (account deletion)
 source/                       reference material (gitignored, not redistributed)
 ```
 

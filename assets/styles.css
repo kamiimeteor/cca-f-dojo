@@ -316,6 +316,13 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 }
 .fld:focus { outline: none; border-color: var(--coral); }
 
+/* 6 位登录验证码：等宽 + 拉开字距，方便逐位核对 */
+.code-input {
+  font-family: var(--mono); font-size: 20px; letter-spacing: .34em;
+  text-align: center; padding: 12px; max-width: 260px;
+}
+.code-input::placeholder { letter-spacing: .34em; color: var(--ink-3); opacity: .45; }
+
 /* ---------- quiz ---------- */
 .quiz { max-width: 760px; }
 .q-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-3); margin-bottom: 10px; }

@@ -1549,6 +1549,25 @@ function cloudSectionHtml(c) {
          <p style="margin:0;font-size:13px">${esc(t(c.linkError.key, c.linkError.arg))}</p></div>`
     : '';
 
+  // 第二步：验证码已发出，等用户输入
+  if (c.pendingEmail) {
+    return `<h3>${esc(t('cloud_h'))}</h3>${box(`
+      <div class="box tip" style="margin:0 0 12px"><b class="bt">${esc(t('cloud_sent_h'))}</b>
+        <p style="margin:0;font-size:13px">${esc(t('cloud_sent', c.pendingEmail))}<br>
+          <span style="color:var(--ink-3)">${esc(t('cloud_sent_spam'))}</span></p></div>
+      <label class="fld-l" for="cCode">${esc(t('cloud_code_l'))}</label>
+      <input id="cCode" class="fld code-input" inputmode="numeric" autocomplete="one-time-code"
+             maxlength="6" placeholder="000000">
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="cVerify">${esc(t('cloud_verify'))}</button>
+        <button class="btn sm ghost" id="cResend">${esc(t('cloud_resend'))}</button>
+        <span class="spacer"></span>
+        <button class="btn sm ghost" id="cBack">${esc(t('cloud_change_email'))}</button>
+      </div>
+      <div id="cMsg"></div>`)}`;
+  }
+
+  // 第一步：填邮箱
   return `<h3>${esc(t('cloud_h'))}</h3>${box(`
     ${linkErr}
     <p class="sub" style="margin:0 0 12px">${t('cloud_intro')}</p>
@@ -1563,30 +1582,66 @@ function cloudSectionHtml(c) {
 }
 
 function bindCloudSection() {
+  const cErr = (msg) =>
+    ($('#cMsg').innerHTML = `<p class="sub" style="color:var(--bad);margin:10px 0 0">${esc(msg)}</p>`);
+  const sendFail = (e) =>
+    /rate|limit|too many/i.test(e.message || '') ? t('cloud_rate') : t('cloud_send_fail', e.message || e);
+
+  /* ── 第一步：发验证码 ── */
   const send = $('#cSend');
   if (send) {
     send.onclick = async () => {
       const email = ($('#cEmail').value || '').trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        $('#cMsg').innerHTML = `<p class="sub" style="color:var(--bad);margin:10px 0 0">${esc(t('cloud_bad_email'))}</p>`;
-        return;
-      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return cErr(t('cloud_bad_email'));
+
       send.disabled = true; send.textContent = t('cloud_sending');
       try {
-        await cloudSendLink(email);
-        if (typeof CLOUD === 'object') CLOUD.linkError = null;  // 重发了，上一条的报错先撤掉
-        $('#cMsg').innerHTML = `<div class="box tip" style="margin:12px 0 0">
-          <b class="bt">${esc(t('cloud_sent_h'))}</b>
-          <p style="margin:0;font-size:13px">${esc(t('cloud_sent', email))}<br>
-            <span style="color:var(--ink-3)">${esc(t('cloud_sent_spam'))}</span></p></div>`;
-        send.textContent = t('cloud_resend'); send.disabled = false;
+        await cloudSendCode(email);
+        CLOUD.linkError = null;        // 重来一次，上一条链接的报错先撤掉
+        renderProgressBody();          // 切到「输验证码」那一步
+        $('#cCode')?.focus();
       } catch (e) {
-        const msg = /rate|limit|too many/i.test(e.message || '') ? t('cloud_rate') : t('cloud_send_fail', e.message || e);
-        $('#cMsg').innerHTML = `<p class="sub" style="color:var(--bad);margin:10px 0 0">${esc(msg)}</p>`;
+        cErr(sendFail(e));
         send.textContent = t('cloud_send'); send.disabled = false;
       }
     };
   }
+
+  /* ── 第二步：验码登录 ── */
+  const verify = $('#cVerify');
+  if (verify) {
+    const submit = async () => {
+      const code = ($('#cCode').value || '').replace(/\D/g, '');
+      if (code.length !== 6) return cErr(t('cloud_bad_code_len'));
+
+      verify.disabled = true; verify.textContent = t('cloud_verifying');
+      try {
+        await cloudVerifyCode(CLOUD.pendingEmail, code);
+        renderProgressBody();          // 成功后这里会重绘成「已登录」
+      } catch (e) {
+        cErr(/expired|invalid|token/i.test(e.message || '') ? t('cloud_bad_code') : (e.message || String(e)));
+        verify.textContent = t('cloud_verify'); verify.disabled = false;
+      }
+    };
+    verify.onclick = submit;
+    // 6 位敲完直接回车即可，不用去够按钮
+    $('#cCode').onkeydown = (e) => { if (e.key === 'Enter') submit(); };
+  }
+
+  const resend = $('#cResend');
+  if (resend) {
+    resend.onclick = async () => {
+      resend.disabled = true; resend.textContent = t('cloud_sending');
+      try {
+        await cloudSendCode(CLOUD.pendingEmail);
+        $('#cMsg').innerHTML = `<p class="sub" style="margin:10px 0 0">${esc(t('cloud_resent'))}</p>`;
+      } catch (e) { cErr(sendFail(e)); }
+      resend.textContent = t('cloud_resend'); resend.disabled = false;
+    };
+  }
+
+  const back = $('#cBack');
+  if (back) back.onclick = () => { CLOUD.pendingEmail = ''; renderProgressBody(); };
 
   const so = $('#cSignOut');
   if (so) so.onclick = async () => { await cloudSignOut(); renderProgressBody(); };

@@ -12,3 +12,6 @@ source/
 
 # macOS
 .DS_Store
+
+# Supabase CLI 本地状态（项目 ref / 组织 id，非密钥但不必公开）
+supabase/.temp/

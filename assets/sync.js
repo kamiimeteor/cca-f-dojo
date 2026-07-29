@@ -24,6 +24,7 @@ const CLOUD = {
   // 邮件链接回跳失败的原因。存 {key, arg} 而不是翻译好的字符串 ——
   // 否则用户切换语言后这条提示会卡在旧语言里。
   linkError: null,
+  pendingEmail: '',  // 已发出验证码、等待用户输入的那个邮箱
   pushTimer: null,
   lastPushed: '',    // 上次推上去的快照，用于跳过无变化的推送
 };
@@ -56,6 +57,7 @@ const cloudState = () => ({
   email: CLOUD.user?.email || '',
   error: CLOUD.error,
   linkError: CLOUD.linkError,
+  pendingEmail: CLOUD.pendingEmail,
 });
 
 /* ---------------- 拉取 / 推送 ---------------- */
@@ -107,14 +109,38 @@ function setCloudStatus(s) {
 
 /* ---------------- 登录 / 登出 ---------------- */
 
-/** 发魔法链接。成功返回 true。 */
-async function cloudSendLink(email) {
+/**
+ * 发 6 位登录码。成功返回 true。
+ *
+ * 这里**刻意不用魔法链接**，两个实测到的原因：
+ *
+ *   1. 一次性链接会被邮箱的安全扫描器提前访问掉。实测两条链接都在用户
+ *      本人点击之前就变成了 otp_expired，用户根本登不进来。
+ *   2. PKCE 的 code_verifier 存在「点发送的那个浏览器」的 localStorage 里。
+ *      在电脑上点发送、在手机邮箱 App 里打开链接 —— 必然失败。
+ *
+ * 手输验证码两个问题都没有：没有 URL 可供预取，也不依赖本地 verifier。
+ * 注意链接和验证码是**同一个一次性 token**，用掉一个另一个就废了，
+ * 所以邮件模板里必须只留 {{ .Token }}、不能保留 {{ .ConfirmationURL }}。
+ */
+async function cloudSendCode(email) {
   const sb = await loadSupabase();
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: location.origin + location.pathname },
+  const { error } = await sb.auth.signInWithOtp({ email });
+  if (error) throw error;
+  CLOUD.pendingEmail = email;
+  return true;
+}
+
+/** 用邮件里的 6 位码换 session */
+async function cloudVerifyCode(email, code) {
+  const sb = await loadSupabase();
+  const { data, error } = await sb.auth.verifyOtp({
+    email, token: String(code).trim(), type: 'email',
   });
   if (error) throw error;
+  if (!data?.user) throw new Error('verifyOtp returned no user');
+  CLOUD.pendingEmail = '';
+  await cloudOnSignedIn(data.user);
   return true;
 }
 
@@ -125,6 +151,7 @@ async function cloudSignOut() {
   } catch { /* 网络问题也要能登出本地 */ }
   CLOUD.user = null;
   CLOUD.lastPushed = '';
+  CLOUD.pendingEmail = '';
   setSessionFlag(false);
   setCloudStatus('signedout');
 }

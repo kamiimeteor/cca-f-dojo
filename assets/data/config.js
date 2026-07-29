@@ -6,8 +6,10 @@
  * 安全边界不在密钥，而在数据库的 RLS 策略（见 supabase/schema.sql）：
  *   未登录 = anon 角色 = 零权限；登录 = 只能读写 user_id 等于自己的那一行。
  *
- * 想自建一份的话，把这两个值换成你自己项目的即可；留空则整个云同步功能自动隐藏，
- * 站点退化成纯本地模式（这也是 fork 后的默认体验）。
+ * ⚠️ Fork 之后请务必改这里。这两个值指向的是本站作者的 Supabase 项目 ——
+ *    直接部署 fork 出去的站点，你的用户会把邮箱和进度注册进**作者的**数据库，
+ *    而不是你的。要么换成你自己项目的值，要么两个都留空：
+ *    留空时 CLOUD_ENABLED 为 false，整块云同步自动隐藏，站点退化成纯本地模式。
  */
 const SUPABASE_CONFIG = {
   url: 'https://zoeflwuzpuwpokfwkigp.supabase.co',

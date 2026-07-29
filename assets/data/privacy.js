@@ -22,7 +22,7 @@ const PRIVACY = {
 
     { t: 'h', v: '三、登录后收集什么' },
     { t: 'table', head: ['数据', '用途', '来源'], rows: [
-      ['邮箱地址', '识别你的账号、发送一次性登录链接', '你主动填写'],
+      ['邮箱地址', '识别你的账号、发送一次性登录验证码', '你主动填写'],
       ['学习进度（做题记录、错题、模考成绩、笔记标记、界面偏好）', '跨设备同步', '你使用本站时产生'],
       ['账号创建与最后登录时间', '账号管理、清理长期不活跃账号', '系统自动记录'],
     ]},
@@ -45,7 +45,7 @@ const PRIVACY = {
       '**在欧洲经济区（EEA）** —— 数据传输至英国。英国已获欧盟充分性认定（adequacy decision），该传输在此基础上合法进行',
       '**在其他国家 / 地区** —— 你的数据会被传输至英国与爱尔兰存储和处理。使用本站即表示你了解并接受这一点。若你所在司法辖区对数据出境另有强制要求，请自行评估后再决定是否登录',
     ]},
-    { t: 'p', v: '登录邮件的内容**仅为一次性登录链接**，不含任何学习数据。' },
+    { t: 'p', v: '登录邮件的内容**仅为一次性验证码**，不含任何学习数据。' },
     { t: 'p', v: '**不想让数据离开你的设备？** 那就别登录 —— 本站全部功能在不登录的情况下都可用，进度只存在你自己的浏览器里。这是默认状态，也是推荐给注重隐私的用户的用法。' },
 
     { t: 'h', v: '六、保留多久' },
@@ -74,12 +74,13 @@ const PRIVACY = {
     { t: 'p', v: `也欢迎先联系 \`${PRIVACY_CONTACT}\`，多数问题可以直接解决。` },
 
     { t: 'h', v: '八、本地存储说明' },
-    { t: 'p', v: '本站**不使用 cookie**。使用的是浏览器 localStorage，存放两类内容：' },
+    { t: 'p', v: '本站**不使用 cookie**。使用的是浏览器 localStorage，存放三类内容：' },
     { t: 'list', v: [
       '`ccae.v2` —— 你的学习进度与界面偏好（不登录也有，纯本地）',
       '`ccae.auth` —— 登录后的会话令牌，用于保持登录状态',
+      '`ccae.cloud` —— 一个标记，仅表示「这台设备登录过」，用于决定要不要加载同步模块；不含任何个人数据',
     ]},
-    { t: 'p', v: '两者都属于**提供你主动要求的功能所必需**的存储，按 PECR 属于豁免情形，因此没有同意横幅。你随时可以在浏览器设置里清除。' },
+    { t: 'p', v: '三者都属于**提供你主动要求的功能所必需**的存储，按 PECR 属于豁免情形，因此没有同意横幅。你随时可以在浏览器设置里清除。' },
 
     { t: 'h', v: '九、安全' },
     { t: 'p', v: '数据库启用了行级安全策略（RLS）：**每个账号只能读写自己那一行**，在数据库层面强制，不依赖前端代码。未登录角色对数据表零权限。传输全程 HTTPS。' },
@@ -102,7 +103,7 @@ const PRIVACY = {
 
     { t: 'h', v: '3. What is collected if you do sign in' },
     { t: 'table', head: ['Data', 'Purpose', 'Source'], rows: [
-      ['Email address', 'Identify your account, send one-time sign-in links', 'You provide it'],
+      ['Email address', 'Identify your account, send one-time sign-in codes', 'You provide it'],
       ['Study progress (answers, missed questions, mock scores, notes read, UI preferences)', 'Sync across devices', 'Generated as you use the site'],
       ['Account creation and last sign-in timestamps', 'Account management, clearing dormant accounts', 'Recorded automatically'],
     ]},
@@ -125,7 +126,7 @@ const PRIVACY = {
       '**In the European Economic Area** — your data is transferred to the UK. The UK holds an EU adequacy decision, which is the basis on which that transfer is lawful',
       '**Anywhere else** — your data is transferred to the UK and Ireland for storage and processing. By using the site you understand and accept this. If your jurisdiction imposes its own data-export requirements, please assess them before signing in',
     ]},
-    { t: 'p', v: 'Sign-in emails contain **a one-time link and nothing else** — never any study data.' },
+    { t: 'p', v: 'Sign-in emails contain **a one-time code and nothing else** — never any study data.' },
     { t: 'p', v: '**Would you rather nothing left your device?** Then do not sign in. Every feature works without an account, with progress kept solely in your own browser. That is the default, and the option we recommend if privacy matters to you.' },
 
     { t: 'h', v: '6. How long it is kept' },
@@ -154,12 +155,13 @@ const PRIVACY = {
     { t: 'p', v: `You are also welcome to contact \`${PRIVACY_CONTACT}\` first; most issues can be resolved directly.` },
 
     { t: 'h', v: '8. Local storage' },
-    { t: 'p', v: 'This site sets **no cookies**. It uses browser localStorage for two things:' },
+    { t: 'p', v: 'This site sets **no cookies**. It uses browser localStorage for three things:' },
     { t: 'list', v: [
       '`ccae.v2` — your study progress and UI preferences (present even without an account; purely local)',
       '`ccae.auth` — your session token after signing in, so you stay signed in',
+      '`ccae.cloud` — a flag recording only that this device has signed in before, used to decide whether to load the sync module; it holds no personal data',
     ]},
-    { t: 'p', v: 'Both are **strictly necessary to provide a service you explicitly requested**, which is exempt under PECR — hence no consent banner. You can clear them from your browser settings at any time.' },
+    { t: 'p', v: 'All three are **strictly necessary to provide a service you explicitly requested**, which is exempt under PECR — hence no consent banner. You can clear them from your browser settings at any time.' },
 
     { t: 'h', v: '9. Security' },
     { t: 'p', v: 'The database enforces row-level security: **each account can only read and write its own row**, enforced in the database rather than trusted to front-end code. The unauthenticated role has zero privileges on the data table. All traffic is over HTTPS.' },
