@@ -93,7 +93,7 @@ Then open <http://localhost:4321>. No dependencies, no build step, no Node.
 | **Practice** | Instant feedback: explanation on answering, a "why this is wrong" note on each distractor, and a link back to the note section. Filter by domain, section, unseen, weak spots, or bookmarks. |
 | **Missed queue** | Wrong answers are queued automatically and grouped by domain. **Clears after 2 correct in a row** — so you cannot pass by memorising one attempt. |
 | **Mock exam** | Locked to official spec, not configurable: 60 items / 120 minutes, weighted 27/18/20/20/15, 4 scenarios drawn from 6. No feedback until you submit; scored out of 1000 with a **720 pass mark**, plus per-domain breakdown and item-by-item review. |
-| **Advanced drills (optional)** | A separate block on the practice page that **never affects the normal path**. "Commit before you look" makes you reason before seeing options; "judgement of degree" leaves only the answer and its closest distractor. Skip them freely. |
+| **Advanced drills (optional)** | A separate block on the practice page that **never affects the normal path**. "Commit before you look" makes you reason before seeing options; "judgement of degree" leaves only the answer and its closest distractor, **hand-tagged per question**. Skip them freely. |
 | **Bilingual** | One dropdown in the header. Interface, all 37 note sections and all 163 questions (stems, options, explanations, distractor notes) exist in both languages. The real exam is in English, so English mode doubles as terminology practice. |
 
 ## Sources
@@ -206,8 +206,14 @@ Append to the `QUESTIONS` array in `assets/data/questions.js`:
   o:['Option A','Option B','Option C','Option D'],
   a:1,                                       // index of the correct option
   e:'Explanation…',
-  w:{ 0:'why A is wrong', 2:'why C is wrong' } }   // optional; the degree drill relies on this
+  w:{ 0:'why A is wrong', 2:'why C is wrong' },    // optional; the degree drill relies on this
+  near:0 }                                        // index of the closest distractor — see below
 ```
+
+`near` points at the distractor that is **defensible but disproportionate** — the degree drill uses
+it as the opposing option. Leave it out and the drill picks at random, often landing on an obviously
+wrong option, which wastes the question. Constraints: `near ≠ a`, index in range, and `w[near]` must
+carry an explanation.
 
 Multiple-response: add `multi: true`, make `a` an array, and **state the count in the stem**
 — the official wording is *"each item states how many responses to select"*. Scoring is exact-match.
@@ -236,14 +242,6 @@ q164:{q:'…', o:['…','…','…','…'], e:'…', w:{0:'…'}}
 
 Notes work the same way under `sections` in `content.en.js`. **The blocks array must line up
 one-to-one with the Chinese side** — rendering merges `v` / `title` / `head` / `rows` by index.
-
-## Known limitation
-
-The "judgement of degree" drill currently picks its foil at random from **any distractor that has a
-written explanation**, and those vary in how close they actually are — some genuinely require
-weighing up (prompt tuning vs a hook), others are obviously wrong. Making the drill live up to its
-name needs a per-question tag marking the genuinely near-miss option (a `near` field), which is a
-manual judgement pass.
 
 ## Contributing
 

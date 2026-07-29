@@ -866,7 +866,11 @@ function degreeRun() {
   const wSrc = (q.w && Object.keys(q.w).length) ? q.w : (raw.w || {});
   const foils = Object.keys(wSrc).map(Number).filter((i) => i !== q.a && i < q.o.length);
   if (!foils.length) { D.i++; return degreeRun(); }
-  const foil = foils[(Math.random() * foils.length) | 0];
+
+  // 优先用逐题标注的 near —— 那个「说得通但不相称」的干扰项。
+  // 这个模式练的是程度判断，随机挑到一个一眼假的选项，题就白出了。
+  // near 取自 raw（题库原始对象）：它是选项下标，与语言无关。
+  const foil = foils.includes(raw.near) ? raw.near : foils[(Math.random() * foils.length) | 0];
   const pair = shuffle([q.a, foil]);
 
   $('#app').innerHTML = `
