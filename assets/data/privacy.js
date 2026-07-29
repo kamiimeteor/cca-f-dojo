@@ -6,7 +6,7 @@
  * 事实性内容必须与实现保持一致 —— 改了同步逻辑就要回来改这里。
  */
 const PRIVACY_UPDATED = '2026-07-29';
-const PRIVACY_CONTACT = 'privacy@signal0.net';
+const PRIVACY_CONTACT = 'kami.aigeek@gmail.com';
 
 const PRIVACY = {
   zh: [
