@@ -459,16 +459,33 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 
 /* ---------- 云同步 ---------- */
 /* 顶栏同步状态小圆点：不打扰，但状态一眼可见 */
-.cloud-badge {
-  display: inline-grid; place-items: center;
-  width: 20px; height: 20px; margin-left: 4px;
-  font-size: 10px; line-height: 1; border-radius: 50%;
-  color: var(--ink-3); cursor: default; user-select: none;
+/* 顶栏账号胶囊：头像 + 右下角状态角标。
+   原先是个孤零零的绿点 —— 看不出是什么，也看不出能点。 */
+.cloud-chip {
+  position: relative; display: inline-grid; place-items: center;
+  width: 26px; height: 26px; margin-left: 6px; padding: 0;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--paper-2); cursor: pointer; user-select: none;
+  transition: border-color .15s, background .15s;
 }
-.cloud-badge[hidden] { display: none; }
-.cloud-badge.ok   { color: var(--ok); }
-.cloud-badge.bad  { color: var(--bad); }
-.cloud-badge.sync { color: var(--coral); animation: cloud-pulse 1.2s ease-in-out infinite; }
+.cloud-chip[hidden] { display: none; }
+.cloud-chip:hover { border-color: var(--coral); background: var(--paper); }
+.cloud-chip:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.cloud-ava {
+  font-size: 11.5px; font-weight: 600; line-height: 1;
+  color: var(--ink-2); letter-spacing: 0;
+}
+
+/* 角标压在头像右下角，用描边和底色隔开，小尺寸下也分得清 */
+.cloud-mark {
+  position: absolute; right: -1px; bottom: -1px;
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 2px solid var(--paper); background: var(--ink-3);
+}
+.cloud-chip.ok   .cloud-mark { background: var(--ok); }
+.cloud-chip.bad  .cloud-mark { background: var(--bad); }
+.cloud-chip.sync .cloud-mark { background: var(--coral); animation: cloud-pulse 1.2s ease-in-out infinite; }
 @keyframes cloud-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
 
 /* 进度面板里的云同步区块：与本地区块视觉上区分开 */
@@ -488,7 +505,9 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .cloud-dot.ok { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
 
 @media (max-width: 560px) {
-  .cloud-badge { margin-left: 0; width: 16px; }
+  .cloud-chip { margin-left: 2px; width: 22px; height: 22px; }
+  .cloud-ava { font-size: 10px; }
+  .cloud-mark { width: 8px; height: 8px; }
 }
 
 /* history table */

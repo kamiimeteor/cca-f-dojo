@@ -1734,6 +1734,8 @@ function stageImport(text, opts = {}) {
 }
 
 $('#progBtn').onclick = openProgress;
+// 顶栏那个账号胶囊也开同一个面板 —— 登录状态显示在哪，管理入口就该在哪
+$('#cloudBadge').onclick = openProgress;
 $('#progClose').onclick = () => { $('#progModal').hidden = true; };
 $('#progModal').onclick = (e) => { if (e.target.id === 'progModal') $('#progModal').hidden = true; };
 document.addEventListener('keydown', (e) => {

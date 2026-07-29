@@ -340,19 +340,30 @@ async function cloudDeleteAccount() {
   setCloudStatus('signedout');
 }
 
-/** 顶栏的同步小圆点 */
+/**
+ * 顶栏的账号胶囊：圆形头像 + 右下角状态角标。
+ *
+ * 头像用邮箱首字母，不用 Gravatar —— 那要把邮箱的 hash 发给第三方，
+ * 和本站「不向第三方发任何请求」的定位直接冲突。首字母是零成本零外泄的。
+ */
 function paintCloudBadge() {
-  const el = $('#cloudBadge');
-  if (!el) return;
-  const map = {
-    off: ['', ''], signedout: ['', ''], loading: ['·', 'sync'],
-    signedin: ['●', 'ok'], syncing: ['◐', 'sync'], error: ['▲', 'bad'],
-  };
-  const [ch, cls] = map[CLOUD.status] || ['', ''];
-  el.textContent = ch;
-  el.className = 'cloud-badge ' + cls;
-  el.hidden = !ch;
-  el.title = CLOUD.status === 'error' ? t('cloud_err_title', CLOUD.error)
-           : CLOUD.status === 'signedin' ? t('cloud_synced', CLOUD.user?.email || '')
-           : CLOUD.status === 'syncing' ? t('cloud_syncing') : '';
+  const el = $('#cloudBadge'), ava = $('#cloudAva'), mark = $('#cloudMark');
+  if (!el || !ava || !mark) return;
+
+  const shown = ['loading', 'signedin', 'syncing', 'error'].includes(CLOUD.status);
+  el.hidden = !shown;
+  if (!shown) return;
+
+  const email = CLOUD.user?.email || '';
+  ava.textContent = (email.trim()[0] || '?').toUpperCase();
+
+  const cls = { loading: 'sync', signedin: 'ok', syncing: 'sync', error: 'bad' }[CLOUD.status];
+  el.className = 'cloud-chip ' + cls;
+
+  const label = CLOUD.status === 'error' ? t('cloud_err_title', CLOUD.error)
+              : CLOUD.status === 'syncing' ? t('cloud_syncing')
+              : CLOUD.status === 'loading' ? t('cloud_loading')
+              : t('cloud_synced', email);
+  el.title = label;
+  el.setAttribute('aria-label', label);
 }
