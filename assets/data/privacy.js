@@ -5,7 +5,7 @@
  *
  * 事实性内容必须与实现保持一致 —— 改了同步逻辑就要回来改这里。
  */
-const PRIVACY_UPDATED = '2026-07-28';
+const PRIVACY_UPDATED = '2026-07-29';
 const PRIVACY_CONTACT = 'privacy@signal0.net';
 
 const PRIVACY = {
@@ -33,9 +33,8 @@ const PRIVACY = {
     { t: 'p', v: '你随时可以停止：登出即可，删除账号则彻底清除。' },
 
     { t: 'h', v: '五、数据存在哪里' },
-    { t: 'p', v: '存储在 **Supabase**（数据处理者），基础设施位于 **AWS 伦敦区域（eu-west-2）**。' },
-    { t: 'p', v: '**数据不出英国境内。** 选择伦敦区域正是为了避免跨境传输。' },
-    { t: 'p', v: '邮件发送由第三方邮件服务商代为投递，仅用于发送登录链接，内容不含你的学习数据。' },
+    { t: 'p', v: '**你的学习进度**存储在 **Supabase**（数据处理者），基础设施位于 **AWS 伦敦区域（eu-west-2）** —— 进度数据不离开英国境内。' },
+    { t: 'p', v: '**登录邮件**由 **Resend**（数据处理者）投递，其发信基础设施位于**爱尔兰（EEA）**。这意味着你的邮箱地址会传输至欧洲经济区。该传输受英国对 EEA 的充分性认定（adequacy regulations）覆盖，属合法传输。邮件内容仅为一次性登录链接，**不含任何学习数据**。' },
 
     { t: 'h', v: '六、保留多久' },
     { t: 'list', v: [
@@ -96,9 +95,8 @@ const PRIVACY = {
     { t: 'p', v: 'You can stop at any time: sign out to pause, delete your account to erase.' },
 
     { t: 'h', v: '5. Where the data lives' },
-    { t: 'p', v: 'Stored with **Supabase** (acting as data processor) on infrastructure in the **AWS London region (eu-west-2)**.' },
-    { t: 'p', v: '**Data does not leave the UK.** The London region was chosen specifically to avoid international transfers.' },
-    { t: 'p', v: 'Sign-in emails are delivered by a third-party email provider. Those messages contain a sign-in link only — never your study data.' },
+    { t: 'p', v: '**Your study progress** is stored with **Supabase** (acting as data processor) on infrastructure in the **AWS London region (eu-west-2)** — progress data does not leave the UK.' },
+    { t: 'p', v: '**Sign-in emails** are delivered by **Resend** (also a processor), whose sending infrastructure is in **Ireland (EEA)**. Your email address is therefore transferred to the European Economic Area. That transfer is covered by the UK\'s adequacy regulations for the EEA and is lawful on that basis. The messages contain a one-time sign-in link and **no study data whatsoever**.' },
 
     { t: 'h', v: '6. How long it is kept' },
     { t: 'list', v: [
