@@ -1503,6 +1503,10 @@ function renderProgressBody() {
 
 /* ---------------- 云同步区块（渲染 + 事件）---------------- */
 
+/* 验证码位数不写死：Supabase 的 Email OTP Length 是可配的（6–10，本项目当前是 8），
+ * 而客户端读不到这个配置，所以按区间放行，交给服务端判对错。 */
+const OTP_MIN = 6, OTP_MAX = 10;
+
 function cloudSectionHtml(c) {
   const box = (inner) => `<div class="cloud-box">${inner}</div>`;
 
@@ -1557,7 +1561,7 @@ function cloudSectionHtml(c) {
           <span style="color:var(--ink-3)">${esc(t('cloud_sent_spam'))}</span></p></div>
       <label class="fld-l" for="cCode">${esc(t('cloud_code_l'))}</label>
       <input id="cCode" class="fld code-input" inputmode="numeric" autocomplete="one-time-code"
-             maxlength="6" placeholder="000000">
+             maxlength="${OTP_MAX}" placeholder="${'0'.repeat(OTP_MIN)}">
       <div class="row" style="margin-top:12px">
         <button class="btn primary" id="cVerify">${esc(t('cloud_verify'))}</button>
         <button class="btn sm ghost" id="cResend">${esc(t('cloud_resend'))}</button>
@@ -1612,7 +1616,7 @@ function bindCloudSection() {
   if (verify) {
     const submit = async () => {
       const code = ($('#cCode').value || '').replace(/\D/g, '');
-      if (code.length !== 6) return cErr(t('cloud_bad_code_len'));
+      if (code.length < OTP_MIN || code.length > OTP_MAX) return cErr(t('cloud_bad_code_len', OTP_MIN, OTP_MAX));
 
       verify.disabled = true; verify.textContent = t('cloud_verifying');
       try {
