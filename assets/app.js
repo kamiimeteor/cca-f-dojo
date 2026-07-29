@@ -1421,11 +1421,13 @@ function renderProgressBody() {
   const d = digest(S);
   const c = typeof cloudState === 'function' ? cloudState() : { enabled: false };
   $('#progBody').innerHTML = `
-    <p class="sub" style="margin-top:0">${esc(t('prog_sub'))}</p>
+    <p class="sub" style="margin-top:0">${esc(
+      c.status === 'signedin' ? t('prog_sub_synced') : t('prog_sub'))}</p>
 
     ${c.enabled ? cloudSectionHtml(c) : ''}
 
     <h3>${esc(t('prog_current'))}</h3>
+    <p class="sub" style="margin:-4px 0 10px;font-size:12.5px">${md(t('prog_current_n'))}</p>
     <div class="chips">
       <span class="chip">${esc(t('prog_stat_q', d.seen, QUESTIONS.length))}</span>
       <span class="chip">${esc(t('prog_stat_rate', d.rate))}</span>

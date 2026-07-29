@@ -151,7 +151,9 @@ const I18N = {
     /* 进度管理 */
     prog_title: '进度管理',
     prog_sub: '进度只存在你这台设备的浏览器里。换机器或换浏览器时，用下面的方式带走。',
-    prog_current: '当前进度',
+    prog_sub_synced: '进度存在本机，并已同步到云端 —— 换设备登录同一账号即可接着刷。',
+    prog_current: '本机进度',
+    prog_current_n: '存在这台设备的浏览器里。登出**不会**删除它，删除账号也不会 —— 只有下面的「清空进度」才会。',
     prog_stat_q: '做过 {0} / {1} 题',
     prog_stat_rate: '正确率 {0}%',
     prog_stat_wrong: '错题 {0}',
@@ -390,7 +392,9 @@ const I18N = {
     /* Progress management */
     prog_title: 'Your progress',
     prog_sub: 'Progress lives only in this browser on this device. Use the options below to take it with you.',
-    prog_current: 'Right now',
+    prog_sub_synced: 'Progress lives on this device and is synced to the cloud — sign in on another device to pick up where you left off.',
+    prog_current: 'On this device',
+    prog_current_n: 'Kept in this browser. Signing out does **not** delete it, and neither does deleting your account — only “Clear progress” below does.',
     prog_stat_q: '{0} of {1} questions attempted',
     prog_stat_rate: '{0}% correct',
     prog_stat_wrong: '{0} in the missed queue',

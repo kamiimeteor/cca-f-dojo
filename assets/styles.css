@@ -479,6 +479,15 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
   color: var(--ink-2); letter-spacing: 0;
 }
 
+/* 未登录形态：不是头像，而是一个和导航项同款的文字按钮 */
+.cloud-chip.plain {
+  width: auto; height: auto; border-radius: 7px;
+  padding: 7px 13px; border-color: transparent; background: transparent;
+  font: inherit; font-size: 14px; color: var(--ink-2); white-space: nowrap;
+}
+.cloud-chip.plain:hover { background: var(--paper-2); color: var(--ink); border-color: transparent; }
+.cloud-chip.plain .cloud-mark { display: none; }
+
 /* 角标压在头像右下角，用描边和底色隔开，小尺寸下也分得清 */
 .cloud-mark {
   position: absolute; right: -1px; bottom: -1px;

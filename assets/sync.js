@@ -394,12 +394,21 @@ async function cloudDeleteAccount() {
  * 和本站「不向第三方发任何请求」的定位直接冲突。首字母是零成本零外泄的。
  */
 function paintCloudBadge() {
-  const el = $('#cloudBadge'), ava = $('#cloudAva'), mark = $('#cloudMark');
-  if (!el || !ava || !mark) return;
+  const el = $('#cloudBadge'), ava = $('#cloudAva'), mark = $('#cloudMark'), lbl = $('#cloudLabel');
+  if (!el || !ava || !mark || !lbl) return;
 
-  const shown = ['loading', 'signedin', 'syncing', 'conflict', 'error'].includes(CLOUD.status);
-  el.hidden = !shown;
-  if (!shown) return;
+  // 这个按钮**永远显示**：未登录时它是「管理进度」的入口（导出/导入/登录都在里面），
+  // 登录后才升级成头像胶囊。以前未登录时整个藏起来，导航栏上就没有任何入口了。
+  const signed = ['loading', 'signedin', 'syncing', 'conflict', 'error'].includes(CLOUD.status);
+  if (!signed) {
+    el.className = 'cloud-chip plain';
+    lbl.textContent = t('prog_open');
+    ava.textContent = '';
+    el.title = t('prog_open');
+    el.setAttribute('aria-label', t('prog_open'));
+    return;
+  }
+  lbl.textContent = '';
 
   const email = CLOUD.user?.email || '';
   ava.textContent = (email.trim()[0] || '?').toUpperCase();
