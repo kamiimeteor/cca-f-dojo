@@ -1560,8 +1560,8 @@ function cloudSectionHtml(c) {
 
   // 未登录
   const linkErr = c.linkError
-    ? `<div class="box warn" style="margin:0 0 12px"><b class="bt">${esc(t('cloud_link_err_h'))}</b>
-         <p style="margin:0;font-size:13px">${esc(t(c.linkError.key, c.linkError.arg))}</p></div>`
+    ? `<div class="box warn" style="margin:0 0 12px"><b class="bt">${esc(t(c.linkError.h || 'cloud_link_err_h'))}</b>
+         <p style="margin:0;font-size:13px">${md(t(c.linkError.key, c.linkError.arg))}</p></div>`
     : '';
 
   // 第二步：验证码已发出，等用户输入

@@ -129,6 +129,27 @@ async function cloudPush() {
   CLOUD.lastPushed = snapshot;
 }
 
+/**
+ * 这个会话背后的账号已经不存在了吗？
+ *
+ * 在别的设备上删了账号之后，本机手里的 JWT 还没过期，界面会一直显示
+ * 「已登录 · 进度已同步」，而每次推送都以外键错误失败 —— 用户看到的是
+ * 一句 Postgres 原文，还会无限重试。识别出来直接本地登出，说清楚原因。
+ */
+function isDeadSession(e) {
+  if (!e) return false;
+  if (e.code === '23503') return true;                       // progress_user_id_fkey：用户行没了
+  if (e.status === 401) return true;
+  return e.status === 403 && /sub claim|does not exist|user_not_found/i.test(e.message || '');
+}
+
+/** 账号已不存在 → 本地登出，但**保留本机进度**（登出从不删本地数据） */
+async function handleDeadSession() {
+  await cloudSignOut();
+  CLOUD.linkError = { key: 'cloud_account_gone', h: 'cloud_account_gone_h' };
+  if (!$('#progModal').hidden && typeof renderProgressBody === 'function') renderProgressBody();
+}
+
 /** 本地有变更 → 防抖后推送。任何失败都只记录，不打断做题。 */
 function schedulePush() {
   if (CLOUD.status !== 'signedin') return;
@@ -139,6 +160,7 @@ function schedulePush() {
       await cloudPush();
       setCloudStatus('signedin');
     } catch (e) {
+      if (isDeadSession(e)) return handleDeadSession();
       CLOUD.error = e.message || String(e);
       setCloudStatus('error');
     }
@@ -245,6 +267,7 @@ async function cloudOnSignedIn(user, opts = {}) {
     }
     setCloudStatus('signedin');
   } catch (e) {
+    if (isDeadSession(e)) { await handleDeadSession(); return false; }
     CLOUD.error = e.message || String(e);
     setCloudStatus('error');
   }
