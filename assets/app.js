@@ -1588,8 +1588,18 @@ function cloudSectionHtml(c) {
 function bindCloudSection() {
   const cErr = (msg) =>
     ($('#cMsg').innerHTML = `<p class="sub" style="color:var(--bad);margin:10px 0 0">${esc(msg)}</p>`);
-  const sendFail = (e) =>
-    /rate|limit|too many/i.test(e.message || '') ? t('cloud_rate') : t('cloud_send_fail', e.message || e);
+  /* Supabase 的报错不能直接甩给用户看：发信失败时 GoTrue 会返回 500 +
+   * 空 JSON body，message 字面上就是 "{}"，显示出来是「发送失败：{}」。
+   * 这里把能识别的情况翻成人话，实在认不出来才退回原文。 */
+  const sendFail = (e) => {
+    const raw = (e && e.message) || '';
+    const status = e && e.status;
+    if (/rate|limit|too many/i.test(raw) || status === 429) return t('cloud_rate');
+    if (status >= 500 || /^\{\}?$/.test(raw.trim()) || e?.name === 'AuthRetryableFetchError')
+      return t('cloud_send_5xx');
+    if (/invalid|email/i.test(raw) && status === 400) return t('cloud_bad_email');
+    return t('cloud_send_fail', raw || t('cloud_unknown_err'));
+  };
 
   /* ── 第一步：发验证码 ── */
   const send = $('#cSend');
@@ -1623,7 +1633,8 @@ function bindCloudSection() {
         await cloudVerifyCode(CLOUD.pendingEmail, code);
         renderProgressBody();          // 成功后这里会重绘成「已登录」
       } catch (e) {
-        cErr(/expired|invalid|token/i.test(e.message || '') ? t('cloud_bad_code') : (e.message || String(e)));
+        const raw = (e && e.message) || '';
+        cErr(/expired|invalid|token/i.test(raw) ? t('cloud_bad_code') : sendFail(e));
         verify.textContent = t('cloud_verify'); verify.disabled = false;
       }
     };
