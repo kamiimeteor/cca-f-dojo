@@ -4,15 +4,15 @@
  *
  * 1. **未登录用户的体验一个字节都不变。** supabase-js 是**按需动态加载**的 ——
  *    没登录过就永远不发请求、不加载 SDK，站点仍然是纯静态、可离线、无追踪。
- *    只有点了「发送登录链接」，或本地存在登录标记时，才会去 CDN 取 SDK。
+ *    只有点了「发送验证码」，或本地存在登录标记时，才会去加载 SDK ——
+ *    而且 SDK 是自托管的，不走任何第三方 CDN。
  *
  * 2. **合并而非覆盖。** 复用 app.js 里的 mergeState()：两台设备各刷各的，
  *    谁的进度都不会被对方洗掉。
  *
  * 3. **失败不能卡住界面。** 断网、限流、链接过期，一律降级为「继续用本地」。
  *
- * 4. 用 PKCE 流程（回调走 ?code= 查询参数），避免和本站的 hash 路由打架 ——
- *    默认的 implicit 流程会把 token 塞进 #fragment，正好和 #/practice 冲突。
+ * 4. 登录用**邮件里的一次性验证码**，不用魔法链接。原因见 cloudSendCode()。
  */
 'use strict';
 
@@ -20,11 +20,12 @@ const CLOUD = {
   sb: null,          // supabase client，懒加载
   sdkPromise: null,  // SDK 的加载中 promise，避免并发重复插 <script>
   user: null,        // 当前登录用户
-  status: 'off',     // off | loading | signedout | signedin | syncing | error
+  status: 'off',     // off | loading | signedout | signedin | syncing | conflict | error
   error: '',
   // 邮件链接回跳失败的原因。存 {key, arg} 而不是翻译好的字符串 ——
   // 否则用户切换语言后这条提示会卡在旧语言里。
   linkError: null,
+  conflictRemote: null,  // 云端那份的 JSON，冲突未解决时留着，供用户随时重开对比
   pendingEmail: '',  // 已发出验证码、等待用户输入的那个邮箱
   pushTimer: null,
   lastPushed: '',    // 上次推上去的快照，用于跳过无变化的推送
@@ -87,6 +88,7 @@ const cloudState = () => ({
   error: CLOUD.error,
   linkError: CLOUD.linkError,
   pendingEmail: CLOUD.pendingEmail,
+  hasConflict: !!CLOUD.conflictRemote,
 });
 
 /* ---------------- 拉取 / 推送 ---------------- */
@@ -184,8 +186,8 @@ async function cloudVerifyCode(email, code) {
   if (error) throw error;
   if (!data?.user) throw new Error('verifyOtp returned no user');
   CLOUD.pendingEmail = '';
-  await cloudOnSignedIn(data.user);
-  return true;
+  // 把「是否已挂出对比界面」原样透传给调用方，别让它重绘盖掉
+  return { staged: (await cloudOnSignedIn(data.user)) === true };
 }
 
 async function cloudSignOut() {
@@ -196,6 +198,7 @@ async function cloudSignOut() {
   CLOUD.user = null;
   CLOUD.lastPushed = '';
   CLOUD.pendingEmail = '';
+  CLOUD.conflictRemote = null;
   setSessionFlag(false);
   setCloudStatus('signedout');
 }
@@ -204,6 +207,10 @@ async function cloudSignOut() {
  * 登录成功后的首次对账。
  * 云端有数据且和本地不一致 → 交给用户决定（复用导入那套三列对比），
  * 不自作主张覆盖任何一边。
+ *
+ * **返回 true 表示已经把对比界面挂进了进度面板**，此时调用方绝对不能再
+ * 重绘面板 —— 否则会把它盖掉，用户根本看不到，`PENDING` 也就永远没人
+ * 确认，两边各留各的，界面却显示「进度已同步」。这是实测踩到的坑。
  */
 async function cloudOnSignedIn(user, opts = {}) {
   CLOUD.user = user;
@@ -222,14 +229,16 @@ async function cloudOnSignedIn(user, opts = {}) {
       applyTheme(); paintChrome(); updateWrongPill(); router();
     } else if (stableStr(remote.state) !== stableStr(S)) {
       // 两边都有且不同 → 让用户选，不自动合并
-      setCloudStatus('signedin');
       if (opts.silent) {                       // 页面刚加载时不打断，先合并保平安
         S = mergeState(S, remote.state); save();
         await cloudPush();
         updateWrongPill(); router();
       } else {
-        stageImport(JSON.stringify(remote.state), { fromCloud: true });
-        return;
+        // 挂起冲突：既不能说「已同步」（没同步），也不能放任后续改动把云端
+        // 覆盖掉（schedulePush 只在 signedin 时推，conflict 状态天然挡住了）
+        CLOUD.conflictRemote = JSON.stringify(remote.state);
+        setCloudStatus('conflict');
+        return stageImport(CLOUD.conflictRemote, { fromCloud: true });
       }
     } else {
       CLOUD.lastPushed = stableStr(S);
@@ -365,17 +374,18 @@ function paintCloudBadge() {
   const el = $('#cloudBadge'), ava = $('#cloudAva'), mark = $('#cloudMark');
   if (!el || !ava || !mark) return;
 
-  const shown = ['loading', 'signedin', 'syncing', 'error'].includes(CLOUD.status);
+  const shown = ['loading', 'signedin', 'syncing', 'conflict', 'error'].includes(CLOUD.status);
   el.hidden = !shown;
   if (!shown) return;
 
   const email = CLOUD.user?.email || '';
   ava.textContent = (email.trim()[0] || '?').toUpperCase();
 
-  const cls = { loading: 'sync', signedin: 'ok', syncing: 'sync', error: 'bad' }[CLOUD.status];
+  const cls = { loading: 'sync', signedin: 'ok', syncing: 'sync', conflict: 'warn', error: 'bad' }[CLOUD.status];
   el.className = 'cloud-chip ' + cls;
 
-  const label = CLOUD.status === 'error' ? t('cloud_err_title', CLOUD.error)
+  const label = CLOUD.status === 'conflict' ? t('cloud_conflict_title')
+              : CLOUD.status === 'error' ? t('cloud_err_title', CLOUD.error)
               : CLOUD.status === 'syncing' ? t('cloud_syncing')
               : CLOUD.status === 'loading' ? t('cloud_loading')
               : t('cloud_synced', email);

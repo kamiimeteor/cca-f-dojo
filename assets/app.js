@@ -1543,6 +1543,17 @@ function cloudSectionHtml(c) {
       </div>`)}`;
   }
 
+  // 冲突挂起：用户取消过对比，两边都原样留着，等他回来处理
+  if (c.status === 'conflict') {
+    return `<h3>${esc(t('cloud_h'))}</h3>${box(`
+      <div class="box warn" style="margin:0"><b class="bt">${esc(t('cloud_conflict_h'))}</b>
+        <p style="margin:0;font-size:13px">${md(t('cloud_conflict_note'))}</p></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="cResolve">${esc(t('cloud_conflict_btn'))}</button>
+        <button class="btn sm ghost" id="cSignOut">${esc(t('cloud_signout'))}</button>
+      </div>`)}`;
+  }
+
   if (c.status === 'loading') {
     return `<h3>${esc(t('cloud_h'))}</h3>${box(`<p class="sub" style="margin:0">${esc(t('cloud_loading'))}</p>`)}`;
   }
@@ -1631,8 +1642,9 @@ function bindCloudSection() {
 
       verify.disabled = true; verify.textContent = t('cloud_verifying');
       try {
-        await cloudVerifyCode(CLOUD.pendingEmail, code);
-        renderProgressBody();          // 成功后这里会重绘成「已登录」
+        const r = await cloudVerifyCode(CLOUD.pendingEmail, code);
+        // 挂出了「云端 vs 本地」对比就别重绘了，否则会把它盖掉
+        if (!r?.staged) renderProgressBody();
       } catch (e) {
         const raw = (e && e.message) || '';
         cErr(/expired|invalid|token/i.test(raw) ? t('cloud_bad_code') : sendFail(e));
@@ -1658,6 +1670,9 @@ function bindCloudSection() {
 
   const back = $('#cBack');
   if (back) back.onclick = () => { CLOUD.pendingEmail = ''; renderProgressBody(); };
+
+  const resolve = $('#cResolve');
+  if (resolve) resolve.onclick = () => stageImport(CLOUD.conflictRemote, { fromCloud: true });
 
   const so = $('#cSignOut');
   if (so) so.onclick = async () => { await cloudSignOut(); renderProgressBody(); };
@@ -1685,10 +1700,12 @@ function bindCloudSection() {
 
 /** 解析待导入内容并展示对比，让用户选合并还是替换。
  *  opts.fromCloud = true 时，来源列标题改成「云端」，且合并后会回推云端。 */
+/** 渲染「两边对比 → 让用户选」。成功挂出对比界面返回 true。
+ *  调用方必须尊重这个返回值 —— 挂出来之后不能再重绘面板，否则会把它盖掉。 */
 function stageImport(text, opts = {}) {
   let incoming;
   try { incoming = sanitizeState(JSON.parse(text)); }
-  catch { alert(t('import_bad')); return; }
+  catch { alert(t('import_bad')); return false; }
 
   PENDING = incoming;
   const f = digest(incoming), n = digest(S), m = digest(mergeState(S, incoming));
@@ -1721,9 +1738,13 @@ function stageImport(text, opts = {}) {
   const finish = (msg) => {
     save(); applyTheme(); paintChrome(); updateWrongPill(); router();
     PENDING = null;
-    // 云端来的：用户已经做了选择，把结果推回去，两边收敛到同一份
+    // 云端来的：用户已经做了选择，把结果推回去，两边收敛到同一份。
+    // 冲突解除，推完才把状态置成「已同步」—— 在此之前它一直是 conflict。
+    if (opts.fromCloud) CLOUD.conflictRemote = null;
     if (opts.fromCloud && typeof cloudPush === 'function' && CLOUD.status !== 'signedout') {
-      cloudPush().catch(() => {});
+      cloudPush()
+        .then(() => setCloudStatus('signedin'))
+        .catch((e) => { CLOUD.error = e.message || String(e); setCloudStatus('error'); });
     }
     openProgress();
     alert(msg);
@@ -1731,6 +1752,7 @@ function stageImport(text, opts = {}) {
   $('#pMerge').onclick = () => { S = mergeState(S, PENDING); finish(t('prog_merged')); };
   $('#pReplace').onclick = () => { S = PENDING; finish(t('prog_replaced')); };
   $('#pCancel').onclick = () => { PENDING = null; openProgress(); };
+  return true;
 }
 
 $('#progBtn').onclick = openProgress;
