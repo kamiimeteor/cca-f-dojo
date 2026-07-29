@@ -32,9 +32,21 @@ const PRIVACY = {
     { t: 'p', v: '处理上述数据的依据是**履行合同**（UK GDPR 第 6(1)(b) 条）—— 你要求本站为你同步进度，为此必须存储你的邮箱和进度数据。不依赖「同意」，因为这些处理是提供该功能所必需的，没有它功能就不存在。' },
     { t: 'p', v: '你随时可以停止：登出即可，删除账号则彻底清除。' },
 
-    { t: 'h', v: '五、数据存在哪里' },
-    { t: 'p', v: '**你的学习进度**存储在 **Supabase**（数据处理者），基础设施位于 **AWS 伦敦区域（eu-west-2）** —— 进度数据不离开英国境内。' },
-    { t: 'p', v: '**登录邮件**由 **Resend**（数据处理者）投递，其发信基础设施位于**爱尔兰（EEA）**。这意味着你的邮箱地址会传输至欧洲经济区。该传输受英国对 EEA 的充分性认定（adequacy regulations）覆盖，属合法传输。邮件内容仅为一次性登录链接，**不含任何学习数据**。' },
+    { t: 'h', v: '五、数据存在哪里 · 跨境传输' },
+    { t: 'p', v: '**本站面向全球用户免费开放，你在哪个国家都可以使用。** 但数据的存储位置是固定的 —— 无论你身在何处，登录后你的数据都会被传输并存储到下列地点：' },
+    { t: 'table', head: ['数据', '处理者', '所在地'], rows: [
+      ['学习进度、邮箱地址', 'Supabase', '英国 · AWS 伦敦区（eu-west-2）'],
+      ['登录邮件投递', 'Resend', '爱尔兰 · EEA'],
+      ['网站静态文件分发', 'Vercel', '全球 CDN 边缘节点（仅分发页面文件，不含你的个人数据）'],
+    ]},
+    { t: 'p', v: '**这对你意味着什么，取决于你在哪：**' },
+    { t: 'list', v: [
+      '**在英国** —— 数据留在本地，无跨境传输',
+      '**在欧洲经济区（EEA）** —— 数据传输至英国。英国已获欧盟充分性认定（adequacy decision），该传输在此基础上合法进行',
+      '**在其他国家 / 地区** —— 你的数据会被传输至英国与爱尔兰存储和处理。使用本站即表示你了解并接受这一点。若你所在司法辖区对数据出境另有强制要求，请自行评估后再决定是否登录',
+    ]},
+    { t: 'p', v: '登录邮件的内容**仅为一次性登录链接**，不含任何学习数据。' },
+    { t: 'p', v: '**不想让数据离开你的设备？** 那就别登录 —— 本站全部功能在不登录的情况下都可用，进度只存在你自己的浏览器里。这是默认状态，也是推荐给注重隐私的用户的用法。' },
 
     { t: 'h', v: '六、保留多久' },
     { t: 'list', v: [
@@ -45,7 +57,7 @@ const PRIVACY = {
     ]},
 
     { t: 'h', v: '七、你的权利' },
-    { t: 'p', v: '在英国 GDPR 下你享有以下权利，本站提供的行使方式如下：' },
+    { t: 'p', v: '本站运营者在英国，因此适用**英国 GDPR**；由于本站也面向欧洲经济区用户提供服务，**欧盟 GDPR** 亦可能适用。无论适用哪一套，你享有的权利是相同的：' },
     { t: 'table', head: ['权利', '怎么行使'], rows: [
       ['访问 —— 知道本站存了你什么', '「管理进度」里可查看全部数据；邮箱即你登录用的那个'],
       ['更正 —— 改正不准确的数据', '进度数据由你使用产生，可直接在站内修改或清空'],
@@ -53,7 +65,13 @@ const PRIVACY = {
       ['可携 —— 拿走你的数据', '「管理进度 → 下载文件」，导出标准 JSON'],
       ['限制 / 反对处理', `发邮件到 \`${PRIVACY_CONTACT}\``],
     ]},
-    { t: 'p', v: `**投诉权**：如果你认为本站处理你的数据的方式不当，有权向英国信息专员办公室（ICO）投诉 —— <https://ico.org.uk/make-a-complaint/>。也欢迎先联系 \`${PRIVACY_CONTACT}\`，多数问题可以直接解决。` },
+    { t: 'p', v: `**投诉权**：如果你认为本站处理你的数据的方式不当，可以向监管机构投诉：` },
+    { t: 'list', v: [
+      '**英国用户** —— 英国信息专员办公室（ICO）：<https://ico.org.uk/make-a-complaint/>',
+      '**EEA 用户** —— 你所在成员国的数据保护监管机构（各国名录见 <https://edpb.europa.eu/about-edpb/about-edpb/members_en>）',
+      '**其他地区用户** —— 可向 ICO 投诉，或联系你当地的数据保护机构（如有）',
+    ]},
+    { t: 'p', v: `也欢迎先联系 \`${PRIVACY_CONTACT}\`，多数问题可以直接解决。` },
 
     { t: 'h', v: '八、本地存储说明' },
     { t: 'p', v: '本站**不使用 cookie**。使用的是浏览器 localStorage，存放两类内容：' },
@@ -94,9 +112,21 @@ const PRIVACY = {
     { t: 'p', v: 'Processing rests on **performance of a contract** (UK GDPR Article 6(1)(b)) — you ask the site to sync your progress, which requires storing your email and that progress. It is not based on consent, because the processing is what the feature *is*; without it there is no feature.' },
     { t: 'p', v: 'You can stop at any time: sign out to pause, delete your account to erase.' },
 
-    { t: 'h', v: '5. Where the data lives' },
-    { t: 'p', v: '**Your study progress** is stored with **Supabase** (acting as data processor) on infrastructure in the **AWS London region (eu-west-2)** — progress data does not leave the UK.' },
-    { t: 'p', v: '**Sign-in emails** are delivered by **Resend** (also a processor), whose sending infrastructure is in **Ireland (EEA)**. Your email address is therefore transferred to the European Economic Area. That transfer is covered by the UK\'s adequacy regulations for the EEA and is lawful on that basis. The messages contain a one-time sign-in link and **no study data whatsoever**.' },
+    { t: 'h', v: '5. Where the data lives and international transfers' },
+    { t: 'p', v: '**This site is free and open to users anywhere in the world.** Storage locations, however, are fixed — wherever you are, signing in means your data is transferred to and stored in the following places:' },
+    { t: 'table', head: ['Data', 'Processor', 'Location'], rows: [
+      ['Study progress, email address', 'Supabase', 'United Kingdom · AWS London (eu-west-2)'],
+      ['Sign-in email delivery', 'Resend', 'Ireland · EEA'],
+      ['Static site delivery', 'Vercel', 'Global CDN edge (page files only — no personal data)'],
+    ]},
+    { t: 'p', v: '**What that means depends on where you are:**' },
+    { t: 'list', v: [
+      '**In the UK** — your data stays local; no international transfer',
+      '**In the European Economic Area** — your data is transferred to the UK. The UK holds an EU adequacy decision, which is the basis on which that transfer is lawful',
+      '**Anywhere else** — your data is transferred to the UK and Ireland for storage and processing. By using the site you understand and accept this. If your jurisdiction imposes its own data-export requirements, please assess them before signing in',
+    ]},
+    { t: 'p', v: 'Sign-in emails contain **a one-time link and nothing else** — never any study data.' },
+    { t: 'p', v: '**Would you rather nothing left your device?** Then do not sign in. Every feature works without an account, with progress kept solely in your own browser. That is the default, and the option we recommend if privacy matters to you.' },
 
     { t: 'h', v: '6. How long it is kept' },
     { t: 'list', v: [
@@ -107,7 +137,7 @@ const PRIVACY = {
     ]},
 
     { t: 'h', v: '7. Your rights' },
-    { t: 'p', v: 'Under the UK GDPR you have the following rights. Here is how to exercise each one:' },
+    { t: 'p', v: 'The operator is based in the UK, so the **UK GDPR** applies. Because the site is also offered to people in the European Economic Area, the **EU GDPR** may apply as well. Either way your rights are the same:' },
     { t: 'table', head: ['Right', 'How'], rows: [
       ['Access — see what is held about you', 'Everything is visible under "Manage progress"; the email is the one you signed in with'],
       ['Rectification — correct inaccurate data', 'Progress data is generated by your own use; change or clear it in the app'],
@@ -115,7 +145,13 @@ const PRIVACY = {
       ['Portability — take your data with you', '"Manage progress → Download file" exports standard JSON'],
       ['Restriction / objection', `Email \`${PRIVACY_CONTACT}\``],
     ]},
-    { t: 'p', v: `**Right to complain**: if you believe your data has been handled improperly, you may complain to the UK Information Commissioner's Office — <https://ico.org.uk/make-a-complaint/>. You are also welcome to contact \`${PRIVACY_CONTACT}\` first; most issues can be resolved directly.` },
+    { t: 'p', v: `**Right to complain**: if you believe your data has been handled improperly, you can complain to a supervisory authority:` },
+    { t: 'list', v: [
+      '**In the UK** — the Information Commissioner\'s Office: <https://ico.org.uk/make-a-complaint/>',
+      '**In the EEA** — the data protection authority of your member state (directory: <https://edpb.europa.eu/about-edpb/about-edpb/members_en>)',
+      '**Elsewhere** — you may complain to the ICO, or to your local data protection authority where one exists',
+    ]},
+    { t: 'p', v: `You are also welcome to contact \`${PRIVACY_CONTACT}\` first; most issues can be resolved directly.` },
 
     { t: 'h', v: '8. Local storage' },
     { t: 'p', v: 'This site sets **no cookies**. It uses browser localStorage for two things:' },
