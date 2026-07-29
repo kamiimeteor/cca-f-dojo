@@ -21,6 +21,9 @@ const CLOUD = {
   user: null,        // 当前登录用户
   status: 'off',     // off | loading | signedout | signedin | syncing | error
   error: '',
+  // 邮件链接回跳失败的原因。存 {key, arg} 而不是翻译好的字符串 ——
+  // 否则用户切换语言后这条提示会卡在旧语言里。
+  linkError: null,
   pushTimer: null,
   lastPushed: '',    // 上次推上去的快照，用于跳过无变化的推送
 };
@@ -52,6 +55,7 @@ const cloudState = () => ({
   status: CLOUD.status,
   email: CLOUD.user?.email || '',
   error: CLOUD.error,
+  linkError: CLOUD.linkError,
 });
 
 /* ---------------- 拉取 / 推送 ---------------- */
@@ -132,6 +136,7 @@ async function cloudSignOut() {
  */
 async function cloudOnSignedIn(user, opts = {}) {
   CLOUD.user = user;
+  CLOUD.linkError = null;        // 登上了，之前那条链接的报错就没意义了
   setSessionFlag(true);
   setCloudStatus('syncing');
   try {
@@ -167,28 +172,75 @@ async function cloudOnSignedIn(user, opts = {}) {
 
 /* ---------------- 启动 ---------------- */
 
+/** 回调里可能出现的参数名，清理 URL 时按这张表来 */
+const AUTH_PARAMS = ['code', 'error', 'error_code', 'error_description',
+                     'access_token', 'refresh_token', 'token_type', 'expires_in', 'sb'];
+
 /**
- * 只在这两种情况下加载 SDK：
- *   a) URL 里带 ?code=（刚点完邮件链接回来）
- *   b) 本地有登录标记（老用户回访）
+ * 读邮件链接回跳带的参数。
+ *
+ * 成功时 PKCE 只往 ?code= 放东西；**失败时 Supabase 会把同一份错误同时塞进
+ * query 和 hash**（`?error=...#error=...`）。hash 那份会顶掉本站的 `#/route`，
+ * 所以两边都要读、两边都要清。
+ */
+function readAuthCallback() {
+  const q = new URLSearchParams(location.search);
+  const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const pick = (k) => q.get(k) || h.get(k) || '';
+  return {
+    code: q.get('code'),
+    error: pick('error'),
+    errorCode: pick('error_code'),
+    desc: pick('error_description').replace(/\+/g, ' '),
+  };
+}
+
+/** hash 里装的是回调残留（而不是 `#/route`）时为真 */
+const hashIsAuthJunk = () =>
+  AUTH_PARAMS.some((k) => new RegExp(`(^#|&)${k}=`).test(location.hash));
+
+/** 把回调残留从地址栏抹掉：query 里逐个删，hash 是垃圾就整个丢掉 */
+function stripAuthParams() {
+  const url = new URL(location.href);
+  AUTH_PARAMS.forEach((k) => url.searchParams.delete(k));
+  const hash = hashIsAuthJunk() ? '' : url.hash;
+  history.replaceState(null, '', url.pathname + url.search + hash);
+}
+
+/**
+ * 只在这三种情况下动作：
+ *   a) URL 里带 ?code=（刚点完邮件链接回来）→ 换 session
+ *   b) URL 里带 error（链接过期/已用过）→ 只提示，不联网
+ *   c) 本地有登录标记（老用户回访）→ 恢复 session
  * 其余情况完全不碰网络。
  */
 async function cloudInit() {
   if (!CLOUD_ENABLED) return;
 
-  const hasCode = new URLSearchParams(location.search).has('code');
-  if (!hasCode && !hadSession()) { CLOUD.status = 'signedout'; return; }
+  const cb = readAuthCallback();
+
+  // 链接没能用上 —— 必须让用户看见，不能静默丢回首页。
+  // 这条路径一个网络请求都不发，SDK 也不加载。
+  if (cb.error || cb.errorCode) {
+    CLOUD.linkError = cb.errorCode === 'otp_expired'
+      ? { key: 'cloud_link_expired' }
+      : { key: 'cloud_link_failed', arg: cb.desc || cb.error };
+    stripAuthParams();
+    CLOUD.status = 'signedout';
+    paintCloudBadge();
+    router();                      // hash 清掉了，重渲染一次让导航高亮回位
+    setTimeout(openProgress, 0);   // 直接把云同步面板拉出来，否则用户看不到
+    return;
+  }
+
+  if (!cb.code && !hadSession()) { CLOUD.status = 'signedout'; return; }
 
   try {
     CLOUD.status = 'loading'; paintCloudBadge();
     const sb = await loadSupabase();
 
     // detectSessionInUrl 会自动用 ?code= 换 session；换完把 URL 清干净
-    if (hasCode) {
-      const url = new URL(location.href);
-      url.searchParams.delete('code');
-      history.replaceState(null, '', url.pathname + url.search + url.hash);
-    }
+    if (cb.code) stripAuthParams();
 
     const { data: { session } } = await sb.auth.getSession();
     if (session?.user) await cloudOnSignedIn(session.user, { silent: true });

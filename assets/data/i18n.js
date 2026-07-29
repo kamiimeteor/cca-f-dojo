@@ -201,6 +201,9 @@ const I18N = {
     cloud_bad_email: '邮箱格式不对。',
     cloud_send_fail: '发送失败：{0}',
     cloud_rate: '发送太频繁，请稍等一会儿再试。',
+    cloud_link_err_h: '登录链接没能用上',
+    cloud_link_expired: '这条链接已经失效了。链接有效期 1 小时、且只能用一次；有些邮箱客户端的安全扫描会替你先打开一遍，也会把它用掉。重新发一封即可。',
+    cloud_link_failed: '登录没有完成：{0}',
 
     cloud_signed_as: '已登录',
     cloud_synced: '进度已同步 · {0}',
@@ -421,6 +424,9 @@ const I18N = {
     cloud_bad_email: 'That does not look like an email address.',
     cloud_send_fail: 'Could not send: {0}',
     cloud_rate: 'Too many requests — please wait a moment and try again.',
+    cloud_link_err_h: 'That sign-in link did not work',
+    cloud_link_expired: 'The link has expired. Sign-in links last one hour and can only be used once — and some mail clients open them once for security scanning, which uses them up. Just send yourself a new one.',
+    cloud_link_failed: 'Sign-in did not complete: {0}',
 
     cloud_signed_as: 'Signed in',
     cloud_synced: 'Progress synced · {0}',

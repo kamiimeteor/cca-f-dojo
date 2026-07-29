@@ -1390,6 +1390,8 @@ $$('.lang-opt').forEach((o) => {
     if (next === LANG()) return;          // 选的就是当前语言，不必重绘
     S.prefs.lang = next;
     save(); paintChrome(); router();
+    // 进度面板开着的话也要跟着换语言，否则它会卡在旧语言里
+    if (!$('#progModal').hidden) renderProgressBody();
   };
 });
 
@@ -1542,7 +1544,13 @@ function cloudSectionHtml(c) {
   }
 
   // 未登录
+  const linkErr = c.linkError
+    ? `<div class="box warn" style="margin:0 0 12px"><b class="bt">${esc(t('cloud_link_err_h'))}</b>
+         <p style="margin:0;font-size:13px">${esc(t(c.linkError.key, c.linkError.arg))}</p></div>`
+    : '';
+
   return `<h3>${esc(t('cloud_h'))}</h3>${box(`
+    ${linkErr}
     <p class="sub" style="margin:0 0 12px">${t('cloud_intro')}</p>
     <label class="fld-l" for="cEmail">${esc(t('cloud_email_l'))}</label>
     <input id="cEmail" class="fld" type="email" autocomplete="email"
@@ -1566,6 +1574,7 @@ function bindCloudSection() {
       send.disabled = true; send.textContent = t('cloud_sending');
       try {
         await cloudSendLink(email);
+        if (typeof CLOUD === 'object') CLOUD.linkError = null;  // 重发了，上一条的报错先撤掉
         $('#cMsg').innerHTML = `<div class="box tip" style="margin:12px 0 0">
           <b class="bt">${esc(t('cloud_sent_h'))}</b>
           <p style="margin:0;font-size:13px">${esc(t('cloud_sent', email))}<br>
