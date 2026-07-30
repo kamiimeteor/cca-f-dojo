@@ -73,6 +73,22 @@ function sanitizePick(value, optionCount) {
   return valid(value) ? value : null;
 }
 
+/** 这份 JSON 看起来像不像本站导出的存档。
+ *
+ *  sanitizeState() 是「收紧」不是「校验」—— 它对任何认不出的输入都返回一份空存档。
+ *  所以 `{}`、`[]`、`"hello"`、`123`、`null`、`{"foo":"bar"}` 全都会被它变成
+ *  一份合法的空进度，导入界面照常弹出、来源列显示 0/0/0/0，用户点「替换」
+ *  就等于一键清空本地进度，而且没有二次确认、无法撤销。
+ *
+ *  所以在 sanitizeState() 之前先设这道闸：根必须是普通对象，且至少命中一个存档字段。
+ *  只要求「至少一个」是为了容忍老版本导出的文件缺字段；而全新用户导出的空存档
+ *  仍带着这些 key，不会被误拒。 */
+const ARCHIVE_KEYS = ['qstats', 'wrong', 'exams', 'marks', 'read', 'prefs'];
+function looksLikeArchive(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false;
+  return ARCHIVE_KEYS.some((k) => Object.prototype.hasOwnProperty.call(raw, k));
+}
+
 /** 把任意 JSON 收紧成合法 state：白名单 key + 强制类型 */
 function sanitizeState(raw) {
   const S = DEFAULT_STATE();
@@ -1890,9 +1906,12 @@ function bindCloudSection() {
 /** 渲染「两边对比 → 让用户选」。成功挂出对比界面返回 true。
  *  调用方必须尊重这个返回值 —— 挂出来之后不能再重绘面板，否则会把它盖掉。 */
 function stageImport(text, opts = {}) {
-  let incoming;
-  try { incoming = sanitizeState(JSON.parse(text)); }
+  let raw;
+  try { raw = JSON.parse(text); }
   catch { alert(t('import_bad')); return false; }
+  // 合法 JSON ≠ 合法存档。不设这道闸，`{}` 会变成空存档，「替换」就清空进度。
+  if (!looksLikeArchive(raw)) { alert(t('import_bad')); return false; }
+  const incoming = sanitizeState(raw);
 
   PENDING = incoming;
   const f = digest(incoming), n = digest(S), m = digest(mergeState(S, incoming));

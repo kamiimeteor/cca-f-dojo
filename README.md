@@ -234,16 +234,33 @@ source/                       参考底本（已 gitignore，不随仓库分发�
 
 ### 校验
 
-没有构建步骤，改完题库直接跑（都是零依赖的 node 脚本，退出码非 0 即失败）：
+没有构建步骤，也没有测试框架。`scripts/` 下就是全部的自动检查，都是零依赖的
+node 脚本，退出码非 0 即失败。改完**任何**东西，把这一整串跑一遍：
 
 ```bash
-node scripts/check-i18n.js && node scripts/check-explanations.js && node scripts/test-option-explanations.js
+for f in scripts/*.js; do node "$f" || break; done
 ```
+
+用通配符是有意的 —— 以前这里写死了脚本名，新增的两个测试漏在外面很久没人跑到。
+
+**题库相关**
 
 - `check-i18n.js` —— 中英 key 对齐；含 markdown 的文案必须走 `md()` 而不是 `esc()`
 - `check-explanations.js` —— 每个错误项中英都有 `w`（中文 ≥10 字、英文 ≥20 字符）；
   `w` 下标不越界；`near` 在范围内、不等于 `a`、且有解析
 - `test-option-explanations.js` —— 解析表只在答错时展示
+
+**行为回归**
+
+- `test-practice-resume.js` —— Domain 刷题从第一道未做题继续，全部做完后开启新一轮
+- `test-progress-colors.js` —— 进度条配色：答对绿、答错红、当前题紫、未做浅灰
+- `test-import-guard.js` —— 导入存档前必须校验。`sanitizeState()` 是「收紧」不是
+  「校验」，它把 `{}`、`[]`、`"hello"` 一律变成空存档；少了 `looksLikeArchive()`
+  这道闸，用户导入一个坏文件再点「替换」就会清空本地进度，且没有二次确认、不可撤销
+
+这些脚本从 `assets/app.js` 源码里抠出目标函数放进沙箱跑 —— app.js 是浏览器脚本、
+没有模块导出，直接 `require` 会因为访问 DOM 而崩。所以**改了被测函数的名字或签名，
+测试会直接报「找不到」而不是静默通过**。
 
 长度下限只挡空壳，挡不住内容错误 —— 脚本全绿不等于内容对，改题库仍要人工核对笔记。
 
