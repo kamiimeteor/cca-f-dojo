@@ -17,4 +17,4 @@ source/
 supabase/.temp/
 
 # Codex 协作用的临时提示词文件，不入库
-.codex-*.md
+.codex-*
