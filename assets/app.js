@@ -728,14 +728,29 @@ function bindMark(root) {
 const PRACTICE = { list: [], i: 0, results: [], label: '' };
 const isWeak = (q) => { const st = S.qstats[q.id]; return !!st?.seen && (st.last === false || st.ok / st.seen < 0.7); };
 
+/** Domain 练习续做：已做题排在进度条前面，当前题指向第一道未做题；全部做完后开启新一轮。 */
+function buildPracticeResume(list, qstats) {
+  const done = [], pending = [];
+  list.forEach((q) => (qstats[q.id]?.seen ? done : pending).push(q));
+  if (!pending.length) return { list: shuffle(list), i: 0, results: [] };
+
+  const completed = shuffle(done);
+  return {
+    list: [...completed, ...shuffle(pending)],
+    i: completed.length,
+    results: completed.map((q) => qstats[q.id].last === true),
+  };
+}
+
 routes.practice = (rest) => {
   if (!rest.length) return practiceMenu();
   const [mode, arg] = rest;
-  let list = [], label = '';
+  let list = [], label = '', resume = false;
 
   if (mode === 'go') return practiceRun();
   else if (mode === 'dom')  { if (!VALID_DOM.has(arg)) return go('/practice');
-                              list = QUESTIONS.filter((q) => q.d === arg); label = domView(domOf(arg)).title; }
+                              list = QUESTIONS.filter((q) => q.d === arg); label = domView(domOf(arg)).title;
+                              resume = true; }
   else if (mode === 'sec')  { const id = safeDecode(arg || '');
                               if (!VALID_SEC.has(id)) return go('/practice');
                               list = QUESTIONS.filter((q) => q.s === id); label = `${id} ${secTitle(id)}`; }
@@ -755,7 +770,8 @@ routes.practice = (rest) => {
           <a class="btn" href="#/practice">${esc(t('practice_back'))}</a></div></div>`;
     return;
   }
-  PRACTICE.list = shuffle(list); PRACTICE.i = 0; PRACTICE.results = []; PRACTICE.label = label;
+  const start = resume ? buildPracticeResume(list, S.qstats) : { list: shuffle(list), i: 0, results: [] };
+  PRACTICE.list = start.list; PRACTICE.i = start.i; PRACTICE.results = start.results; PRACTICE.label = label;
   practiceRun();
 };
 
