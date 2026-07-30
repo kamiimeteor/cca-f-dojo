@@ -20,4 +20,18 @@ assert.match(
   '当前题应使用独立颜色，并通过粗细与其他状态区分',
 );
 
-console.log('✓ 进度条状态：绿色答对、红色答错、紫色加粗表示当前、浅灰表示未做');
+assert.match(
+  css,
+  /\.opt:hover:not\(:disabled\)\s*{[^}]*border-color:\s*var\(--current\)/,
+  '选项悬停应使用紫色交互态，不能使用红色',
+);
+assert.match(
+  css,
+  /\.opt:focus-visible\s*{[^}]*outline:\s*2px solid var\(--current\)/,
+  '键盘聚焦应使用紫色轮廓',
+);
+assert.match(css, /\.opt\.sel\s*{[^}]*border-color:\s*var\(--current\)/, '多选选中边框应使用紫色');
+assert.match(css, /\.opt\.sel \.ltr\s*{[^}]*background:\s*var\(--current\)/, '多选选中字母应使用紫色');
+assert.match(css, /\.opt\.wrong\s*{[^}]*border-color:\s*var\(--bad\)/, '红色只保留给判错状态');
+
+console.log('✓ 状态颜色：绿色答对、红色答错、紫色表示当前题及判分前交互、浅灰表示未做');
