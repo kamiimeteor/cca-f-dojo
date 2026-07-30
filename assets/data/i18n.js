@@ -254,6 +254,29 @@ const I18N = {
     priv_title: '隐私政策',
     priv_updated: '最后更新：{0}',
 
+    /* ── 反馈 ──
+     * 正文是给用户填的模板，{0} 是当前页面地址。用户在自己的邮件客户端里
+     * 能看到全部内容，想删就删 —— 不做任何静默上报。 */
+    foot_feedback: '反馈 / 报错',
+    fb_intro: '题目有错、翻译不准、功能坏了 —— 都欢迎告诉我。这个站是一个人维护的，每封信我都会看。',
+    fb_addr_h: '发到这个邮箱',
+    fb_copy_addr: '复制邮箱',
+    fb_tpl_h: '可以照这个写',
+    fb_tpl_note: '不是必填的模板，只是照着写我能更快定位。最后那行是你当前所在的页面。',
+    fb_copy_tpl: '复制内容',
+    fb_copy_fail: '复制失败，手动选中上面的地址即可',
+    fb_open: '用邮件客户端打开',
+    fb_fallback: '点了「用邮件客户端打开」没反应？说明这台设备没有配置邮件客户端。复制上面的邮箱，用网页版邮箱发一样的。',
+    feedback_subject: 'CCA-F 备考道场 · 反馈',
+    feedback_body: `想说的话（题目有错请附题号，例如 q042）：
+
+
+复现步骤（如果是 bug）：
+
+
+———— 以下供定位问题，可自行删除 ————
+页面：{0}`,
+
     prog_open: '管理进度',
     prog_close: '关闭',
   },
@@ -498,6 +521,27 @@ const I18N = {
     nav_privacy: 'Privacy',
     priv_title: 'Privacy Policy',
     priv_updated: 'Last updated: {0}',
+
+    /* ── Feedback ── */
+    foot_feedback: 'Feedback / report an error',
+    fb_intro: 'Wrong answer, shaky translation, something broken — all welcome. One person maintains this site, and every message gets read.',
+    fb_addr_h: 'Send it here',
+    fb_copy_addr: 'Copy address',
+    fb_tpl_h: 'Something like this helps',
+    fb_tpl_note: 'Not a required form — following it just helps me pin the problem down faster. The last line is the page you are on.',
+    fb_copy_tpl: 'Copy the text',
+    fb_copy_fail: 'Copy failed — just select the address above by hand',
+    fb_open: 'Open in mail client',
+    fb_fallback: 'Nothing happened when you clicked "Open in mail client"? Then this device has no mail client set up. Copy the address above and send it from webmail instead.',
+    feedback_subject: 'cca-f-dojo · feedback',
+    feedback_body: `What you want to say (for a wrong question, include its id, e.g. q042):
+
+
+Steps to reproduce (if it is a bug):
+
+
+———— context, delete if you prefer ————
+Page: {0}`,
 
     prog_open: 'Manage progress',
     prog_close: 'Close',

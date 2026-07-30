@@ -406,6 +406,46 @@ function router() {
 }
 window.addEventListener('hashchange', router);
 
+/** 反馈邮件的正文模板。带当前页面地址，方便定位是哪一页/哪道题出的问题 ——
+ *  内容全摆在用户眼前，想删就删，本站不做任何静默上报。 */
+const feedbackTemplate = () => t('feedback_body', location.href);
+
+const feedbackMailto = () => `mailto:${CONTACT_EMAIL}`
+  + `?subject=${encodeURIComponent(t('feedback_subject'))}`
+  + `&body=${encodeURIComponent(feedbackTemplate())}`;
+
+/** 打开反馈面板。
+ *  为什么不让页脚那个直接 mailto：没装邮件客户端的设备点了**毫无反应**，
+ *  而点它的人正是想报告问题的人 —— 失败还会自我掩盖。所以先摆出可复制的邮箱。 */
+function openFeedback() {
+  $('#fbTitle').textContent = t('foot_feedback');
+  $('#fbClose').setAttribute('aria-label', t('prog_close'));
+  $('#fbIntro').textContent = t('fb_intro');
+  $('#fbAddrH').textContent = t('fb_addr_h');
+  $('#fbAddr').textContent = CONTACT_EMAIL;
+  $('#fbCopyAddr').textContent = t('fb_copy_addr');
+  $('#fbTplH').textContent = t('fb_tpl_h');
+  $('#fbTplNote').textContent = t('fb_tpl_note');
+  $('#fbTpl').textContent = feedbackTemplate();
+  $('#fbOpen').textContent = t('fb_open');
+  $('#fbOpen').href = feedbackMailto();
+  $('#fbCopyTpl').textContent = t('fb_copy_tpl');
+  $('#fbFallback').textContent = t('fb_fallback');
+  $('#fbModal').hidden = false;
+}
+
+/** 复制按钮的通用反馈：成功闪一下「已复制」，失败给出该场景下的退路。
+ *  failLabel 必须按场景传 —— 导出进度失败时可以「改用下载」，
+ *  反馈面板里没有下载这回事，得让用户手动选中。 */
+async function copyWithFlash(btn, text, label, failLabel = 'prog_copy_fail') {
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = t('prog_copied');
+    btn.classList.add('ok-flash');
+    setTimeout(() => { btn.textContent = t(label); btn.classList.remove('ok-flash'); }, 1800);
+  } catch { btn.textContent = t(failLabel); }
+}
+
 /** 顶栏 / 页脚的静态文案随语言重绘 */
 function paintChrome() {
   $('#navHome').textContent = t('nav_home');
@@ -419,6 +459,7 @@ function paintChrome() {
   $('#progTitle').textContent = t('prog_title');
   $('#progClose').setAttribute('aria-label', t('prog_close'));
   $('#privacyLink').textContent = t('nav_privacy');
+  $('#feedbackLink').textContent = t('foot_feedback');
   if (typeof paintCloudBadge === 'function') paintCloudBadge();
   $('#themeBtn').title = t('theme_toggle');
   // 按钮显示"当前"语言，下拉里勾出当前项
@@ -1475,8 +1516,10 @@ $$('.lang-opt').forEach((o) => {
     if (next === LANG()) return;          // 选的就是当前语言，不必重绘
     S.prefs.lang = next;
     save(); paintChrome(); router();
-    // 进度面板开着的话也要跟着换语言，否则它会卡在旧语言里
+    // 开着的浮层都要跟着换语言，否则它们会卡在旧语言里
+    // （反馈面板连 mailto 的主题和正文都是按语言生成的，不重绘会发出中文邮件模板）
     if (!$('#progModal').hidden) renderProgressBody();
+    if (!$('#fbModal').hidden) openFeedback();
   };
 });
 
@@ -1551,15 +1594,7 @@ function renderProgressBody() {
     URL.revokeObjectURL(a.href);
   };
 
-  $('#pCopy').onclick = async () => {
-    const btn = $('#pCopy');
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(S));
-      btn.textContent = t('prog_copied');
-      btn.classList.add('ok-flash');
-      setTimeout(() => { btn.textContent = t('prog_copy'); btn.classList.remove('ok-flash'); }, 1800);
-    } catch { btn.textContent = t('prog_copy_fail'); }
-  };
+  $('#pCopy').onclick = (e) => copyWithFlash(e.currentTarget, JSON.stringify(S), 'prog_copy');
 
   $('#pPick').onclick = () => $('#importFile').click();
   $('#pPasteGo').onclick = () => stageImport($('#pPaste').value);
@@ -1867,9 +1902,17 @@ $('#progBtn').onclick = openProgress;
 // 顶栏那个账号胶囊也开同一个面板 —— 登录状态显示在哪，管理入口就该在哪
 $('#cloudBadge').onclick = openProgress;
 $('#progClose').onclick = () => { $('#progModal').hidden = true; };
+
+$('#feedbackLink').onclick = openFeedback;
+$('#fbClose').onclick = () => { $('#fbModal').hidden = true; };
+$('#fbModal').onclick = (e) => { if (e.target.id === 'fbModal') $('#fbModal').hidden = true; };
+$('#fbCopyAddr').onclick = (e) => copyWithFlash(e.currentTarget, CONTACT_EMAIL, 'fb_copy_addr', 'fb_copy_fail');
+$('#fbCopyTpl').onclick = (e) => copyWithFlash(e.currentTarget, feedbackTemplate(), 'fb_copy_tpl', 'fb_copy_fail');
 $('#progModal').onclick = (e) => { if (e.target.id === 'progModal') $('#progModal').hidden = true; };
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !$('#progModal').hidden) $('#progModal').hidden = true;
+  if (e.key !== 'Escape') return;
+  if (!$('#fbModal').hidden) $('#fbModal').hidden = true;
+  else if (!$('#progModal').hidden) $('#progModal').hidden = true;
 });
 
 $('#importFile').onchange = (ev) => {

@@ -447,6 +447,15 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .modal-body .chips .chip { cursor: default; }
 .modal-body .chips .chip:hover { border-color: var(--line); color: var(--ink-2); }
 
+/* 反馈面板的邮件模板：可读、可选中，长了自己滚 */
+.fb-tpl {
+  margin: 0; padding: 12px 14px; max-height: 200px; overflow: auto;
+  background: var(--paper-2); border: 1px solid var(--line);
+  border-radius: var(--radius); color: var(--ink-2);
+  font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+}
+#fbAddr { font-size: 14px; padding: 4px 9px; user-select: all; }
+
 /* 拖拽导入区 */
 .dropzone {
   border: 2px dashed var(--line); border-radius: var(--radius);
