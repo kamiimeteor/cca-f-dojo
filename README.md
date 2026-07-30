@@ -11,7 +11,7 @@
 [![在线试用](https://img.shields.io/badge/▶_在线试用-signal0.net-c8553d?style=for-the-badge)](https://signal0.net)
 
 [![License](https://img.shields.io/badge/License-MIT-3f7d58)](LICENSE)
-![题库](https://img.shields.io/badge/题库-163_题-6b5b95)
+![题库](https://img.shields.io/badge/题库-168_题-6b5b95)
 ![笔记](https://img.shields.io/badge/笔记-37_节-2e7d7b)
 ![Task Statement](https://img.shields.io/badge/官方考点-30_条全覆盖-4a6fa5)
 ![依赖](https://img.shields.io/badge/依赖-0-a1662f)
@@ -41,7 +41,7 @@ GitHub 上 CCA-F 相关仓库有 190+，但它们基本落在两类里，中间�
 除此之外还有三点是别处没有的：
 
 **① 每道题都能一键跳回它考的那一节**
-别的项目最多把题归到 5 个 Domain 之一；这里 163 道题各自绑定到 37 节笔记中具体的一节，
+别的项目最多把题归到 5 个 Domain 之一；这里 168 道题各自绑定到 37 节笔记中具体的一节，
 答错立刻能看到「这题考的是 1.5 Agent SDK Hooks」并直接跳过去，不用自己翻。
 
 **② 对着官方 Exam Guide 逐条校准，并把出入公开记录下来**
@@ -61,7 +61,7 @@ GitHub 上 CCA-F 相关仓库有 190+，但它们基本落在两类里，中间�
 本项目**与 Anthropic 无任何隶属或背书关系**。Claude、Anthropic、CCA-F / CCAR-F
 均为 Anthropic PBC 的商标。这是一个社区自制的学习工具。
 
-站内 163 道题**全部为自编**，依据官方 Exam Guide 公布的考点蓝图撰写，
+站内 168 道题**全部为自编**，依据官方 Exam Guide 公布的考点蓝图撰写，
 **不是官方真题，也不是任何形式的真题回忆或泄露**。模考分数只是估算 —— 官方采用
 等值换算计分（scaled scoring），本站用线性折算近似，仅供判断掌握程度。
 
@@ -89,7 +89,7 @@ cd cca-f-dojo && python3 -m http.server 4321
 | **错题集** | 答错自动收录，按 Domain 分组。**连续答对 2 次自动毕业**，避免只是背下了某一次的答案。 |
 | **模拟考试** | 规格**锁定为官方值、不可自定义**：60 题 / 120 分钟，按权重（27/18/20/20/15）抽题。每次随机抽 4 个场景并优先从中出题；某个 Domain 在这些场景下题量不足时，从其余场景补齐。全程无反馈、带倒计时，交卷后换算 1000 分制，**720 及格**，给出各 Domain 得分和逐题回顾。 |
 | **进阶训练（可选）** | 刷题页单独一块，**不影响常规刷题路径**。「先答后看」逼你先写判断依据再看选项；「程度判断」只留正确项和一个**逐题人工标注**的最强干扰项二选一。不需要的话完全可以跳过。 |
-| **中英双语** | 顶栏下拉一键切换。界面、37 节笔记、163 道题（含题干/选项/解析/错误项说明）全部双语。真考是英文，用英文模式练可顺带熟悉官方术语。 |
+| **中英双语** | 顶栏下拉一键切换。界面、37 节笔记、168 道题（含题干/选项/解析/错误项说明）全部双语。真考是英文，用英文模式练可顺带熟悉官方术语。 |
 
 ## 数据来源
 
@@ -117,23 +117,29 @@ cd cca-f-dojo && python3 -m http.server 4321
 
 **仍属本站自设**（无官方依据）：
 
-- 163 道题本身 —— **不是官方真题**
+- 168 道题本身 —— **不是官方真题**
 - 错题「连对 2 次毕业」的阈值
 - 模考换算分用 `正确数 / 总数 × 1000` 线性折算；官方是 scaled scoring，非线性，只能近似
 - 英文版内容为本站撰写，一切以官方 Exam Guide 原文为准
 
 ## 题库
 
-163 题，场景式单选 + 多选，分布与考试权重一致：
+168 题，场景式单选 + 多选。题量按官方权重分配，但受总题数限制只能近似 ——
+各 Domain 的题库占比与官方权重相差在 3 个百分点以内：
 
-| Domain | 权重 | Task Statement | 小节 | 题数 |
-| --- | --- | --- | --- | --- |
-| D1 Agentic Architecture & Orchestration | 27% | 7 | 7 | 39 |
-| D2 Tool Design & MCP Integration | 18% | 5 | 6 | 28 |
-| D3 Claude Code Configuration & Workflows | 20% | 6 | 8 | 33 |
-| D4 Prompt Engineering & Structured Output | 20% | 6 | 6 | 33 |
-| D5 Context Management & Reliability | 15% | 6 | 6 | 30 |
-| **合计** | **100%** | **30** | **33** | **163** |
+| Domain | 官方权重 | 题库占比 | Task Statement | 小节 | 题数 |
+| --- | --- | --- | --- | --- | --- |
+| D1 Agentic Architecture & Orchestration | 27% | 26.2% | 7 | 7 | 44 |
+| D2 Tool Design & MCP Integration | 18% | 16.7% | 5 | 6 | 28 |
+| D3 Claude Code Configuration & Workflows | 20% | 19.6% | 6 | 8 | 33 |
+| D4 Prompt Engineering & Structured Output | 20% | 19.6% | 6 | 6 | 33 |
+| D5 Context Management & Reliability | 15% | 17.9% | 6 | 6 | 30 |
+| **合计** | **100%** | **100%** | **30** | **33** | **168** |
+
+最大偏差在 D5（多 2.9 个百分点），D1 已补齐到 −0.8 个百分点。
+**这不影响模考的保真度** —— 模考按官方权重算每个 Domain 出几题
+（`assets/app.js` 的 `buildExam`），60 题固定切成 16/11/12/12/9，
+与题库里各 Domain 存了多少题无关。
 
 「Task Statement」是官方考点数（30），「小节」是笔记实际编号数（33）——
 差额来自笔记把部分考点拆成了独立编号。其中 6 道为多选题，对齐官方 multiple-response 题型。

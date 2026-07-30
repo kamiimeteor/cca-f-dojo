@@ -11,7 +11,7 @@ Practice · missed-question queue · official-spec mock exam · jump straight to
 [![Try it live](https://img.shields.io/badge/▶_Try_it_live-signal0.net-c8553d?style=for-the-badge)](https://signal0.net)
 
 [![License](https://img.shields.io/badge/License-MIT-3f7d58)](LICENSE)
-![Questions](https://img.shields.io/badge/questions-163-6b5b95)
+![Questions](https://img.shields.io/badge/questions-168-6b5b95)
 ![Notes](https://img.shields.io/badge/note_sections-37-2e7d7b)
 ![Coverage](https://img.shields.io/badge/task_statements-30_of_30-4a6fa5)
 ![Dependencies](https://img.shields.io/badge/dependencies-0-a1662f)
@@ -42,7 +42,7 @@ There are 190+ CCA-F repos on GitHub, but they cluster into two groups with a ga
 Three things you will not find elsewhere:
 
 **① Every question links back to the exact note section it tests**
-Other projects map questions to one of five domains at best. Here all 163 questions are bound to a
+Other projects map questions to one of five domains at best. Here all 168 questions are bound to a
 specific section out of 37. Get one wrong and you immediately see "this tests 1.5 Agent SDK Hooks"
 with a link straight to it — no hunting.
 
@@ -66,7 +66,7 @@ and never interfere with normal practice.
 **Not affiliated with or endorsed by Anthropic.** Claude, Anthropic and CCA-F / CCAR-F are
 trademarks of Anthropic PBC. This is a community study tool.
 
-All 163 questions are **original**, written from the blueprint published in the official Exam Guide.
+All 168 questions are **original**, written from the blueprint published in the official Exam Guide.
 They are **not real exam items, recalled items, or leaked content**. Practice scores are estimates
 only — the real exam uses equated scaled scoring; this app approximates it linearly.
 
@@ -94,7 +94,7 @@ Then open <http://localhost:4321>. No dependencies, no build step, no Node.
 | **Missed queue** | Wrong answers are queued automatically and grouped by domain. **Clears after 2 correct in a row** — so you cannot pass by memorising one attempt. |
 | **Mock exam** | Locked to official spec, not configurable: 60 items / 120 minutes, weighted 27/18/20/20/15. Each exam randomly selects 4 of 6 scenarios as the preferred pool; if a domain lacks enough items there, the remaining scenarios fill the gap. No feedback until you submit; scored out of 1000 with a **720 pass mark**, plus per-domain breakdown and item-by-item review. |
 | **Advanced drills (optional)** | A separate block on the practice page that **never affects the normal path**. "Commit before you look" makes you reason before seeing options; "judgement of degree" leaves only the answer and its closest distractor, **hand-tagged per question**. Skip them freely. |
-| **Bilingual** | One dropdown in the header. Interface, all 37 note sections and all 163 questions (stems, options, explanations, distractor notes) exist in both languages. The real exam is in English, so English mode doubles as terminology practice. |
+| **Bilingual** | One dropdown in the header. Interface, all 37 note sections and all 168 questions (stems, options, explanations, distractor notes) exist in both languages. The real exam is in English, so English mode doubles as terminology practice. |
 
 ## Sources
 
@@ -118,23 +118,30 @@ downloadable from the [Anthropic Academy certification page](https://anthropic-p
 
 **Still this project's own choices** (no official basis):
 
-- The 163 questions themselves — **not real exam items**
+- The 168 questions themselves — **not real exam items**
 - The "2 correct in a row" graduation threshold for the missed queue
 - Linear score conversion (`correct / total × 1000`); the real exam is non-linear scaled scoring
 - The English content is written by this project; the official Exam Guide always wins
 
 ## Question bank
 
-163 scenario-based items, single- and multiple-response, distributed to match the official weights:
+168 scenario-based items, single- and multiple-response. Items are allocated by the official
+weights, but at 168 items the match can only be approximate — each domain's share of the bank
+sits within 3 percentage points of its official weight:
 
-| Domain | Weight | Task statements | Note sections | Questions |
-| --- | --- | --- | --- | --- |
-| D1 Agentic Architecture & Orchestration | 27% | 7 | 7 | 39 |
-| D2 Tool Design & MCP Integration | 18% | 5 | 6 | 28 |
-| D3 Claude Code Configuration & Workflows | 20% | 6 | 8 | 33 |
-| D4 Prompt Engineering & Structured Output | 20% | 6 | 6 | 33 |
-| D5 Context Management & Reliability | 15% | 6 | 6 | 30 |
-| **Total** | **100%** | **30** | **33** | **163** |
+| Domain | Official weight | Share of bank | Task statements | Note sections | Questions |
+| --- | --- | --- | --- | --- | --- |
+| D1 Agentic Architecture & Orchestration | 27% | 26.2% | 7 | 7 | 44 |
+| D2 Tool Design & MCP Integration | 18% | 16.7% | 5 | 6 | 28 |
+| D3 Claude Code Configuration & Workflows | 20% | 19.6% | 6 | 8 | 33 |
+| D4 Prompt Engineering & Structured Output | 20% | 19.6% | 6 | 6 | 33 |
+| D5 Context Management & Reliability | 15% | 17.9% | 6 | 6 | 30 |
+| **Total** | **100%** | **100%** | **30** | **33** | **168** |
+
+The largest gap is now D5 (2.9 points over); D1 has been topped up to 0.8 points under.
+**This does not affect mock-exam fidelity** — the mock exam derives per-domain item counts from
+the official weights (`buildExam` in `assets/app.js`), splitting 60 items into a fixed
+16/11/12/12/9 regardless of how many items each domain holds in the bank.
 
 "Task statements" is the official count (30); "note sections" is how the notes are numbered (33) —
 the difference is that the notes split a few statements into their own entries.
