@@ -98,6 +98,8 @@ const I18N = {
     q_back_to_note: '📖 回笔记 {0} {1}',
     q_next: '下一题 →', q_see_result: '看本轮成绩 →',
     q_correct_answer: '正确答案：',
+    q_option_breakdown: '逐项解析', q_option_col: '选项', q_explanation_col: '解析',
+    q_option_correct: '正确答案', q_option_selected: '你的选择',
 
     /* 错题集 */
     wrong_h1: '错题集',
@@ -369,6 +371,8 @@ const I18N = {
     q_back_to_note: '📖 Note {0} {1}',
     q_next: 'Next →', q_see_result: 'See round result →',
     q_correct_answer: 'Correct answer:',
+    q_option_breakdown: 'Option by option', q_option_col: 'Option', q_explanation_col: 'Explanation',
+    q_option_correct: 'Correct answer', q_option_selected: 'Your choice',
 
     wrong_h1: 'Missed questions',
     wrong_sub: 'Missed questions are queued automatically and clear after <b>2 correct answers in a row</b>. Grouped by domain — start with the heaviest weights.',

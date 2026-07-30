@@ -19,17 +19,17 @@ w:{0:'That is an explicit anti-pattern.',2:'stop_reason is a structured signal �
 
 q004:{q:'Which of these is NOT one of the three named agentic-loop anti-patterns?',
 o:['Parsing natural language to decide the loop is over','Using a max-iteration cap as the primary stopping mechanism','Inspecting assistant text content as a completion signal','Feeding tool results back to Claude as new messages'],
-e:'Feeding tool results back is the correct behaviour. The other three are the named anti-patterns.',w:{}},
+e:'Feeding tool results back is the correct behaviour. The other three are the named anti-patterns.',w:{0:'Natural-language termination depends on variable wording and can mistake an intermediate reply for completion; the loop should read structured stop_reason.',1:'A maximum-iteration limit is a runaway safety cap, not evidence that the task is complete, so it cannot be the primary stop condition.',2:'Assistant text is unstructured and variable; treating it as a completion flag is as brittle as parsing any other natural-language phrase.'}},
 
 q005:{q:'A code-generation agent occasionally "finishes early" on long tasks. Logs show the loop exiting while stop_reason was still tool_use. What should you inspect first?',
 o:['Whether the termination condition mixes in checks on text content or iteration count','Whether the Claude model version is out of date','Whether tool return values are too large','Whether the system prompt is too long'],
 e:'stop_reason said continue but the loop exited, so the termination condition contains a non-stop_reason test — one of the anti-patterns.',
-w:{1:'Unrelated to termination logic.',2:'Affects context, not early exit.',3:'Same.'}},
+w:{1:'The model version does not make application code exit while stop_reason is still tool_use; the fault remains in the local loop condition.',2:'A large tool result affects context usage but does not directly turn tool_use into a termination signal.',3:'System-prompt length may affect model behaviour, but it cannot explain application code ignoring structured stop_reason and exiting early.'}},
 
 q006:{q:'What does stop_reason: "end_turn" mean?',
 o:['Claude wants to call a tool','Claude has finished this turn; the loop should end and the result go to the user','Claude hit the token limit','An error occurred and a retry is needed'],
 e:'end_turn means Claude is done — the task is complete and you reply to the user.',
-w:{0:'That is tool_use.',2:'That is max_tokens.',3:'Errors have their own error responses.'}},
+w:{0:'tool_use, not end_turn, signals that Claude wants the application to execute a tool and continue the loop.',2:'max_tokens signals that generation hit its token limit; end_turn instead means the current work is complete.',3:'Execution or API failures use error responses rather than end_turn, which is a normal completion signal.'}},
 
 q007:{q:'In a multi-agent research system, an architect wants two subagents to exchange intermediate findings directly to lighten the coordinator\'s load. What is wrong with that?',
 o:['It breaks hub-and-spoke: subagents must not communicate directly — communication, error handling and routing all belong to the coordinator','It will drive token costs up','The Agent SDK does not support that message format','It will slow the subagents down'],
@@ -58,7 +58,7 @@ w:{1:'Unrelated to context inheritance.',2:'A bad allowedTools stops spawning en
 
 q012:{q:'In the Agent SDK, which tool must appear in a coordinator\'s allowedTools for it to spawn subagents?',
 o:['Bash','Task','Read','Grep'],
-e:'The Task tool spawns subagents, so "Task" must be present in allowedTools.',w:{}},
+e:'The Task tool spawns subagents, so "Task" must be present in allowedTools.',w:{0:'Bash runs shell commands such as installing dependencies or checking Git status; it cannot spawn or delegate a subagent.',2:'Read retrieves the contents of a file at a known path; it does not create agents.',3:'Grep searches files and code by content pattern; it can locate text but cannot spawn a subagent.'}},
 
 q013:{q:'A coordinator needs to investigate five independent subtopics in parallel. What is correct?',
 o:['Emit five Task calls in a single response','Send one Task call per turn across five turns','Write "please investigate these five topics in parallel" inside one Task prompt','Use fork_session five times'],
@@ -82,11 +82,11 @@ w:{0:'One session means the two explorations pollute each other.',2:'Throws away
 
 q017:{q:'What does AgentDefinition configure?',
 o:['Each subagent type\'s description, system prompt and tool restrictions','MCP server connection parameters','The CLAUDE.md loading hierarchy','When hooks fire'],
-e:'AgentDefinition is the subagent configuration: description, system prompt, tool restrictions.',w:{}},
+e:'AgentDefinition is the subagent configuration: description, system prompt, tool restrictions.',w:{1:'MCP connection settings configure an external tool server, not a subagent role, prompt, or permission set.',2:'The CLAUDE.md hierarchy controls where project memory loads from; it does not define subagents.',3:'Hook timing configures event-driven automation and is unrelated to defining a subagent.'}},
 
 q018:{q:'Regarding subagent memory, which statement is correct?',
 o:['Subagents share memory across invocations','Subagents neither share memory across invocations nor inherit parent context','Subagents inherit parent context but do not share memory with each other','Subagent memory is synchronised automatically via MCP resources'],
-e:'Both are negative: no inherited parent context, no shared memory across invocations. Hence context must be passed explicitly.',w:{}},
+e:'Both are negative: no inherited parent context, no shared memory across invocations. Hence context must be passed explicitly.',w:{0:'Each subagent invocation is isolated and does not automatically retain memory from a previous call.',2:'Subagents neither inherit parent context automatically nor share memory across calls, so this statement is only half right.',3:'MCP resources expose readable data; they do not synchronise conversation memory between subagents.'}},
 
 q019:{q:'A support agent occasionally issues refunds without verifying the customer\'s identity. Which option is the most reliable fix?',
 o:['Write "identity must be verified first" in bold in the system prompt','Add a programmatic prerequisite: process_refund is blocked until get_customer returns a verified customer ID','Provide three few-shot examples demonstrating correct verification','Add "please verify identity before calling" to the tool description'],
@@ -96,7 +96,7 @@ w:{0:'A prompt is only probabilistic advice.',2:'Few-shot raises the odds but gu
 q020:{q:'An agent\'s reply formatting is occasionally inconsistent (sometimes with headings, sometimes without). No money or safety is involved. Best fix?',
 o:['Add a PreToolUse hook to intercept','Tune the prompt / add few-shot examples','Add a programmatic prerequisite','Escalate to a human'],
 e:'Formatting inconsistency is the "probabilistic is fine" case — prompt tuning is enough; no hard limit needed.',
-w:{0:'Overkill, and hooks are the wrong tool for style preferences.',2:'Over-engineering.',3:'Formatting does not need a human.'}},
+w:{0:'PreToolUse hooks are for deterministic interception of risky operations; using one for heading style is unnecessary enforcement.',2:'Programmatic prerequisites fit rules that must never fail, while this is a tolerable formatting preference, so the approach is over-engineered.',3:'Human escalation is for authority limits, high risk, or subjective judgement, not ordinary formatting variation.'}},
 
 q021:{q:'One customer message raises three issues at once: refund status, exchange policy, and a login failure. Best handling?',
 o:['Answer the first only and let the customer ask again','Split into separate items, investigate in parallel over shared context, then synthesise one unified reply','Escalate immediately because there are too many issues','Handle them serially, replying after each one'],
@@ -110,12 +110,12 @@ w:{0:'Forces the human to re-read everything.',2:'Not enough information.',3:'Te
 
 q023:{q:'Which consequence REQUIRES a programmatic hard limit rather than prompt tuning?',
 o:['The tone is not friendly enough','Summaries are sometimes too long, sometimes too short','A refund was paid into the wrong customer\'s account','Email signature formatting is inconsistent'],
-e:'Wrong refund = money plus wrong identity → deterministic requirement → programmatic hard limit. The rest are probabilistic style issues.',w:{}},
+e:'Wrong refund = money plus wrong identity → deterministic requirement → programmatic hard limit. The rest are probabilistic style issues.',w:{0:'Tone is a style preference that prompt guidance can usually improve; it does not require a programmatic hard limit.',1:'Summary length can be controlled with explicit criteria, structure, or token limits and does not carry the same zero-tolerance financial risk.',3:'An email signature is a formatting concern suited to a template or prompt, not a safety hard limit.'}},
 
 q024:{q:'What does "a prompt is advice, code is law" mean in practice for architecture decisions?',
 o:['Prompts are never reliable; put all logic in code','When failure is tolerable (formatting, style) use a prompt; when a rule must hold 100% (money, safety, identity) use programmatic enforcement','Programmatic enforcement is cheaper, so prefer it','Prompts work for conversation but not workflows'],
 e:'The test is severity of consequence: probabilistic is fine → prompt; determinism required → programmatic.',
-w:{0:'Too absolute; prompts are adequate and cheapest in most cases.',2:'Programmatic enforcement costs more and is the last resort.',3:'Not true.'}},
+w:{0:'This is too absolute: prompts are the appropriate, lowest-cost control for tolerable style and formatting variation.',2:'Programmatic enforcement costs more and is reserved for rules that must hold deterministically, not every preference.',3:'Prompts work in workflows as well as conversations; the deciding factor is the consequence of failure, not the interaction type.'}},
 
 q025:{q:'Company policy: any refund over $500 must go to a human. Which mechanism is most reliable?',
 o:['State the limit in the tool description','A PreToolUse hook that intercepts before execution and blocks over-limit refunds, routing to a human','A PostToolUse hook that checks the amount after the refund','Few-shot examples showing escalation when over the limit'],
@@ -129,12 +129,12 @@ w:{0:'There is no result yet before execution.',2:'Probabilistic and wastes toke
 
 q027:{q:'What is the core difference between a hook and a tool?',
 o:['Hooks are faster, tools are slower','Hooks fire automatically and deterministically (Claude never sees them); tools are chosen by Claude and are probabilistic (it can pick wrong or forget)','Hooks are read-only, tools can write','Hooks are project-scoped, tools are user-scoped'],
-e:'Hook = automatic + certain. Tool = chosen + probabilistic. Money and safety always require a hook.',w:{}},
+e:'Hook = automatic + certain. Tool = chosen + probabilistic. Money and safety always require a hook.',w:{0:'Speed is not the defining distinction; the key difference is deterministic automatic execution versus model-chosen invocation.',2:'Hooks and tools can both read or write depending on their implementation; there is no fixed read/write split.',3:'Project or user scope describes where configuration applies, not the core difference between hooks and tools.'}},
 
 q028:{q:'When should you use a hook rather than a prompt?',
 o:['When you want output in a particular language','When a business rule must hold 100% of the time','When you want replies to be more concise','When you want Claude to call a certain tool more often'],
 e:'A rule requiring 100% compliance needs a deterministic hook; style and formatting preferences are fine in a prompt.',
-w:{0:'Style preference; a prompt suffices.',2:'Same.',3:'Tool-selection bias belongs in the description or prompt.'}},
+w:{0:'Output language is a style preference that prompt guidance can handle; it does not need deterministic hook enforcement.',2:'Conciseness is a tolerable style preference and should be tuned in the prompt.',3:'Tool-selection preference should first be expressed through clear tool descriptions or prompt guidance, not a mandatory hook.'}},
 
 q029:{q:'In review someone proposes: "make permission checking a check_permission tool and have Claude call it before sensitive operations." What is the flaw?',
 o:['Tool calls add latency','A tool is chosen by Claude and therefore probabilistic — it may forget or misjudge, so it cannot guarantee 100% compliance; permission checks belong in a PreToolUse hook','check_permission overlaps with other tool names','It consumes an allowedTools slot'],
@@ -143,7 +143,7 @@ w:{0:'Latency is not the real risk.',2:'Not a naming problem.',3:'Not a meaningf
 
 q030:{q:'A hook fires and blocks a tool call. From Claude\'s point of view, what happens?',
 o:['Claude knows in advance and routes around it','The hook is deterministic and system-executed; Claude cannot influence whether it fires','Claude can ask to skip the hook in its prompt','The hook is only a suggestion to Claude'],
-e:'A hook is code that runs automatically on an event — deterministic and entirely outside Claude\'s control.',w:{}},
+e:'A hook is code that runs automatically on an event — deterministic and entirely outside Claude\'s control.',w:{0:'Claude does not know in advance exactly how a hook will rule; the system runs the hook independently when the event occurs.',2:'A prompt cannot let Claude bypass a deterministic hook; the hook code decides whether the call proceeds.',3:'A hook is executable enforcement that can block an operation, not probabilistic advice for Claude.'}},
 
 q031:{q:'A 120-file PR was reviewed in one pass; Claude missed many local bugs and its conclusions contradicted each other. Best fix?',
 o:['Switch to a larger-context model and run one pass again','Split into a per-file local pass (local bugs) and a cross-file integration pass (data-flow issues)','Ask the developer to break it into smaller PRs','Review only the 20 files with the most changed lines'],
@@ -163,12 +163,12 @@ w:{0:'A fixed pipeline cannot handle the unknown.',2:'Unrelated to decomposition
 q034:{q:'In multi-pass review, what is the cross-file integration pass responsible for finding?',
 o:['Null-pointer risk inside a single function','Cross-file data-flow problems (e.g. a module changed its return shape and callers were not updated)','Inconsistent code style','Missing comments'],
 e:'The local pass finds local bugs; the integration pass finds cross-file data-flow problems. That is the division of labour.',
-w:{0:'That is the local pass.',2:'A local concern.',3:'A local concern.'}},
+w:{0:'A null-pointer risk within one function belongs to the per-file local pass, not cross-file integration.',2:'Code style is a local consistency concern and does not trace data flow between files.',3:'Missing comments are a local documentation issue, not a cross-file contract failure.'}},
 
 q035:{q:'Yesterday you were halfway through debugging with Claude Code. The code has not changed and your earlier analysis still holds. What do you do?',
 o:['Start a new session and paste in a summary','Use --resume <session-name> to resume the named session','fork_session','Redo the analysis from scratch'],
 e:'When prior context is mostly still valid, --resume is the right mechanism for continuing across work sessions.',
-w:{0:'Summaries are lossy and unnecessary here.',2:'Forking is for comparing approaches.',3:'Wasteful.'}},
+w:{0:'Pasting a summary loses detail and is unnecessary while the original context is still valid.',2:'fork_session creates an independent branch for comparing approaches; it is not the normal way to continue one investigation.',3:'Repeating the analysis discards valid understanding and spends time and tokens rebuilding it.'}},
 
 q036:{q:'Last week\'s session read 30 files and built up understanding, but a colleague has since refactored most of them. What is most reliable?',
 o:['--resume the original session; Claude will notice the files changed','Start a new session with an injected structured summary, because the old tool results are stale','fork_session from the old session','Keep the old session and just mention "the code changed" in the prompt'],
@@ -178,7 +178,7 @@ w:{0:'Claude does not automatically invalidate old tool results.',2:'The baselin
 q037:{q:'After --resume, you find three files have changed. Best move?',
 o:['Have the agent re-analyse the entire codebase','Tell the agent exactly which three files changed and request a targeted re-analysis','Ignore the changes and carry on','Abandon the session and start over'],
 e:'Name the specific changed files and do a targeted re-analysis rather than starting from scratch.',
-w:{0:'Wasteful and discards existing understanding.',2:'Leads to errors built on stale information.',3:'Excessive.'}},
+w:{0:'Re-analysing the whole codebase is wasteful when only three known files changed and discards still-valid understanding.',2:'Ignoring the changes lets conclusions rest on stale file contents and can produce incorrect fixes.',3:'Starting over throws away valid context; a targeted refresh of the three changed files is sufficient.'}},
 
 q038:{q:'What is fork_session for?',
 o:['Resuming an interrupted investigation across work sessions','Creating an independent exploration branch from a shared analysis baseline, e.g. to compare two approaches','Running reviews in parallel in CI','Clearing context and starting over'],
@@ -193,12 +193,12 @@ w:{0:'Few-shot is not a cure-all; naming problems get renamed.',2:'Treats the sy
 
 q040:{q:'Which four things should a good tool description contain?',
 o:['Author, version, last updated, licence','What it does, what input format it takes, when to use it (example queries), when not to use it (its boundary against similar tools)','Return type, error codes, timeout, retry policy','Cost per call, average latency, concurrency limit, rate limits'],
-e:'Tool descriptions drive LLM tool selection. The four elements: what it does / input format / when to use / when not to use.',w:{}},
+e:'Tool descriptions drive LLM tool selection. The four elements: what it does / input format / when to use / when not to use.',w:{0:'Author, version, and licence are package metadata; they do not help the model decide whether this tool fits a task.',2:'Return types and failure behaviour are interface details but omit the crucial when-to-use and when-not-to-use boundaries.',3:'Cost and rate limits are operational constraints, not a substitute for purpose, input format, and selection boundaries.'}},
 
 q041:{q:'Analysis shows that when a user query contains the word "report", the agent picks the wrong tool 78% of the time; otherwise it is fine. The tool descriptions have been reviewed and are clear and non-overlapping. What next?',
 o:['Add few-shot examples for report scenarios','Check the system prompt for unintentional keyword-based routing instructions','Rename the tools','Reduce the number of tools'],
 e:'Descriptions are fine but selection is systematically biased by a keyword — inspect the system prompt for accidental routing instructions.',
-w:{0:'Rule out system-prompt contamination before reaching for few-shot.',2:'The descriptions are already confirmed clear.',3:'Not a count problem.'}},
+w:{0:'Few-shot may mask the symptom, but a systematic keyword effect calls for checking accidental system-prompt routing first.',2:'Renaming addresses ambiguous names or descriptions, which the analysis has already ruled out.',3:'Reducing tool count helps overloaded selection sets, but the evidence points to one keyword-driven routing bias instead.'}},
 
 q042:{q:'One analyze_document tool extracts data points, writes summaries and verifies claims, and the agent uses it inconsistently. Best fix?',
 o:['Write a longer, more detailed description','Split it into extract_data_points + summarize_content + verify_claim_against_source','Set tool_choice: "any" to force a tool call','Add a PostToolUse hook to normalise the return format'],
@@ -218,7 +218,7 @@ w:{0:'A retry can collide again.',2:'Shrinking the window does not remove it.',3
 q045:{q:'An agent pulls data from four APIs with different field names and shapes, and often mishandles them. Best approach?',
 o:['Describe all four shapes in the prompt and let Claude adapt','Normalise inside the tool and return one uniform schema','Provide a few-shot example for each shape','Add a PreToolUse hook to validate arguments'],
 e:'Uniform return schema: convert formats inside the tool and return one schema.',
-w:{0:'Pushes conversion onto the model and invites errors.',2:'Same problem.',3:'Pre-stage handles inputs, not return values.'}},
+w:{0:'Describing four formats in the prompt pushes conversion onto the model and leaves probabilistic mapping errors.',2:'Few-shot examples may improve adaptation but still make the model translate four incompatible shapes instead of giving it one deterministic schema.',3:'PreToolUse handles call inputs before execution and cannot normalize four different API response shapes.'}},
 
 q046:{q:'A research agent has a fetch_url tool that can reach any URL, and audits show it occasionally pulls unrelated social-media pages. What satisfies least privilege?',
 o:['List banned domains in the prompt','Replace it with a narrower tool such as load_document, which only loads document formats','Add a PostToolUse hook to filter results','Word the fetch_url description more strictly'],
@@ -247,7 +247,7 @@ w:{0:'Retrying "0 results" is pointless.',2:'A timeout means a data gap; it is n
 
 q051:{q:'What are the typical values of errorCategory?',
 o:['low / medium / high / critical','transient / validation / business / permission','read / write / execute / admin','info / warn / error / fatal'],
-e:'errorCategory describes the failure type: transient, validation, business, permission.',w:{}},
+e:'errorCategory describes the failure type: transient, validation, business, permission.',w:{0:'Low through critical is a severity scale, not an errorCategory that explains cause and retryability.',2:'Read, write, execute, and admin describe operations or permissions, not failure categories.',3:'Info, warn, error, and fatal are logging levels, not business categories for agent error handling.'}},
 
 q052:{q:'A database query times out and returns an error. What should isRetryable be?',
 o:['false, because the query is faulty','true — a timeout is a transient error and can be retried','It depends on the query length','Omit the field and let the agent decide'],
@@ -271,11 +271,11 @@ w:{0:'Violates least privilege and inflates the tool count, hurting selection ac
 
 q056:{q:'What is the core value of MCP?',
 o:['Automatic retries and rate limiting for tool calls','A standard interface: write one MCP server and every MCP-compatible AI application can connect to it — build once, reuse everywhere','A faster transport protocol than REST','Built-in authentication and secret management'],
-e:'MCP\'s value is the standard interface. It does NOT provide automatic retries, auth/rate limiting, or a faster protocol.',w:{}},
+e:'MCP\'s value is the standard interface. It does NOT provide automatic retries, auth/rate limiting, or a faster protocol.',w:{0:'Retries and rate limiting must be implemented by the client, server, or infrastructure; MCP does not supply them automatically.',2:'MCP provides an interoperable interface, not a guarantee of a transport faster than REST.',3:'Authentication and secret management remain responsibilities of the server and deployment environment, not built-in MCP hosting.'}},
 
 q057:{q:'A team wants its MCP server configuration in version control so everyone shares it. Which file?',
 o:['~/.claude.json','.mcp.json in the project root','.claude/CLAUDE.md','.claude/rules/mcp.md'],
-e:'Project-level .mcp.json is the shared team configuration; user-level ~/.claude.json is personal.',w:{}},
+e:'Project-level .mcp.json is the shared team configuration; user-level ~/.claude.json is personal.',w:{0:'~/.claude.json is personal user configuration, so it does not travel with the repository.',2:'CLAUDE.md holds project instructions and memory, not MCP server connection definitions.',3:'.claude/rules/ contains path-triggered instructions and is not the project MCP configuration file.'}},
 
 q058:{q:'An MCP configuration needs an API key. Correct approach?',
 o:['Put it directly in .mcp.json since the repository is internal','Use ${ENV_VAR} expansion — never hard-code secrets in configuration','Put it in CLAUDE.md with a "do not share" comment','Encrypt it and store it in .mcp.json'],
@@ -299,11 +299,11 @@ w:{0:'Reinventing the wheel.',2:'No community server will exist for a proprietar
 
 q062:{q:'You need to find every place that calls calculateTax(). Which built-in tool?',
 o:['Glob','Grep','Read','Bash'],
-e:'Grep searches file contents — finding callers, locating error strings, tracing imports. Glob matches names and paths.',w:{}},
+e:'Grep searches file contents — finding callers, locating error strings, tracing imports. Glob matches names and paths.',w:{0:'Glob matches file names and path patterns; it cannot directly locate calculateTax() calls inside file contents.',2:'Read retrieves one known file; when the caller locations are unknown, opening files one by one is inefficient.',3:'Bash could run a search command indirectly, but built-in Grep is the direct, controlled tool for content search.'}},
 
 q063:{q:'You need to find every **/*.test.tsx file in the project. Which built-in tool?',
 o:['Grep','Glob','Read','Write'],
-e:'Glob matches file names and path patterns; finding **/*.test.tsx is the canonical case.',w:{}},
+e:'Glob matches file names and path patterns; finding **/*.test.tsx is the canonical case.',w:{0:'Grep searches file contents, while the task is to match a file-name and path pattern.',2:'Read opens a known file and cannot enumerate every path matching **/*.test.tsx.',3:'Write creates or modifies files and does not discover files whose paths match a pattern.'}},
 
 q064:{q:'Edit keeps failing because the target text is not unique in the file. Best handling?',
 o:['Keep extending old_string until it is unique','Read the whole file and Write it back','Use Bash and sed to substitute','Give up on modifying that file'],

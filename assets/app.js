@@ -260,13 +260,24 @@ function secView(sec) {
   return { ...sec, title: en.title ?? sec.title, tag: en.tag ?? sec.tag, blocks };
 }
 
-/** 题目视图：英文缺失时整题回退中文 */
-function qView(q) {
-  if (LANG() === 'zh') return q;
-  const en = CONTENT_EN.questions[q.id];
-  if (!en) return { ...q, _fallback: true };
+/** 每个选项都有独立解析：正确项沿用总解析，错误项读取 w。 */
+function optionExplanations(q) {
+  const answers = new Set([].concat(q.a));
+  return q.o.map((_, i) => (answers.has(i) ? q.e : q.w?.[i]) || '');
+}
+
+/** 可单测的题目视图：英文缺失时整题回退中文。 */
+function questionView(q, lang, content) {
+  if (lang === 'zh') return { ...q, optionExplanations: optionExplanations(q) };
+  const en = content.questions[q.id];
+  if (!en) return { ...q, optionExplanations: optionExplanations(q), _fallback: true };
   // w 不做跨语言混用：英文侧没写就当没有
-  return { ...q, q: en.q, o: en.o ?? q.o, e: en.e ?? q.e, w: en.w || {} };
+  const view = { ...q, q: en.q, o: en.o ?? q.o, e: en.e ?? q.e, w: en.w || {} };
+  return { ...view, optionExplanations: optionExplanations(view) };
+}
+
+function qView(q) {
+  return questionView(q, LANG(), CONTENT_EN);
 }
 
 /** Domain 视图 */
@@ -684,6 +695,40 @@ function questionCard(q, opts = {}) {
     <div id="verdict"></div>`;
 }
 
+function optionExplanationHtml(q, pickSet, ansSet) {
+  const explanations = q.optionExplanations || optionExplanations(q);
+  if (!Array.isArray(explanations) || explanations.length !== q.o.length
+      || explanations.some((text) => !String(text).trim())) return '';
+  return `
+    <section class="option-explanations" aria-label="${esc(t('q_option_breakdown'))}">
+      <h3>${esc(t('q_option_breakdown'))}</h3>
+      <table class="option-explanations-table">
+        <thead><tr>
+          <th scope="col">${esc(t('q_option_col'))}</th>
+          <th scope="col">${esc(t('q_explanation_col'))}</th>
+        </tr></thead>
+        <tbody>${q.o.map((option, i) => {
+          const stateClass = ansSet.has(i) ? 'option-row correct'
+            : pickSet.has(i) ? 'option-row picked-wrong' : 'option-row';
+          const status = ansSet.has(i) ? t('q_option_correct')
+            : pickSet.has(i) ? t('q_option_selected') : '';
+          return `<tr class="${stateClass}">
+            <th scope="row">
+              <span class="option-letter">${esc(LTR[i])}</span>
+              <span class="option-label">${md(option)}</span>
+              ${status ? `<span class="option-status">${esc(status)}</span>` : ''}
+            </th>
+            <td>${md(explanations[i])}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </section>`;
+}
+
+function answerBreakdownHtml(q, pickSet, ansSet, correct) {
+  return correct ? '' : optionExplanationHtml(q, pickSet, ansSet);
+}
+
 function revealAnswer(q, picked, root) {
   const correct = isCorrect(q, picked);
   const ansSet = new Set([].concat(q.a));
@@ -694,9 +739,6 @@ function revealAnswer(q, picked, root) {
     b.classList.remove('sel');
     if (ansSet.has(i)) b.classList.add('right');
     else if (pickSet.has(i)) b.classList.add('wrong');
-    if (!ansSet.has(i) && q.w && q.w[i]) {
-      b.querySelector('.ot').insertAdjacentHTML('beforeend', `<span class="why">✗ ${md(q.w[i])}</span>`);
-    }
   });
   const sm = $('#submitMulti', root);
   if (sm) sm.closest('.row').remove();
@@ -704,6 +746,7 @@ function revealAnswer(q, picked, root) {
     <div class="verdict ${correct ? 'good' : 'bad'}">
       <div class="vh">${esc(correct ? t('q_right') : t('q_wrong', answerLetters(q)))}</div>
       <p>${md(q.e)}</p>
+      ${answerBreakdownHtml(q, pickSet, ansSet, correct)}
       <div class="row">
         <a class="btn sm" href="#/notes/${encodeURIComponent(q.s)}">${esc(t('q_back_to_note', q.s, secTitle(q.s)))}</a>
       </div>

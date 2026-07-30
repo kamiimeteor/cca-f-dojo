@@ -9,7 +9,7 @@ w:{0:'Poor wording would make everyone inconsistent, not half.',2:'That would no
 
 q067:{q:'Which CLAUDE.md location travels with the repository and is shared with the team?',
 o:['~/.claude/CLAUDE.md','.claude/CLAUDE.md or the root CLAUDE.md','~/.claude.json','/etc/claude/CLAUDE.md'],
-e:'Project level = .claude/CLAUDE.md or root CLAUDE.md, version-controlled and team-wide.',w:{}},
+e:'Project level = .claude/CLAUDE.md or root CLAUDE.md, version-controlled and team-wide.',w:{0:'~/.claude/CLAUDE.md is personal user-level memory and is not shared through the repository.',2:'~/.claude.json is a user configuration file, not a project CLAUDE.md under version control.',3:'A file under /etc is machine-level configuration, not team memory stored in the project repository.'}},
 
 q068:{q:'In a monorepo, each package has its own coding-standards file and you want the root CLAUDE.md to stay modular instead of copying everything in. What do you use?',
 o:['@import syntax to reference external files','MCP resources','The paths field of a path rule','A skill\'s argument-hint'],
@@ -23,7 +23,7 @@ w:{0:'You lose the standards.',2:'It becomes personal config and stops being sha
 
 q070:{q:'Claude behaves inconsistently across sessions and you suspect a memory-file loading problem. Which command diagnoses it?',
 o:['/doctor','/memory','/config','/hooks'],
-e:'/memory shows which memory files loaded — the tool for diagnosing inconsistent cross-session behaviour.',w:{}},
+e:'/memory shows which memory files loaded — the tool for diagnosing inconsistent cross-session behaviour.',w:{0:'/doctor diagnoses installation and environment health; it does not list the memory files currently loaded.',2:'/config views or changes settings and is not the dedicated command for checking CLAUDE.md load sources.',3:'/hooks inspects hook events and configuration, not memory-file loading.'}},
 
 q071:{q:'The team wants an IaC security standard to load automatically whenever Claude edits anything under terraform/, and not otherwise. Which mechanism?',
 o:['CLAUDE.md','A path rule under .claude/rules/ with a paths glob','A skill under .claude/skills/','A command under .claude/commands/'],
@@ -42,7 +42,7 @@ w:{1:'Unmatched files would be missed.',2:'Task triggering does not guarantee lo
 
 q074:{q:'Which set of trigger descriptions is entirely correct?',
 o:['CLAUDE.md task-triggered / path rules always loaded / skills path-matched','CLAUDE.md always loaded / path rules glob-matched on file path (automatic, deterministic) / skills task-triggered','CLAUDE.md path-matched / path rules task-triggered / skills always loaded','All three always load; they differ only in content'],
-e:'CLAUDE.md always loads; path rules fire deterministically on glob match; skills are task-triggered.',w:{}},
+e:'CLAUDE.md always loads; path rules fire deterministically on glob match; skills are task-triggered.',w:{0:'This swaps all three triggers: CLAUDE.md is not task-triggered and path rules are not always loaded.',2:'CLAUDE.md is not path-matched, path rules are not triggered by task semantics, and skills are not always loaded.',3:'The three mechanisms load differently; making all of them permanent would defeat on-demand rules and skills.'}},
 
 q075:{q:'What is the core advantage of path rules over CLAUDE.md?',
 o:['They support richer Markdown syntax','They load only when a matching file is edited, cutting irrelevant context and saving tokens','They have higher priority and override CLAUDE.md','They can call tools'],
@@ -51,7 +51,7 @@ w:{0:'Syntax capability is the same.',2:'Not a priority mechanism.',3:'Rules are
 
 q076:{q:'Which frontmatter field in a path rule specifies which files it governs?',
 o:['files','paths','glob','match'],
-e:'Rule frontmatter fields are paths (a glob pattern) and description.',w:{}},
+e:'Rule frontmatter fields are paths (a glob pattern) and description.',w:{0:'files is not the supported rule-frontmatter field; the governed patterns belong under paths.',2:'glob describes the pattern syntax used by paths, not the field name.',3:'match is not a supported Rules matching field and cannot replace paths.'}},
 
 q077:{q:'A testing convention must apply to every **/*.test.tsx file, scattered across more than twenty directories. Path rule or subdirectory CLAUDE.md?',
 o:['Subdirectory CLAUDE.md, one copy in each directory','A path rule, because the convention spans directories and is keyed on file type','The root CLAUDE.md','A skill, invoked manually when writing tests'],
@@ -75,7 +75,7 @@ w:{0:'That isolates context, not capability.',2:'Only an argument prompt.',3:'On
 
 q081:{q:'Which field set belongs to a **rule**\'s frontmatter rather than a skill\'s?',
 o:['context: fork, allowed-tools, argument-hint','paths, description','name, version, author','model, temperature, max_tokens'],
-e:'Rule frontmatter: paths (which files) and description. Skill frontmatter: context: fork, allowed-tools, argument-hint.',w:{}},
+e:'Rule frontmatter: paths (which files) and description. Skill frontmatter: context: fork, allowed-tools, argument-hint.',w:{0:'context, allowed-tools, and argument-hint configure skill execution and arguments, not path rules.',2:'name, version, and author are generic package metadata, not the specified Rules frontmatter pair.',3:'model, temperature, and max_tokens are model runtime settings, not path-trigger configuration.'}},
 
 q082:{q:'What is the core difference between commands and skills?',
 o:['Commands are project-only, skills are user-only','Commands do not support frontmatter (plain text); skills support context: fork, allowed-tools and argument-hint','Commands are faster, skills are slower','Commands are chosen automatically by Claude, skills must be invoked manually'],
@@ -84,7 +84,7 @@ w:{0:'Both exist at project and user level.',2:'Performance is not the distincti
 
 q083:{q:'A team wants to share a set of skills with everyone. Where do they go?',
 o:['~/.claude/skills/','.claude/skills/','~/.claude.json','.claude/rules/'],
-e:'The universal rule: inside the project directory (.claude/) means shared and version-controlled; under ~/ means personal.',w:{}},
+e:'The universal rule: inside the project directory (.claude/) means shared and version-controlled; under ~/ means personal.',w:{0:'~/.claude/skills/ is personal to one user and does not travel with the repository.',2:'~/.claude.json stores user configuration and is not a shared Skills directory.',3:'.claude/rules/ stores path-triggered rules, not task-triggered Skills.'}},
 
 q084:{q:'You want a personal variant of a team skill without affecting anyone else. Best approach?',
 o:['Edit the team version in .claude/skills/','Create your variant under ~/.claude/skills/ with a different name','Shadow it with the same filename in .claude/skills/','Delete the team skill and replace it with yours'],
@@ -93,7 +93,7 @@ w:{0:'Pollutes team config and lands in version control.',2:'Same name still sit
 
 q085:{q:'Which of these location mappings is WRONG?',
 o:['Skills: project .claude/skills/ ; user ~/.claude/skills/','MCP servers: project .mcp.json ; user ~/.claude.json','Path rules: project .claude/rules/ ; user ~/.claude/rules/','Commands: project .claude/commands/ ; user ~/.claude/commands/'],
-e:'Path rules exist only at project level (.claude/rules/); the user-level column is "—". The other three are correct.',w:{}},
+e:'Path rules exist only at project level (.claude/rules/); the user-level column is "—". The other three are correct.',w:{0:'Skills support both project and user directories, so this mapping is correct.',1:'Project .mcp.json and user ~/.claude.json are the shared and personal MCP locations, so this mapping is correct.',3:'Commands support both project and user directories, making this mapping correct as well.'}},
 
 q086:{q:'You are splitting a monolith into microservices, touching 45+ files, with several viable designs. Which mode?',
 o:['Direct execution, adjusting as you go','Plan mode — explore and design before making changes','Batch API submission','fork_session'],
@@ -128,7 +128,7 @@ w:{0:'You cannot judge whether the result is right.',2:'You do not know the corr
 q092:{q:'A CI pipeline calls claude and the job hangs forever. Which flag is most likely missing?',
 o:['--output-format json','-p / --print (non-interactive mode)','--json-schema','--resume'],
 e:'-p / --print is non-interactive mode and is mandatory in CI — without it the process hangs.',
-w:{0:'Affects output format, not hanging.',2:'Same.',3:'Session resumption, unrelated.'}},
+w:{0:'--output-format json changes formatting but does not make an interactive process exit automatically.',2:'--json-schema constrains result structure but does not enable the non-interactive execution CI requires.',3:'--resume restores a session and is unrelated to a CI process waiting indefinitely for interaction.'}},
 
 q093:{q:'CI must parse Claude\'s review output as structured data with a fixed field structure. Which flags?',
 o:['Just -p','-p plus --output-format json plus --json-schema','-p plus --resume','--output-format json on its own'],
@@ -178,37 +178,37 @@ w:{0:'Real problems get buried too.',2:'This kind of vague instruction does not 
 
 q102:{q:'Why does "only report high-confidence issues" usually fail as a prompt instruction?',
 o:['The model does not understand English adjectives','It is a vague instruction with no actionable basis for judgement — what is needed is concrete categorical criteria','It makes the model report nothing at all','It must be in the system prompt rather than the user prompt'],
-e:'Vague instructions like "be conservative" or "only high-confidence" do not work — you need specific categorical criteria.',w:{}},
+e:'Vague instructions like "be conservative" or "only high-confidence" do not work — you need specific categorical criteria.',w:{0:'The model understands the phrase high confidence; the problem is the absence of an actionable threshold or category rule.',2:'A vague instruction does not necessarily suppress every report; it more often produces inconsistent thresholds across cases.',3:'Moving the same vague phrase into the system prompt raises its priority but still supplies no concrete decision criteria.'}},
 
 q103:{q:'What is the correct order of the three-rung prompt ladder?',
 o:['few-shot → explicit criteria → self-review','explicit criteria → few-shot examples → self-review (evaluator–optimizer)','self-review → few-shot → explicit criteria','explicit criteria → self-review → few-shot'],
-e:'Rung one, vague prompt → explicit criteria. Rung two, clear criteria but inconsistent → few-shot. Rung three, varying omissions → self-review.',w:{}},
+e:'Rung one, vague prompt → explicit criteria. Rung two, clear criteria but inconsistent → few-shot. Rung three, varying omissions → self-review.',w:{0:'Few-shot comes after explicit criteria when execution is still inconsistent; examples before criteria encourage surface imitation.',2:'Self-review addresses omissions that vary by case and belongs after criteria and few-shot, not at the start.',3:'Few-shot handles inconsistency under clear criteria and should precede self-review for dynamic omissions.'}},
 
 q104:{q:'What is the most important principle when designing few-shot examples?',
 o:['Give as many as possible; 10–15 covers more ground','Target the cases the model actually gets wrong, show the reasoning, and keep it to 2–4 precise examples','Give only the answers, never the reasoning','Keep every example as short as possible'],
-e:'Three principles: target actual failures (do not teach what it knows), show the reasoning (not just the answer), few and precise (2–4 beats 10–15 vague ones).',w:{}},
+e:'Three principles: target actual failures (do not teach what it knows), show the reasoning (not just the answer), few and precise (2–4 beats 10–15 vague ones).',w:{0:'Many generic examples consume context and dilute the lesson; two to four examples aimed at real failures are more effective.',2:'Answers alone teach a surface mapping; without reasons the model cannot generalise the judgement to unseen cases.',3:'Brevity helps, but it is secondary; an example shortened until the reasoning disappears loses its teaching value.'}},
 
 q105:{q:'Why should few-shot examples show "why this option" rather than just the answer?',
 o:['It makes the prompt look more professional','So the model learns the reasoning process and can generalise to unseen but similar cases','To add tokens and trigger deeper thinking','To make the prompt easier for humans to review'],
-e:'Showing the reasoning is one of the three principles: the model learns the basis for judgement rather than a surface mapping.',w:{}},
+e:'Showing the reasoning is one of the three principles: the model learns the basis for judgement rather than a surface mapping.',w:{0:'Making a prompt look professional is not a learning objective and does not improve transfer of judgement.',2:'Adding tokens does not automatically cause deeper reasoning; reusable decision logic in the example is what matters.',3:'Human readability is a side benefit, but the main purpose is generalising the same reasoning to new cases.'}},
 
 q106:{q:'Which of these should NOT be solved with few-shot examples?',
 o:['Tool selection in ambiguous cases','Distinguishing acceptable code patterns from genuine issues (reducing false positives)','Ensuring refunds never exceed the authorised limit','Correct extraction from differently structured documents'],
-e:'Few-shot is not a cure-all: money and safety require programmatic enforcement, not examples. The other three are genuine few-shot use cases.',w:{}},
+e:'Few-shot is not a cure-all: money and safety require programmatic enforcement, not examples. The other three are genuine few-shot use cases.',w:{0:'A few boundary examples can show which tool fits ambiguous cases, making this a valid few-shot use case.',1:'Positive and negative examples can distinguish acceptable patterns from real defects and reduce false positives.',3:'Examples across document layouts help the model apply one extraction schema to varied structures.'}},
 
 q107:{q:'In an extraction task the model occasionally hallucinates units of measure that are not in the source. Besides schema design, how can few-shot help?',
 o:['Show worked examples of how to handle informal units, reducing hallucination','Give 15 examples covering every possible unit','Demonstrate how to invent a plausible unit','Few-shot has no effect on hallucination'],
 e:'One documented use of few-shot is reducing hallucination in extraction tasks, e.g. handling informal units of measure.',
-w:{1:'Violates "few and precise".',2:'Exactly backwards.',3:'Not true.'}},
+w:{1:'Fifteen examples violate the few-and-precise principle, consume context, and dilute the cases that actually need teaching.',2:'Inventing a plausible unit is the hallucination being prevented; examples should demonstrate preserving or flagging source uncertainty.',3:'Targeted examples can reduce extraction hallucinations by teaching how to handle informal or missing units.'}},
 
 q108:{q:'Which item is NOT on the "rule this out first" checklist before reaching for few-shot?',
 o:['Whether there are any baseline criteria at all','Whether the tool descriptions or names are problematic','Whether temperature is set too high','Whether the system prompt contains accidental routing instructions'],
-e:'The checklist: no criteria → write criteria; tool description problems → fix or rename; money/safety → programmatic; varying omissions → self-review; check the system prompt. Temperature is not on it.',w:{}},
+e:'The checklist: no criteria → write criteria; tool description problems → fix or rename; money/safety → programmatic; varying omissions → self-review; check the system prompt. Temperature is not on it.',w:{0:'Missing baseline criteria must be fixed first, so this is genuinely on the rule-out checklist.',1:'Bad tool names or descriptions should be repaired before adding examples and are on the checklist.',3:'Accidental routing instructions in the system prompt can override examples, so they must be checked first.'}},
 
 q109:{q:'What is the most reliable way to get consistently structured output from Claude?',
 o:['Ask for JSON in the prompt and show a format example','Define a tool with a JSON schema and force structured output via tool_use','Extract with regular expressions from free text','Have Claude emit a Markdown table and parse it'],
 e:'The most reliable approach is a tool with a JSON schema, using tool_use to force structured output.',
-w:{0:'Probabilistic; format errors still occur.',2:'Brittle.',3:'Still free-text parsing.'}},
+w:{0:'Prompting for JSON remains probabilistic, so malformed output or missing fields can still occur.',2:'Regular expressions over free text are brittle because harmless wording or formatting changes can break extraction.',3:'A Markdown table is still free text that must be parsed and does not enforce a JSON schema.'}},
 
 q110:{q:'After moving to tool_use with a JSON schema, invoice extraction never produces malformed JSON again — but 8% of invoices still have line items that do not sum to the stated total. Why?',
 o:['The schema definition has a bug','Tool use removes syntax errors (malformed JSON, missing fields) but not semantic errors (sums that do not add up, values in the wrong field)','The model version is too old','tool_choice should be set to "any"'],
@@ -253,11 +253,11 @@ w:{0:'Severity does not explain the trigger.',2:'Time does not attribute a patte
 q118:{q:'A self-check finds calculated_total and stated_total disagree. Best action?',
 o:['Overwrite stated_total with calculated_total automatically','Set conflict_detected: true in the output and flag it for human review','Discard the record','Re-extract until they agree'],
 e:'The self-check flow sets conflict_detected: true (and flags for review) rather than deciding on the user\'s behalf.',
-w:{0:'Line items may themselves be incomplete; do not overwrite unilaterally.',2:'Loses data.',3:'They may never agree if the source itself is wrong.'}},
+w:{0:'Line items may themselves be incomplete, so overwriting the stated total would make an unsupported unilateral decision.',2:'Discarding the record loses the source data and the evidence needed for a human to resolve the conflict.',3:'Repeated extraction may never make the values agree when the source itself is inconsistent.'}},
 
 q119:{q:'What are the two defining characteristics of the Batch API versus the synchronous API?',
 o:['Lower latency and higher cost','Up to 24 hours of latency and a 50% cost discount','Real-time responses at full price','A guaranteed latency SLA and a 30% discount'],
-e:'Batch API: up to 24 hours, 50% discount. Synchronous: real time, full price.',w:{}},
+e:'Batch API: up to 24 hours, 50% discount. Synchronous: real time, full price.',w:{0:'Batch trades latency for cost; it is neither lower latency nor higher cost than synchronous requests.',2:'Real-time at full price describes the synchronous API, while Batch accepts a processing window in exchange for a discount.',3:'The defining figures are up to 24 hours and 50%, not a 30% discount or stronger latency SLA.'}},
 
 q120:{q:'A pre-merge PR check blocks developers until it returns. Is the Batch API appropriate?',
 o:['Yes, it is half the price','No — this is a blocking workflow and cannot wait up to 24 hours','Yes, as long as you set a short timeout','Yes, the Batch API usually returns within seconds'],
@@ -296,11 +296,11 @@ w:{0:'Wording cannot remove a structural bias.',2:'Randomness is not objectivity
 
 q127:{q:'Review findings must be routed by risk: high-confidence issues block the merge, low-confidence ones are advisory. How do you design this?',
 o:['Route by how long the finding text is','Have the model self-report a confidence score per finding, enabling calibrated review routing','Route by file path','Route by a threshold on the number of findings'],
-e:'Self-reported confidence per finding is what enables calibrated review routing.',w:{}},
+e:'Self-reported confidence per finding is what enables calibrated review routing.',w:{0:'Finding length measures expression, not confidence or risk, and cannot drive merge routing.',2:'A file path identifies an area of code but says nothing about confidence in a particular finding.',3:'The number of findings is not the severity or reliability of each one and can miss a single high-risk issue.'}},
 
 q128:{q:'What are the two classic symptoms of reviewing a large PR in one pass?',
 o:['Slowness and cost','Attention dilution (local issues missed) and self-contradictory conclusions','Malformed JSON and missing fields','Timeouts and rate limiting'],
-e:'A large PR in one pass causes attention dilution and contradictions — hence the split into local and integration passes.',w:{}},
+e:'A large PR in one pass causes attention dilution and contradictions — hence the split into local and integration passes.',w:{0:'Large PRs may affect speed and cost, but those are not the two characteristic quality failures of a single review pass.',2:'Malformed JSON and missing fields are structured-output failures, not symptoms of attention allocation across a large PR.',3:'Timeouts and rate limits are operational constraints and do not explain missed local defects or contradictory conclusions.'}},
 
 /* ═══ DOMAIN 5 ═══ */
 q129:{q:'In a long research context, findings in the middle are consistently overlooked by the agent. What is this called, and how is it fixed?',
@@ -320,7 +320,7 @@ w:{0:'Officially marked ❌: another layer that treats the symptom.',2:'Discards
 
 q132:{q:'Putting the key-findings summary at the very start of a long context primarily counteracts what?',
 o:['Token cost','Lost in the middle (content in the middle is easily missed)','Confirmation bias','Race conditions'],
-e:'Attention is strongest at the start and end, so key content goes first, with section headers to help navigate the middle.',w:{}},
+e:'Attention is strongest at the start and end, so key content goes first, with section headers to help navigate the middle.',w:{0:'Moving a summary does not reduce input tokens; it improves visibility within a long context.',2:'Confirmation bias is a preference for existing beliefs and is not directly fixed by putting a summary first.',3:'Race conditions come from concurrent access or updates, not reduced attention to the middle of a long context.'}},
 
 q133:{q:'A customer\'s situation is not covered by any company policy. What should the agent do?',
 o:['Extrapolate from the closest policy','Escalate — this is a policy gap, and the agent must not invent rules','Refuse service','Tell the customer to look up the policy themselves'],
@@ -329,7 +329,7 @@ w:{0:'Extrapolation is inventing a rule; high risk.',2:'Poor experience and unre
 
 q134:{q:'Which situation should NOT be escalated to a human?',
 o:['A complaint requiring subjective, empathetic judgement','A shipping dispute — the company has a standard procedure','A refund above the agent\'s authorised limit','An irreversible high-risk action'],
-e:'Where a standard procedure exists (a shipping dispute), the agent handles it. The other three are genuine escalation triggers.',w:{}},
+e:'Where a standard procedure exists (a shipping dispute), the agent handles it. The other three are genuine escalation triggers.',w:{0:'A complaint requiring subjective empathy and discretion falls outside a standard procedure and is suitable for human escalation.',2:'A refund above the agent authority is a permission boundary and must go to someone with the required authority.',3:'An irreversible high-risk action requires human confirmation or execution rather than agent autonomy.'}},
 
 q135:{q:'A customer raises four issues at once and the agent decides "this is too much for me" and escalates. Is that right?',
 o:['Yes, more issues means escalate','No — "several issues at once" is not an escalation trigger; the agent should decompose, investigate in parallel and synthesise one reply','Yes, because the context will overflow','No, it should answer only the first issue'],
@@ -339,7 +339,7 @@ w:{0:'Contrary to the official criteria.',2:'Four issues will not overflow the c
 q136:{q:'A customer lookup returns three customers with the same name. What should the agent do?',
 o:['Pick the one with the most recent order','Do not guess — ask the user for an additional identifier (email, phone, order number)','Escalate to a human','Act on all three accounts'],
 e:'Disambiguating multiple matches: do not guess, ask for another identifier.',
-w:{0:'Guessing wrong is a serious incident.',2:'A standard disambiguation exists; no escalation needed.',3:'Catastrophic.'}},
+w:{0:'Guessing can act on the wrong customer account, creating a serious identity and financial incident.',2:'Requesting another identifier is the standard disambiguation path, so escalation is unnecessary while that path remains available.',3:'Acting on every matched account turns one ambiguity into multiple incorrect and potentially irreversible operations.'}},
 
 q137:{q:'The rule "refunds may not exceed $500" — escalation or programmatic enforcement?',
 o:['Escalation: send every refund to a human for confirmation','Programmatic enforcement (hook or prerequisite): the rule is explicit and simply must hold 100% of the time','Neither; a prompt instruction is enough','Escalation, because money is involved'],
@@ -348,12 +348,12 @@ w:{0:'The rule is explicit; no human judgement is required each time.',2:'A prom
 
 q138:{q:'Two of a research system\'s five data sources timed out. What must the agent absolutely NOT do?',
 o:['Continue synthesising with the remaining three sources','Annotate which areas are well supported, which have gaps, and which sources failed','Silently skip the failed sources and emit a report that looks complete','Keep both values and flag the conflict where data disagrees'],
-e:'Absolutely prohibited: silently skipping without reporting. Hiding the error leaves a hole in the output that nobody knows about.',w:{}},
+e:'Absolutely prohibited: silently skipping without reporting. Hiding the error leaves a hole in the output that nobody knows about.',w:{0:'Continuing with the remaining sources is a valid degraded result when the missing coverage is disclosed clearly.',1:'Labelling supported areas, gaps, and failed sources lets readers judge reliability and is the transparent response.',3:'Conflicting values should remain attributed and visibly flagged rather than silently choosing one, so this is correct handling.'}},
 
 q139:{q:'When some data sources fail, what does correct graceful degradation look like?',
 o:['Fail the whole task and return an error','Continue synthesising with what is available, and annotate coverage and gaps explicitly in the output','Retry automatically until everything succeeds','Substitute guessed data for the failed sources'],
 e:'Graceful degradation: keep working with the available data while clearly flagging the gaps.',
-w:{0:'Discards 60% of usable information.',2:'Some failures are not retryable, and this blocks indefinitely.',3:'Hallucination.'}},
+w:{0:'Reporting only the success count discards 60% of usable research and hides which coverage the failed sources removed.',2:'Some failures are not retryable, so requiring every source to succeed can block the workflow indefinitely.',3:'Filling failed sources with guesses presents unsupported content as research evidence and is hallucination.'}},
 
 q140:{q:'Two sources give different values for the same metric. What should the subagent do?',
 o:['Pick whichever looks more credible','Keep both values, flag the conflict, and let the coordinator decide','Take the average','Drop the metric'],
@@ -362,32 +362,32 @@ w:{0:'Overreach, and it may be wrong.',2:'Numerically meaningless.',3:'Loses inf
 
 q141:{q:'A search tool returns "0 results". What is that?',
 o:['A failure requiring a retry','A successful query with no matches — a meaningful empty result','A timeout','A permission error'],
-e:'Heavily tested: "0 results" means the query succeeded and nothing matched; "timeout" means the query never completed and is a failure.',w:{}},
+e:'Heavily tested: "0 results" means the query succeeded and nothing matched; "timeout" means the query never completed and is a failure.',w:{0:'Zero results means the query completed with no match; it is not an execution failure that requires retrying.',2:'A timeout means the query did not complete and is distinct from a successful empty result.',3:'A permission error means access was denied; a successful zero-result response does not imply an access problem.'}},
 
 q142:{q:'Why is silent skipping listed as something you must never do?',
 o:['It wastes tokens','It hides the error — the final output has a gap that nobody knows about','It triggers rate limiting','It violates the MCP specification'],
-e:'Hiding the error means downstream decisions are made on incomplete data without anyone realising.',w:{}},
+e:'Hiding the error means downstream decisions are made on incomplete data without anyone realising.',w:{0:'Silent skipping may save rather than waste tokens; the real danger is making missing data invisible.',2:'Rate limiting has no necessary connection to hiding an error and is not why silent skipping is prohibited.',3:'This is a reliability and transparency rule, not a special result-handling requirement in the MCP protocol.'}},
 
 q143:{q:'Subagents emit so much output that downstream synthesis quality drops. What is the recommended principle?',
 o:['Post-hoc summarisation beats source filtering','Source filtering beats post-hoc summarisation','Increase the downstream agent\'s context window','Reduce the number of subagents'],
-e:'The principle is that filtering at the source beats summarising afterwards: have upstream agents return structured essentials rather than adding an intermediate summariser.',w:{}},
+e:'The principle is that filtering at the source beats summarising afterwards: have upstream agents return structured essentials rather than adding an intermediate summariser.',w:{0:'Post-hoc summarisation adds a layer after excess content has already entered the system; source filtering is more direct.',2:'A larger context window only postpones overload and does not remove noise or improve handoff structure.',3:'Agent count is not the root cause; even one verbose subagent can degrade synthesis.'}},
 
 q144:{q:'In structured handoffs between agents, how should content and metadata be separated?',
 o:['Blend everything into one natural-language passage','Content = facts, findings, quotations; metadata = source URL, document name, page number, relevance score','Content = URLs; metadata = facts','No separation is needed; the downstream agent will parse it'],
-e:'Structured handoff separates content (facts, findings, quotations) from metadata (source URL, document name, page number, relevance score) to preserve attribution.',w:{}},
+e:'Structured handoff separates content (facts, findings, quotations) from metadata (source URL, document name, page number, relevance score) to preserve attribution.',w:{0:'Mixing facts and sources in prose weakens attribution and forces downstream parsing.',2:'URLs are metadata and facts are content, so this option reverses their roles.',3:'Making the downstream agent recover structure from prose wastes context and risks attaching citations to the wrong facts.'}},
 
 q145:{q:'Why is "add an intermediate summarising agent" marked as a ❌ approach?',
 o:['Summarising agents are expensive','It adds another processing layer and treats the symptom — the volume should be reduced at the source','The Agent SDK does not support three-level agents','Summarising agents create race conditions'],
-e:'❌ an intermediate summariser is another layer treating the symptom; ✅ have upstream agents return structured essentials, cutting volume at the source.',w:{}},
+e:'❌ an intermediate summariser is another layer treating the symptom; ✅ have upstream agents return structured essentials, cutting volume at the source.',w:{0:'Cost may rise, but the central objection is that another layer leaves excessive upstream output unsolved.',2:'The Agent SDK can orchestrate deeper workflows; the problem is architectural value, not a three-level limitation.',3:'A summary stage need not cause a race; the issue here is redundant processing and information loss.'}},
 
 q146:{q:'What are the correct steps of the evaluator–optimizer pattern?',
 o:['Emit the final reply directly and spot-check afterwards','Draft the reply → self-check against a checklist (policy? timeline? next steps? did it answer the question?) → fill the gaps → emit the final reply','Generate three versions in parallel and vote','Ask the user what format they want, then generate'],
-e:'Evaluator–optimizer: draft → checklist self-check → fill gaps → final reply. It fits omissions that vary case by case.',w:{}},
+e:'Evaluator–optimizer: draft → checklist self-check → fill gaps → final reply. It fits omissions that vary case by case.',w:{0:'A spot-check after completion cannot systematically find and repair dynamic omissions before the final output.',2:'Parallel voting compares candidate outputs; it is not checklist-based gap detection and repair.',3:'Asking about format resolves presentation preference, not missing policy, timeline, or next-step content.'}},
 
 q147:{q:'An extraction system now emits field-level confidence scores. How should human review be organised?',
 o:['Review only the low-confidence fields','Prioritise low confidence for review, and also take a stratified random sample across every confidence band','Review only the high-confidence fields','Sample purely at random, ignoring confidence'],
 e:'Review the low-confidence first; still sample the high-confidence, because high confidence can still be wrong.',
-w:{0:'Every high-confidence error would escape.',2:'Backwards.',3:'Wastes reviewer capacity on obviously correct samples.'}},
+w:{0:'Reviewing only low-confidence fields lets every confidently wrong result escape measurement and correction.',2:'Reviewing only high-confidence fields reverses the risk priority and ignores the cases most likely to be wrong.',3:'Pure random sampling ignores useful confidence signals and spends reviewer capacity on many obviously correct fields.'}},
 
 q148:{q:'Which problem does the evaluator–optimizer pattern fit best?',
 o:['A hard cap on refund amounts','Omissions that vary from case to case','Wrong tool selection','Malformed JSON'],
@@ -396,11 +396,11 @@ w:{0:'Money → programmatic hard limit.',2:'Fix the tool description or name.',
 
 q149:{q:'Why sample high-confidence extractions for review as well?',
 o:['To measure the confidence distribution','Because high confidence can still be wrong — reviewing only low confidence lets those errors escape entirely','To satisfy a compliance audit','To source few-shot material'],
-e:'High confidence can still be wrong, so stratified random sampling across bands avoids a systematic blind spot.',w:{}},
+e:'High confidence can still be wrong, so stratified random sampling across bands avoids a systematic blind spot.',w:{0:'Measuring confidence distribution may be a side analysis, but the primary purpose is finding confidently wrong results.',2:'Some settings may require compliance review, but high-confidence errors still need sampling even without that requirement.',3:'Reviewed samples might later become few-shot material, but that is not the main quality-control purpose of stratified sampling.'}},
 
 q150:{q:'Faced with any "the agent is underperforming" problem, what is the universal priority framework?',
 o:['Architecture first → then tools → then the prompt','Tune the prompt first → then tools and workflow → then architecture and infrastructure. Exception: money, safety or compliance go straight to programmatic enforcement','Change the model → then the prompt → then add tools','Add few-shot → then a hook → then split the agent'],
-e:'Priority: 1) prompt (simplest, fastest, cheapest) 2) tools and workflow 3) architecture and infrastructure. Exception: money/safety/compliance → programmatic enforcement directly.',w:{}},
+e:'Priority: 1) prompt (simplest, fastest, cheapest) 2) tools and workflow 3) architecture and infrastructure. Exception: money/safety/compliance → programmatic enforcement directly.',w:{0:'Architecture is the most expensive layer and normally follows prompt and workflow improvements rather than coming first.',2:'Changing models is not a universal first step; it costs more and does not repair unclear prompts or broken workflow design.',3:'Few-shot, hooks, and agent splitting have different triggers, so a fixed sequence cannot handle every underperformance case.'}},
 
 q151:{q:'Late in a long codebase-exploration session, Claude starts giving inconsistent answers and cites "the typical approach" rather than the specific classes it actually read earlier. What is happening?',
 o:['Hallucination; switch to a stronger model','Context degradation — the early findings have been diluted and the model falls back on generic priors','Overlapping tool descriptions causing wrong tool selection','Confirmation bias'],
