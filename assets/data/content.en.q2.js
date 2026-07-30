@@ -38,7 +38,7 @@ w:{0:'Always loading wastes context.',1:'Not triggered by file path.',3:'MCP ser
 q073:{q:'The rule "all code comments must be in English" applies to every file and every task. Where does it belong?',
 o:['CLAUDE.md','Path rules','A skill','A command'],
 e:'CLAUDE.md always loads and does not discriminate by file — right for universal rules.',
-w:{1:'Path rules load only when a file path matches their glob and suit type- or location-specific rules; this universal rule would miss unmatched files.',2:'A skill is task-triggered and suits a specific workflow, so it may not load for every edit; this cross-file rule belongs in always-loaded CLAUDE.md.',3:"A command is plain text invoked for a particular task; this rule must apply to every file and task, so it belongs in always-loaded CLAUDE.md."}},
+w:{1:'Path rules load only when a file path matches their glob and suit type- or location-specific rules; this universal rule would miss unmatched files.',2:'A skill suits a specific workflow and may not load for every edit; its scope follows the task, so it is not a default editing constraint.',3:"A command is plain text invoked on demand; it runs only when called and does not appear automatically on every edit."}},
 
 q074:{q:'Which set of trigger descriptions is entirely correct?',
 o:['CLAUDE.md task-triggered / path rules always loaded / skills path-matched','CLAUDE.md always loaded / path rules glob-matched on file path (automatic, deterministic) / skills task-triggered','CLAUDE.md path-matched / path rules task-triggered / skills always loaded','All three always load; they differ only in content'],
@@ -71,7 +71,7 @@ w:{0:'allowed-tools: [Read] limits which tools a skill may use and suits read-on
 q080:{q:'A skill should perform read-only analysis and must never write or delete files. What do you configure?',
 o:['context: fork','allowed-tools, restricting the skill to read operations','argument-hint','paths'],
 e:'allowed-tools restricts which tools a skill may use — e.g. reads only, no writes or deletes.',
-w:{0:'context: fork isolates a skill in a subagent and suits protecting the main context; it does not restrict writes, so use allowed-tools for read-only access.',2:"argument-hint only prompts for required input and does not restrict tool access; allowed-tools must enforce this skill's read-only boundary.",3:'Only rules have paths.'}},
+w:{0:'context: fork runs the skill in an isolated subagent without polluting the main session; it changes where the skill runs, not which operations it may perform.',2:"argument-hint prompts for input but does not restrict tools; a usage hint is documentation, not an enforcement boundary.",3:'Only rules have paths.'}},
 
 q081:{q:'Which field set belongs to a **rule**\'s frontmatter rather than a skill\'s?',
 o:['context: fork, allowed-tools, argument-hint','paths, description','name, version, author','model, temperature, max_tokens'],
@@ -108,7 +108,7 @@ w:{0:"Plan mode suits large, cross-file, or ambiguous changes where design work 
 q088:{q:'During exploration Claude must read dozens of files, producing very verbose output, and the main session\'s context is nearly full. Best approach?',
 o:['Switch to a model with a larger context window','Use an Explore subagent to isolate the exploration output so the main session receives only a compact summary','Manually delete part of the history','Move the exploration to the Batch API'],
 e:'The Explore subagent isolates verbose discovery so the main session gets a summary — this is what prevents context exhaustion.',
-w:{0:"A larger context window only raises capacity, does not isolate verbose exploration, and costs more; an Explore subagent should return a compact summary.",2:"Deleting history manually can also remove important decisions and findings; isolate the detailed exploration and return only its summary instead.",3:'Batch does not support interactive multi-turn exploration.'}},
+w:{0:"A larger context window adds capacity but does not isolate output; the exploration still accumulates in the main session.",2:"Deleting history manually can remove key decisions and findings that later work still needs.",3:'Batch does not support interactive multi-turn exploration.'}},
 
 q089:{q:'You described the output format you want in prose, but Claude interprets it slightly differently every time. Most effective technique?',
 o:['Give 2–3 concrete input/output pairs','Have Claude ask you questions first, then implement','Write tests first and have it iterate','Switch to plan mode'],
@@ -118,7 +118,7 @@ w:{1:'The interview pattern is for domains you do not know well.',2:'Test-driven
 q090:{q:'You are implementing complex distributed-locking logic and want Claude to converge on a correct implementation. Best iteration mode?',
 o:['Give a few I/O examples','Test-driven iteration: write the tests first, share the failures, converge','The interview pattern','Try variants in bulk via the Batch API'],
 e:'Test-driven iteration suits complex implementations: tests first, share failures, converge step by step.',
-w:{0:'Complex logic is hard to cover with a few I/O pairs.',2:'The interview pattern asks clarifying questions when you do not know the domain; this task needs convergence on a complex implementation through failing tests.',3:"The Batch API suits bulk independent requests and cannot adjust interactively after each test failure; this task needs test-driven iteration."}},
+w:{0:'Complex logic is hard to cover with a few I/O pairs.',2:'The interview pattern clarifies an unfamiliar domain or design, but it neither runs tests nor corrects code from failure results.',3:"The Batch API handles independent, delay-tolerant requests; after submission it cannot use each test failure to revise one implementation."}},
 
 q091:{q:'You are designing in an area you do not know well (cache coherency) and are unsure what to even consider. Best pattern?',
 o:['Have Claude implement it and fix problems later','The interview pattern: let Claude ask questions first (invalidation strategy? failure modes?) then implement','Give I/O examples','Write tests first'],
@@ -143,7 +143,7 @@ w:{0:'Verbose prompts that drift out of date.',2:'Workable, but CLAUDE.md is the
 q095:{q:'In CI, one Claude session generates code and then reviews its own output, and almost never reports problems. Cause and fix?',
 o:['The model is not capable enough; use a bigger one','Confirmation bias: the same session retains its generation reasoning and will not question its own decisions — review with an independent Claude instance','The prompt does not say "review strictly" — strengthen the wording','Raise the temperature'],
 e:'Session isolation: a session reviewing its own output suffers confirmation bias; review must use an independent instance with no generation context.',
-w:{0:'A bigger model does not remove same-session bias.',2:'Stronger wording changes only the prompt; it does not remove reasoning retained in the same session. Use an independent reviewer to avoid confirmation bias.',3:"Temperature changes output randomness and variety; it does not remove the generation reasoning retained by the same session. Use an independent reviewer."}},
+w:{0:'A bigger model does not remove same-session bias.',2:'Stronger review wording changes prompt emphasis; the review perspective is unchanged and may still defend earlier choices.',3:"Temperature changes sampling randomness; it does not make the reviewer a separate instance from the code generator."}},
 
 q096:{q:'A PR re-runs the Claude review on every push and the same comment has now been posted five times. Best fix?',
 o:['Review only once, when the PR is opened','On re-run, pass in the prior findings and instruct Claude to report only new or still-unresolved issues','Cache the review result and reuse it','Reduce review frequency to once a day'],
@@ -153,13 +153,13 @@ w:{0:'Later commits then go unreviewed.',2:'A cache cannot reflect new changes.'
 q097:{q:'Claude\'s suggested test cases in CI frequently duplicate existing tests. Best fix?',
 o:['Add "do not suggest duplicate tests" to the prompt','Provide the existing test files so Claude knows what is already covered','Turn off test suggestions','Only run test suggestions on new files'],
 e:'Supplying the existing tests tells Claude what scenarios are covered, so it stops proposing duplicates.',
-w:{0:'Claude has no idea what "existing" means without the files.',2:"Turning off test suggestions removes duplicates by discarding the feature's value; providing existing tests lets Claude target uncovered cases instead.",3:'Restricting suggestions to new files may avoid some duplicates, but misses gaps in older files; provide the existing tests and target uncovered cases.'}},
+w:{0:'Claude has no idea what "existing" means without the files.',2:"Disabling suggestions drops useful new cases with duplicates; it removes the feature instead of improving suggestion quality.",3:'File age is not a coverage signal; limiting checks to new files skips missing cases in older files.'}},
 
 /* ═══ DOMAIN 4 ═══ */
 q098:{q:'A code-review agent\'s prompt says only "find problems in the code", and the severity judgements come out wildly inconsistent. First step?',
 o:['Add few-shot examples','Make the criteria explicit: define what counts as critical / major / minor','Add a self-review stage','Switch to a stronger model'],
 e:'Rung one: the prompt is vague with no criteria → make the criteria explicit. The keyword "no clear criteria" points here.',
-w:{0:'With no criteria, examples only get imitated superficially.',2:"Self-review fits omissions that vary after criteria are clear; this prompt has no severity criteria yet, so define critical, major, and minor first.",3:"A stronger model may improve general capability, but it cannot supply one shared definition for missing severity levels; make the criteria explicit first."}},
+w:{0:'With no criteria, examples only get imitated superficially.',2:"Self-review suits varying omissions after criteria are clear; without severity rules, it has no consistent scale for checking its labels.",3:"A stronger model may improve capability but will not create a shared severity definition; separate runs can still grade differently."}},
 
 q099:{q:'The prompt already states clear classification criteria, but the model still applies them inconsistently on borderline cases. Next step?',
 o:['Make the criteria even longer','Add 2–4 few-shot examples covering the borderline cases and showing the reasoning','Add self-review','Add programmatic enforcement'],
@@ -174,7 +174,7 @@ w:{0:'The criteria may already exist; the problem is coverage in execution.',1:'
 q101:{q:'A code-review tool has a very high false-positive rate and developers now ignore every warning. Best way to stop the bleeding?',
 o:['Downgrade all findings to info','Switch off the high-false-positive categories first, keep the high-precision ones, and re-enable gradually once the criteria improve','Add "be conservative, only report high-confidence issues" to the prompt','Reduce review frequency'],
 e:'False-positive management: high noise destroying trust → disable the noisy categories to stop the bleeding, keep the precise ones, re-enable after fixing.',
-w:{0:"Downgrading every finding changes only presentation, so false positives still bury genuine issues; disable noisy categories while retaining precise ones.",2:'This kind of vague instruction does not work; you need concrete criteria.',3:'Lower frequency reduces alert count, not the false-positive rate of noisy categories; disable them, retain precise checks, and restore them after fixes.'}},
+w:{0:"Downgrading every alert to info changes presentation only; false positives still mix with real issues and keep trust low.",2:'This kind of vague instruction does not work; you need concrete criteria.',3:'Reducing review frequency lowers alert volume, not the false-positive rate; each run still emits the same noisy category.'}},
 
 q102:{q:'Why does "only report high-confidence issues" usually fail as a prompt instruction?',
 o:['The model does not understand English adjectives','It is a vague instruction with no actionable basis for judgement — what is needed is concrete categorical criteria','It makes the model report nothing at all','It must be in the system prompt rather than the user prompt'],
@@ -208,7 +208,7 @@ e:'The checklist: no criteria → write criteria; tool description problems → 
 q109:{q:'What is the most reliable way to get consistently structured output from Claude?',
 o:['Ask for JSON in the prompt and show a format example','Define a tool with a JSON schema and force structured output via tool_use','Extract with regular expressions from free text','Have Claude emit a Markdown table and parse it'],
 e:'The most reliable approach is a tool with a JSON schema, using tool_use to force structured output.',
-w:{0:'A JSON request and example can guide formatting, but output remains probabilistic and may omit fields; force structure with tool_use and a JSON schema.',2:"Regular expressions depend on exact free-text wording and formatting, so harmless changes can break extraction; tool_use with a JSON schema is stable.",3:'Markdown tables suit human reading but remain free text that needs parsing and cannot enforce JSON schema fields; use a schema-backed tool instead.'}},
+w:{0:'A JSON instruction and example only guide output; Claude may still omit fields or change the structure, and the example enforces nothing.',2:"A regex matches predefined text patterns but cannot constrain Claude to generate every field; a format change breaks the match.",3:'A Markdown table is a display format; headers, cells, and escaping vary between answers, making it a brittle machine interface.'}},
 
 q110:{q:'After moving to tool_use with a JSON schema, invoice extraction never produces malformed JSON again — but 8% of invoices still have line items that do not sum to the stated total. Why?',
 o:['The schema definition has a bug','Tool use removes syntax errors (malformed JSON, missing fields) but not semantic errors (sums that do not add up, values in the wrong field)','The model version is too old','tool_choice should be set to "any"'],
@@ -248,7 +248,7 @@ w:{0:"Retries suit transient failures or correctable validation feedback; the fi
 q117:{q:'You want to analyse code-review false positives systematically — which findings developers dismiss and what they have in common. Which field do you add?',
 o:['severity','detected_pattern — recording which code pattern triggered the finding','timestamp','reviewer_id'],
 e:'detected_pattern records what triggered each finding, so dismissals can be analysed for false-positive patterns.',
-w:{0:'severity records impact and suits risk ordering; it does not explain why dismissed findings fired, which requires the code pattern in detected_pattern.',2:'timestamp records when a finding occurred and suits timeline analysis; it cannot replace detected_pattern for identifying shared false-positive triggers.',3:"reviewer_id identifies who reviewed a finding, which helps attribution, but it does not record the triggering code pattern needed for false-positive analysis."}},
+w:{0:'severity records impact for risk ordering; dismissed findings at the same level can still arise from different code patterns.',2:'timestamp supports timeline analysis; false positives created near each other need not share a triggering code pattern.',3:"reviewer_id identifies who reviewed a finding, which helps attribution, but it does not record the triggering code pattern needed for false-positive analysis."}},
 
 q118:{q:'A self-check finds calculated_total and stated_total disagree. Best action?',
 o:['Overwrite stated_total with calculated_total automatically','Set conflict_detected: true in the output and flag it for human review','Discard the record','Re-extract until they agree'],
@@ -292,7 +292,7 @@ w:{0:"Nothing here points to context length; the same session retains its genera
 q126:{q:'Following on, what is the correct fix?',
 o:['Add "please review strictly" to the same session','Review with an independent Claude instance that has none of the generation context','Raise temperature','Run the review via the Batch API'],
 e:'The fix is an independent Claude instance, which has no generation reasoning and therefore no confirmation bias.',
-w:{0:"The phrase 'review strictly' changes only the prompt and leaves generation reasoning in context; use an independent Claude instance to remove confirmation bias.",2:'Higher temperature adds randomness and can suit diverse candidates, but cannot remove generation context or create objectivity; use an independent instance.',3:"The Batch API changes submission, latency, and cost; it does not by itself remove generation reasoning. The review must explicitly use an independent instance."}},
+w:{0:'"Review strictly" changes only the tone; the reviewer is still the session that generated the answer, so its confirmation bias remains.',2:'Higher temperature broadens sampling variation; different output is not an independent review perspective or correction.',3:"The Batch API changes submission, latency, and cost; it does not by itself remove generation reasoning. The review must explicitly use an independent instance."}},
 
 q127:{q:'Review findings must be routed by risk: high-confidence issues block the merge, low-confidence ones are advisory. How do you design this?',
 o:['Route by how long the finding text is','Have the model self-report a confidence score per finding, enabling calibrated review routing','Route by file path','Route by a threshold on the number of findings'],
@@ -311,7 +311,7 @@ w:{0:'A larger window does not change the attention distribution.',2:'Confirmati
 q130:{q:'After a long conversation is auto-summarised, the agent misremembers a refund amount that was previously confirmed. Best fix?',
 o:['Disable summarisation and keep the full transcript','Extract the hard facts (amounts, dates, order numbers, policy references) into a persistent "case facts" block that is excluded from summarisation and injected each turn','Make the summaries longer','Ask the customer to restate the amount each turn'],
 e:'Summaries are lossy by nature. The fix is a persistent case-facts block excluded from summarisation and injected every turn.',
-w:{0:"Disabling summarisation preserves details temporarily, but a long transcript keeps growing until context overflows; persist case facts separately instead.",2:'A longer summary may retain more, but summarisation still compresses and loses details; store the confirmed amount in a persistent case-facts block.',3:'Asking the customer every turn adds friction and may produce another wrong value. The amount is confirmed, so persist it in case facts.'}},
+w:{0:"Disabling summarisation preserves details temporarily, but a long transcript keeps growing until context overflows; persist case facts separately instead.",2:'A longer summary is still lossy compression and cannot guarantee retention of the exact confirmed amount; length is not fact storage.',3:'Asking every turn repeatedly burdens the customer and may produce conflicting amounts, leaving no stable record of the confirmed fact.'}},
 
 q131:{q:'An upstream subagent emits 155K tokens while the downstream synthesis agent performs best around 50K. Best fix?',
 o:['Insert an intermediate summarising agent to compress to 50K','Have the upstream agent return only structured essentials (facts + citations + relevance scores), reducing volume at the source','Truncate to the first 50K','Give the downstream agent a larger-window model'],
@@ -325,7 +325,7 @@ e:'Attention is strongest at the start and end, so key content goes first, with 
 q133:{q:'A customer\'s situation is not covered by any company policy. What should the agent do?',
 o:['Extrapolate from the closest policy','Escalate — this is a policy gap, and the agent must not invent rules','Refuse service','Tell the customer to look up the policy themselves'],
 e:'One of the four escalation triggers: a policy gap means there is no rule to follow, and the agent must not make one up.',
-w:{0:'Applying the nearest policy makes the agent invent an unauthorised rule. This policy gap has no applicable rule and needs human judgement.',2:"Refusing service ends the interaction without filling the policy gap or giving the customer a path forward; this case needs human judgement through escalation.",3:"Telling the customer to search shifts responsibility for an internal policy gap and still produces no applicable rule; escalate to a human decision-maker."}},
+w:{0:'Applying the nearest policy makes the agent invent an unauthorised rule. This policy gap has no applicable rule and needs human judgement.',2:"A policy gap does not mean the request should be refused; ending service skips the needed judgement and leaves no path forward.",3:"The policy has no applicable rule, so asking the customer to search cannot produce one and merely shifts an internal decision onto them."}},
 
 q134:{q:'Which situation should NOT be escalated to a human?',
 o:['A complaint requiring subjective, empathetic judgement','A shipping dispute — the company has a standard procedure','A refund above the agent\'s authorised limit','An irreversible high-risk action'],
@@ -410,7 +410,7 @@ w:{0:'A different model does not stop the dilution.',2:'A tool-selection problem
 q152:{q:'What does the official guidance recommend to counteract that context degradation?',
 o:['Re-read the whole codebase every turn','Have the agent maintain scratchpad files recording key findings, and read them back on later questions','Lower the temperature','Shorten each question'],
 e:'Scratchpad files persist key findings across context boundaries and are read back to counteract degradation.',
-w:{0:'Re-reading the entire codebase every turn repeatedly fills context and worsens degradation; store key findings in a scratchpad and read them as needed.',2:"Temperature affects generation randomness, not context capacity or retention of early findings; record key discoveries in a scratchpad and read them back.",3:'The problem is diluted history, not question length.'}},
+w:{0:'Re-reading the whole codebase each turn refills context; loading the same files again pushes earlier findings farther back.',2:"Temperature affects randomness, not retained context; lowering it cannot recover key facts already diluted by the history.",3:'The problem is diluted history, not question length.'}},
 
 q153:{q:'Exploration has produced a lot of verbose output, the context is nearly full, and the task is not finished. Which in-session compaction mechanism does the official guide name?',
 o:['`/memory`','`/compact`','`--resume`','`fork_session`'],

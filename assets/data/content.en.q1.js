@@ -39,12 +39,12 @@ w:{1:"Token cost is an optimisation concern; this question tests the hub-and-spo
 q008:{q:'A coordinator dispatched four subagents on the same topic and three reports came back largely duplicated. What is missing from the coordinator design?',
 o:['It failed to partition the research space and give each subagent a non-overlapping scope (by subtopic or source type)','The subagents were not given enough tools','Four subagents is too many; it should use one','No maximum iteration count was set'],
 e:'The coordinator\'s first rule: partition the research space explicitly with non-overlapping scopes.',
-w:{1:'Tools determine what a subagent can investigate, but the duplicated reports come from overlapping scopes; the coordinator must partition the research space.',2:'Using one subagent would remove useful parallelism. Keep parallel investigation, but give the four agents distinct subtopics or source types.',3:"A maximum-iteration cap limits runaway loops, not overlapping research scopes; the coordinator must assign non-overlapping work to prevent duplication."}},
+w:{1:'Tools define available capabilities, not task boundaries; several subagents can still collect the same evidence.',2:'Using one subagent would remove useful parallelism. Keep parallel investigation, but give the four agents distinct subtopics or source types.',3:"A maximum-iteration cap stops a loop after a count; repeated work can happen in the first round, before the cap helps."}},
 
 q009:{q:'A coordinator always runs "search agent → document agent → verification agent → synthesis agent" in fixed order, even for simple queries — slow and expensive. What should change?',
 o:['Let the coordinator select subagents dynamically instead of always running the full pipeline','Merge all four agents into one large agent','Shorten each agent\'s system prompt','Add caching to the pipeline'],
 e:'Coordinator rule two: choose subagents dynamically rather than running a fixed pipeline.',
-w:{1:'Merging removes specialisation and context isolation. That can suit a simple undivided task, but here the coordinator should select specialists per query.',2:"A shorter system prompt may reduce context per call, but every agent still runs in the fixed pipeline; the coordinator should select agents dynamically.",3:'Caching can reuse results for repeated queries, but it cannot decide whether an invocation is needed; the fixed full pipeline is the problem here.'}},
+w:{1:'Merging removes specialisation and context isolation. The four roles remain useful; the flaw is invoking all of them for every query.',2:"A shorter system prompt reduces context per call, but simple queries still incur every call in the fixed pipeline.",3:'Caching can reuse results for repeated queries, but it cannot decide whether an invocation is needed; the fixed full pipeline is the problem here.'}},
 
 q010:{q:'After synthesising a report, the coordinator notices one subtopic is clearly under-evidenced. What does the official guidance recommend?',
 o:['Publish the report and note the weak evidence','Enter an iterative refinement loop: evaluate the synthesis, locate gaps, re-dispatch targeted subagents, repeat until coverage is sufficient','Ask the user to rephrase the question','Re-run every subagent from scratch'],
@@ -54,7 +54,7 @@ w:{0:'Do not ship a known gap you can close.',2:"Asking the user again fits an u
 q011:{q:'After the coordinator decomposes a task, a subagent reports it has no idea what the user is asking about. The most likely cause?',
 o:['Subagents do not inherit parent context; the coordinator must pass what they need explicitly','The subagent model version is too old','The coordinator\'s allowedTools is misconfigured','The subagent\'s max_tokens is too small'],
 e:'Subagent context must be passed explicitly — it is never inherited from the parent.',
-w:{1:"Model version can affect capability, but it does not change the rule that subagents lack parent context; the coordinator must pass the background explicitly.",2:'A bad allowedTools stops spawning entirely, not context.',3:'max_tokens limits how much the subagent can produce and matters when output is truncated; here the coordinator must pass the missing user context.'}},
+w:{1:"Model version affects capability, not what enters the subagent's context; a stronger model still receives no user background.",2:'A bad allowedTools stops spawning entirely, not context.',3:'max_tokens limits output length and helps with truncation; it cannot add user background that was absent from the input.'}},
 
 q012:{q:'In the Agent SDK, which tool must appear in a coordinator\'s allowedTools for it to spawn subagents?',
 o:['Bash','Task','Read','Grep'],
@@ -73,7 +73,7 @@ w:{0:'Summaries are lossy and force duplicated work.',2:'Adds indirection and lo
 q015:{q:'A coordinator prompt spells out "first search X, then read document Y, then compare Z". When an unexpected data shape appears, every subagent stalls. How should the prompt change?',
 o:['Add more detail, enumerating every branch','State research goals and quality criteria rather than step-by-step procedure, so subagents can adapt','Reduce the number of subagents','Move the prompt into AgentDefinition\'s description field'],
 e:'Coordinator prompts should specify goals and quality criteria, not procedure — that is what enables adaptation.',
-w:{0:'Adding branches expands the brittle procedure without covering unforeseen data shapes; state research goals and quality criteria so subagents can adapt.',2:"Reducing the subagent count changes the level of parallelism but does not address the rigidity of step-by-step instructions; the prompt should state goals and quality criteria.",3:'`description` is the AgentDefinition field that explains a subagent\'s purpose; moving rigid steps there does not make them adaptive, so the prompt must focus on goals and quality.'}},
+w:{0:'A branch list is necessarily finite, so an unforeseen data shape still falls outside the procedure.',2:"Fewer subagents changes only parallelism; it does not make a step-by-step procedure flexible when inputs differ.",3:'`description` is an AgentDefinition field for a subagent\'s purpose; moving rigid steps there leaves them brittle to new data shapes.'}},
 
 q016:{q:'A team wants to compare a "migrate to Jest" path against a "migrate to Vitest" path from the same codebase analysis, without the two explorations contaminating each other. What fits?',
 o:['--resume the same session and alternate between them','fork_session, creating two independent branches from the shared baseline','Two entirely separate new sessions, each starting from zero','Put both options in one prompt and let Claude analyse them together'],
@@ -153,7 +153,7 @@ w:{0:'A larger window holds more text but does not fix attention dilution in one
 q032:{q:'The task is "analyse each file statically, then integrate into a cross-file report" — fixed and predictable. Which decomposition pattern?',
 o:['Dynamic decomposition','Prompt chaining','fork_session','Evaluator–optimizer'],
 e:'Prompt chaining is a fixed ordered pipeline, ideal for predictable multi-step reviews (per-file analysis → cross-file integration).',
-w:{0:'Dynamic decomposition creates tasks from intermediate findings and suits open exploration; this predictable sequence calls for prompt chaining.',2:"fork_session creates independent branches from a shared baseline for comparing alternatives; this fixed sequential workflow calls for prompt chaining.",3:'Evaluator-optimizer revisits one result to find and fill gaps; it does not decompose this known per-file then cross-file pipeline.'}},
+w:{0:'Dynamic decomposition suits open exploration driven by findings; this known sequence needs no adaptive replanning.',2:"fork_session branches from a shared baseline to compare alternatives; these file analyses must feed one report, not separate solution paths.",3:'Evaluator-optimizer reviews and improves one result; it does not organise per-file analysis followed by cross-file integration.'}},
 
 q033:{q:'The task is "investigate potential performance problems in this unfamiliar codebase" — you cannot know in advance what you will find. Which pattern?',
 o:['Prompt chaining','Dynamic decomposition: map the structure, find hot spots, generate subtasks on the fly','Batch API submission','A PreToolUse hook'],
@@ -178,7 +178,7 @@ w:{0:'Claude does not automatically invalidate old tool results.',2:'The baselin
 q037:{q:'After --resume, you find three files have changed. Best move?',
 o:['Have the agent re-analyse the entire codebase','Tell the agent exactly which three files changed and request a targeted re-analysis','Ignore the changes and carry on','Abandon the session and start over'],
 e:'Name the specific changed files and do a targeted re-analysis rather than starting from scratch.',
-w:{0:'Re-analysing the entire codebase repeats work on unchanged files and expands context and cost; only the three changed files need targeted analysis.',2:'Ignoring the edits leaves later decisions based on stale contents; tell the agent which three files changed and re-analyse those files.',3:"Even when prior tool results are stale, the recommended approach is a new session with an injected structured summary, not starting with no context at all; here only three files changed, so targeted re-analysis is enough."}},
+w:{0:'Re-analysing the whole codebase repeats unchanged files and fails to use the known three-file boundary, needlessly widening the work.',2:'Ignoring the edits leaves later decisions based on stale contents; tell the agent which three files changed and re-analyse those files.',3:"Starting from zero discards session context that remains valid; changes to only three files do not invalidate all prior analysis."}},
 
 q038:{q:'What is fork_session for?',
 o:['Resuming an interrupted investigation across work sessions','Creating an independent exploration branch from a shared analysis baseline, e.g. to compare two approaches','Running reviews in parallel in CI','Clearing context and starting over'],
@@ -198,7 +198,7 @@ e:'Tool descriptions drive LLM tool selection. The four elements: what it does /
 q041:{q:'Analysis shows that when a user query contains the word "report", the agent picks the wrong tool 78% of the time; otherwise it is fine. The tool descriptions have been reviewed and are clear and non-overlapping. What next?',
 o:['Add few-shot examples for report scenarios','Check the system prompt for unintentional keyword-based routing instructions','Rename the tools','Reduce the number of tools'],
 e:'Descriptions are fine but selection is systematically biased by a keyword — inspect the system prompt for accidental routing instructions.',
-w:{0:'Few-shot may mask the symptom, but a systematic keyword effect calls for checking accidental system-prompt routing first.',2:"Renaming helps when names or descriptions overlap; both are clear here, and the report-specific error points to system-prompt routing instructions.",3:"Reducing tool count helps when the whole selection set is overloaded; this error occurs only on one keyword, which points to system-prompt routing bias."}},
+w:{0:'Few-shot may mask the symptom, but a systematic keyword effect calls for checking accidental system-prompt routing first.',2:"Renaming addresses overlapping tool names or descriptions; the prompt gives no sign of name overlap, and renaming would not stop the same keyword from skewing the choice.",3:"Reducing tool count suits reliability degradation caused by too many tools; the prompt gives no evidence of excessive tool count, and the error appears only with one query word."}},
 
 q042:{q:'One analyze_document tool extracts data points, writes summaries and verifies claims, and the agent uses it inconsistently. Best fix?',
 o:['Write a longer, more detailed description','Split it into extract_data_points + summarize_content + verify_claim_against_source','Set tool_choice: "any" to force a tool call','Add a PostToolUse hook to normalise the return format'],
@@ -213,7 +213,7 @@ w:{0:"A description can document legal combinations but preserves invalid states
 q044:{q:'An agent calls check_availability then book_appointment; occasionally the slot is taken in between and the booking fails. Best fix?',
 o:['Auto-retry on failure','Merge into one atomic operation, find_and_book_appointment','Add a lock and shorten the interval between calls','Add a PostToolUse hook to detect the failure'],
 e:'A race condition caused by a window between two steps is fixed by making the operation atomic.',
-w:{0:'Automatic retry suits a retryable transient failure, but preserves the race between checking and booking; combine both steps into one atomic operation.',2:'Locking and shortening the gap still leaves a two-call workflow outside the recommended tool-level atomic design; expose one find-and-book operation.',3:"A PostToolUse hook can detect the failed booking after the race has happened, but cannot close the time window; one atomic operation can."}},
+w:{0:'Automatic retry suits transient failures but preserves the check-book race; the same slot can be taken again before booking.',2:'Locking and shortening the gap still leaves a two-call workflow outside the recommended tool-level atomic design; expose one find-and-book operation.',3:"A PostToolUse hook can detect a failed booking, but by then the two-call race has already occurred."}},
 
 q045:{q:'An agent pulls data from four APIs with different field names and shapes, and often mishandles them. Best approach?',
 o:['Describe all four shapes in the prompt and let Claude adapt','Normalise inside the tool and return one uniform schema','Provide a few-shot example for each shape','Add a PreToolUse hook to validate arguments'],
@@ -308,12 +308,12 @@ e:'Glob matches file names and path patterns; finding **/*.test.tsx is the canon
 q064:{q:'Edit keeps failing because the target text is not unique in the file. Best handling?',
 o:['Keep extending old_string until it is unique','Read the whole file and Write it back','Use Bash and sed to substitute','Give up on modifying that file'],
 e:'When Edit cannot find a unique anchor, fall back to Read + Write rather than fighting Edit.',
-w:{0:'Extending old_string keeps searching for a unique anchor and may still fail; after this Edit failure, Read the full file and rewrite it with Write.',2:'sed is useful for explicit command-line text processing, but bypasses this editing path; after Edit fails, use Read and then Write.',3:"Giving up leaves the file unchanged and the task unfinished; when Edit cannot find unique text, Read the complete file and rewrite it with Write."}},
+w:{0:'Extending old_string only keeps searching for an anchor; repeated text can remain non-unique and make Edit fail again.',2:'sed suits explicit command-line replacement but bypasses the built-in edit flow; an imprecise match may change several locations.',3:"Giving up leaves the task unfinished; it neither resolves the non-unique text nor produces the required file change."}},
 
 q065:{q:'What is the recommended strategy for understanding an unfamiliar large codebase?',
 o:['Read every source file at once to build complete context','Grep for entry points → Read to follow the import chain → build understanding incrementally','Run tree in Bash to see the directory structure and stop there','Have Claude write a speculative architecture document first'],
 e:'Exploration strategy: Grep for entry points, Read to follow imports, build up incrementally rather than reading everything (which blows up the context).',
-w:{0:'A full read may fit a small, fully relevant code set, but this large unfamiliar repository needs Grep entry points and targeted Reads.',2:"tree shows names and directory structure, which helps orientation, but not code semantics or import relationships; Grep and Read are still needed.",3:"A speculative architecture document lacks code evidence and can turn guesses into facts; first find entry points with Grep and follow imports with Read."}},
+w:{0:'A full read may fit a small, fully relevant code set, but this large unfamiliar repository needs Grep entry points and targeted Reads.',2:"tree lists directories and filenames, but cannot show how entry-point code is called or how modules relate through imports.",3:"A speculative architecture document has no code evidence and can freeze unverified module relationships into misleading facts."}},
 
 /* ═══ D1 additions ═══ */
 q164:{q:'A subagent keeps failing to reach an external data source. After retrying five times it gives up and returns an empty "nothing relevant found" report. The coordinator takes that at face value and moves on to synthesis. What is the underlying design fault?',
