@@ -83,7 +83,26 @@ create policy "progress_delete_own" on public.progress
 revoke all on table public.progress from anon, authenticated;
 grant select, insert, update, delete on table public.progress to authenticated;
 
--- 同时收掉 default privileges，避免以后新建的表重蹈覆辙
+-- 同时收掉 default privileges。
+--
+-- ⚠️ 别把这两行当成「以后新建的表自动安全」——**它只覆盖一个授予者**。
+--    default privileges 在 pg_default_acl 里是**按授予者角色分别记录**的，
+--    下面两句以执行者身份（SQL Editor 里是 postgres）生效，因此：
+--
+--      · postgres 建的表        → anon / authenticated 零权限 ✓
+--      · supabase_admin 建的表  → 仍继承 arwdDxtm 完整 7 项权限 ✗
+--
+--    实测（select * from pg_default_acl where defaclnamespace = 'public'::regnamespace）：
+--      postgres       | r | {postgres=arwdDxtm/postgres, service_role=Dxtm/postgres}
+--      supabase_admin | r | {…, anon=arwdDxtm/…, authenticated=arwdDxtm/…}
+--
+--    supabase_admin 那份改不了 —— alter default privileges for role supabase_admin
+--    需要该角色身份，托管环境不提供。
+--
+--    ⇒ 所以新增任何表都必须**显式**做这三件事，不能依赖这里：
+--         alter table … enable row level security;
+--         revoke all on table … from anon, authenticated;
+--         grant <所需最小权限> on table … to authenticated;
 alter default privileges in schema public revoke all on tables from anon;
 alter default privileges in schema public revoke all on tables from authenticated;
 
