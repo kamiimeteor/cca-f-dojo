@@ -14,6 +14,7 @@
   --ok-bg: #e8f2ea;
   --bad: #b3403a;
   --bad-bg: #fbeceb;
+  --current: #6b5b95;
   --warn: #9a6b12;
   --warn-bg: #fdf3dd;
   --info-bg: #eceef4;
@@ -40,6 +41,7 @@
   --ok-bg: #1e2c24;
   --bad: #e08b85;
   --bad-bg: #2f201f;
+  --current: #b7a4e0;
   --warn: #d9b45f;
   --warn-bg: #2c2718;
   --info-bg: #22252d;
@@ -368,7 +370,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 }
 .progress-strip i.ok { background: var(--ok); }
 .progress-strip i.no { background: var(--bad); }
-.progress-strip i.cur { background: var(--coral); }
+.progress-strip i.cur { background: var(--current); transform: scaleY(1.75); }
 
 /* ---------- exam ---------- */
 .exam-bar {
