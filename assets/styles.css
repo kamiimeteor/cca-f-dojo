@@ -101,8 +101,10 @@ a { color: inherit; }
 .nav a:hover { background: var(--paper-2); color: var(--ink); }
 .nav a.on { background: var(--ink); color: var(--paper); }
 
-/* 语言切换 / 进度入口 / 主题：非导航项，单独成组 */
-.topbar-tools { display: flex; align-items: center; flex: 0 0 auto; }
+/* 语言切换 / 进度入口 / 主题：非导航项，单独成组。
+   间距统一由 gap 管 —— 之前靠各控件自带 margin-left，主题按钮没有，
+   于是它和语言下拉贴成 0px。 */
+.topbar-tools { display: flex; align-items: center; flex: 0 0 auto; gap: 8px; }
 
 /* ---------- 窄屏顶栏：两行 ----------
    桌面端是「品牌 + 导航 + 工具」单行。窄屏放不下：五个中文导航项就要 460px，
@@ -342,7 +344,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .tag.fb { background: transparent; color: var(--ink-3); border: 1px dashed var(--line); }
 
 /* 语言切换：显示当前语言的下拉，放在 nav 最右 */
-.lang-wrap { position: relative; margin-left: 6px; }
+.lang-wrap { position: relative; }
 .lang-btn {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 6px 11px; border-radius: 20px;
@@ -621,7 +623,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
    原先是个孤零零的绿点 —— 看不出是什么，也看不出能点。 */
 .cloud-chip {
   position: relative; display: inline-grid; place-items: center;
-  width: 26px; height: 26px; margin-left: 6px; padding: 0;
+  width: 26px; height: 26px; padding: 0;
   border: 1px solid var(--line); border-radius: 50%;
   background: var(--paper-2); cursor: pointer; user-select: none;
   transition: border-color .15s, background .15s;
@@ -673,7 +675,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .cloud-dot.ok { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
 
 @media (max-width: 560px) {
-  .cloud-chip { margin-left: 2px; width: 22px; height: 22px; }
+  .cloud-chip { width: 22px; height: 22px; }
   .cloud-ava { font-size: 10px; }
   .cloud-mark { width: 8px; height: 8px; }
 }
