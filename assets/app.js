@@ -420,6 +420,7 @@ function router() {
     else app.innerHTML = `<div class="empty"><div class="em">◇</div>
       <h1>${esc(t('page_not_found'))}</h1>
       <a class="btn primary" href="#/">${esc(t('page_back_home'))}</a></div>`;
+    syncTopbarHeight();   // 换语言会改导航文字长度，进而改顶栏高度
     window.scrollTo(0, 0);
   } catch (e) {
     console.error('Router error:', e);
@@ -472,6 +473,34 @@ async function copyWithFlash(btn, text, label, failLabel = 'prog_copy_fail') {
     setTimeout(() => { btn.textContent = t(label); btn.classList.remove('ok-flash'); }, 1800);
   } catch { btn.textContent = t(failLabel); }
 }
+
+/** 把顶栏实际高度写进 --topbar-h，供所有 sticky 元素对齐。
+ *  桌面固定 60px，但窄屏顶栏是两行、高度随品牌换行和语言而变，
+ *  写死数值会让考试栏和目录卡在顶栏底下。 */
+function trackTopbarHeight() {
+  const bar = $('.topbar');
+  if (!bar) return;
+  const apply = () => document.documentElement.style
+    .setProperty('--topbar-h', Math.round(bar.getBoundingClientRect().height) + 'px');
+  apply();
+  // 多路兜底，不做二选一 —— 实测 ResizeObserver 和 window.resize 在部分环境
+  // （含浏览器的响应式模拟视口）改变宽度时都不回调，而 matchMedia 的 change 稳定触发。
+  // 顶栏高度只在跨过这两个断点时才变（导航是否换行），所以盯住断点就够。
+  if (typeof ResizeObserver === 'function') new ResizeObserver(apply).observe(bar);
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', () => setTimeout(apply, 100));
+  [820, 560].forEach((bp) => {
+    const mq = window.matchMedia(`(max-width: ${bp}px)`);
+    (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(apply);
+  });
+}
+
+/** 顶栏高度也可能因为换语言（导航文字变长变短）而改变，渲染后再对一次。 */
+const syncTopbarHeight = () => {
+  const bar = $('.topbar');
+  if (bar) document.documentElement.style
+    .setProperty('--topbar-h', Math.round(bar.getBoundingClientRect().height) + 'px');
+};
 
 /** 顶栏 / 页脚的静态文案随语言重绘 */
 function paintChrome() {
@@ -561,7 +590,7 @@ routes.home = () => {
         meta('scenarios').map((s) => `<span class="chip">${esc(s)}</span>`).join('')}</div></div>
 
     <h2>${esc(t('home_history'))}</h2>
-    ${S.exams.length ? `<div class="card" style="padding:6px 16px"><table class="hist">
+    ${S.exams.length ? `<div class="card" style="padding:6px 16px"><div class="table-scroll"><table class="hist">
       <thead><tr><th>${esc(t('hist_time'))}</th><th>${esc(t('hist_score'))}</th><th>${esc(t('hist_correct'))}</th>
         <th>${esc(t('hist_dur'))}</th><th>${esc(t('hist_dom'))}</th><th></th></tr></thead>
       <tbody>${S.exams.slice(0, 12).map((e, i) => `<tr>
@@ -572,7 +601,7 @@ routes.home = () => {
         <td style="font-size:12px;color:var(--ink-2)">${
           Object.entries(e.byDom).map(([d, v]) => `${esc(d.toUpperCase())} ${pct(v.ok, v.n)}%`).join(' · ')}</td>
         <td><button class="link-btn" data-review="${num(i)}">${esc(t('hist_review'))}</button></td>
-      </tr>`).join('')}</tbody></table></div>`
+      </tr>`).join('')}</tbody></table></div></div>`
       : `<div class="empty"><div class="em">◇</div>${esc(t('home_nohistory'))}</div>`}
   `;
 
@@ -1922,7 +1951,7 @@ function stageImport(text, opts = {}) {
   $('#progBody').innerHTML = `
     <h3 style="margin-top:0">${esc(opts.fromCloud ? t('cloud_merge_h') : t('prog_preview_h'))}</h3>
     <p class="sub">${esc(opts.fromCloud ? t('cloud_merge_sub') : t('prog_preview_sub'))}</p>
-    <table class="hist">
+    <div class="table-scroll"><table class="hist">
       <thead><tr><th></th><th>${esc(opts.fromCloud ? t('cloud_col_cloud') : t('prog_col_file'))}</th>
         <th>${esc(t('prog_col_now'))}</th>
         <th>${esc(t('prog_col_after'))}</th></tr></thead>
@@ -1932,7 +1961,7 @@ function stageImport(text, opts = {}) {
         ${row(t('prog_row_notes'), 'read')}
         ${row(t('prog_row_exams'), 'exams')}
       </tbody>
-    </table>
+    </table></div>
     <p class="sub" style="font-size:12.5px">${esc(t('prog_merge_note'))}</p>
     <div class="row" style="margin-top:14px">
       <button class="btn primary" id="pMerge">${esc(t('prog_do_merge'))}</button>
@@ -2001,6 +2030,7 @@ $('#importFile').onchange = (ev) => {
 
 applyTheme();
 paintChrome();
+trackTopbarHeight();
 updateWrongPill();
 router();
 
