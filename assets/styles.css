@@ -144,9 +144,17 @@ a { color: inherit; }
 @media (max-width: 560px) {
   .brand-text em { display: none; }
   .brand-text b {
-    white-space: normal; overflow: visible;
+    white-space: normal;
     font-size: 13.5px; line-height: 1.22;
+    /* 兜底：宁可从词中间断开，也不许溢出盒子 ——
+       溢出的文字会直接画到右边的工具区上，看起来像两段文字叠在一起。 */
+    overflow-wrap: anywhere;
   }
+  /* 品牌至少要能放下「Claude Certified」这一行，否则每个单词各占一行、
+     盒子却只有 41px 宽（英文工具区要 268px，把品牌挤没了）。
+     给了下限之后，放不下时 .topbar 会让工具区整体换行，而不是叠上去。 */
+  .brand { min-width: 96px; }
+  .topbar-tools { margin-left: auto; }
 }
 .nav a.on .pill { background: var(--paper); color: var(--ink); }
 
