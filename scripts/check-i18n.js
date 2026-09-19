@@ -7,8 +7,8 @@
 const fs = require('fs');
 const read = (p) => fs.readFileSync(p, 'utf8');
 
-const I18N = new Function(read('assets/data/i18n.js') + ';return I18N')();
-const src = read('assets/app.js') + read('assets/sync.js');
+const I18N = new Function(read('cca-f/assets/data/i18n.js') + ';return I18N')();
+const src = read('cca-f/assets/app.js') + read('cca-f/assets/sync.js');
 
 let bad = 0;
 

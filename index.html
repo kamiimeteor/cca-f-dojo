@@ -2,107 +2,168 @@
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
+<script>
+(() => {
+  function redirectLegacyUrl() {
+    const isFile = location.protocol === 'file:';
+    // 根路径和显式首页均可转发；file:// 保留本地目录支持。
+    let rootPath = location.pathname;
+    try { rootPath = decodeURIComponent(rootPath); } catch (_) {}
+    const isRoot = rootPath === '/' || rootPath === '/index.html'
+      || (isFile && /\/index\.html$/.test(rootPath));
+    const authParams = ['code', 'error', 'error_code', 'error_description',
+                        'access_token', 'refresh_token', 'token_type', 'expires_in', 'sb'];
+    const query = new URLSearchParams(location.search);
+    const hasAuthQuery = ['code', 'error', 'error_code', 'error_description'].some(key => query.has(key));
+    const hashParams = new URLSearchParams(location.hash.slice(1));
+    const hasAuthHash = !location.hash.startsWith('#/') && authParams.some(key => hashParams.has(key));
+    // 与 cca-f/assets/app.js 的 routes 耦合：CCA-F 新增路由时须同步此名单。
+    const knownRoutes = ['home', 'notes', 'practice', 'wrong', 'exam', 'privacy'];
+    const firstRoute = location.hash.slice(1).split('/').filter(Boolean)[0];
+    const isRouteHash = location.hash.startsWith('#/') || (Boolean(firstRoute) && knownRoutes.includes(firstRoute));
+    if (isRoot && (hasAuthQuery || hasAuthHash || isRouteHash)) {
+      const target = isFile ? new URL('cca-f/index.html', location.href).pathname : '/cca-f/';
+      location.replace(target + location.search + location.hash);
+      return true;
+    }
+    return false;
+  }
+  if (redirectLegacyUrl()) return;
+  window.addEventListener('hashchange', redirectLegacyUrl);
+  const isTheme = value => value === 'dark' || value === 'light';
+  let theme;
+  try { theme = localStorage.getItem('signal0.theme'); } catch (_) {}
+  if (!isTheme(theme)) {
+    try {
+      theme = JSON.parse(localStorage.getItem('ccae.v2'))?.prefs?.theme;
+    } catch (_) { /* 旧存档不可读时使用系统主题。 */ }
+  }
+  if (!isTheme(theme)) {
+    theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.dataset.theme = theme;
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Claude Certified Architect — 备考站</title>
-<link rel="stylesheet" href="assets/styles.css?v=47">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◆</text></svg>">
+<title>signal0 · 开发者学习与测验</title>
+<meta name="description" content="signal0 学习入口：Claude Certified Architect Foundations 备考、TypeScript 21 天每日测试、React 21 天每日测试。选择一个主题，开始今天的练习。">
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;text y='26' font-size='26' fill='%23c8553d'&gt;◆&lt;/text&gt;&lt;/svg&gt;">
+<style>
+:root {
+  --coral: #c8553d;
+  --paper: #faf9f5;
+  --paper-2: #f2f0e9;
+  --ink: #23211e;
+  --ink-2: #57534c;
+  --ink-3: #6f695f;
+  --line: #ddd8ca;
+  --ok: #31684a;
+  --ok-bg: #e8f2ea;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(35,33,30,.06), 0 6px 18px rgba(35,33,30,.05);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Songti SC", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+[data-theme="dark"] {
+  --coral: #e08b73;
+  --paper: #1b1a18;
+  --paper-2: #232120;
+  --ink: #ece8e0;
+  --ink-2: #b3ada2;
+  --ink-3: #a39b8f;
+  --line: #3a3733;
+  --ok: #7ec49a;
+  --ok-bg: #1e2c24;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.7 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.topbar { max-width: 1160px; margin: auto; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: bold 24px var(--serif); }
+.brand-mark { color: var(--coral); font-size: 21px; }
+.theme-btn { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink); font-size: 20px; cursor: pointer; }
+main { max-width: 1160px; margin: auto; padding: 76px 32px 80px; }
+.eyebrow { margin: 0 0 12px; color: var(--ink-2); font: 12px var(--mono); letter-spacing: .12em; }
+h1 { margin: 0; font: 500 clamp(32px, 5vw, 48px)/1.3 var(--serif); }
+.intro { margin: 18px 0 40px; color: var(--ink-2); }
+.apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; background: var(--paper-2); box-shadow: var(--shadow); }
+.card:hover { border-color: var(--coral); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--coral); outline-offset: 5px; }
+.number { color: var(--ink-3); font: 12px var(--mono); }
+h2 { margin: 24px 0 12px; font: 500 25px/1.4 var(--serif); overflow-wrap: anywhere; }
+.description { margin: 0 0 28px; color: var(--ink-2); font-size: 14px; }
+.card-bottom { margin-top: auto; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.status { color: var(--ok); background: var(--ok-bg); border-radius: 20px; padding: 3px 10px; font-size: 12px; }
+.enter { color: var(--ink-2); font-size: 13px; }
+footer { max-width: 1096px; margin: 0 auto; padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12px; }
+@media (max-width: 760px) {
+  .topbar { padding: 18px 20px; }
+  main { padding: 44px 20px; }
+  .apps { grid-template-columns: 1fr; }
+  .card { padding: 24px; }
+  h2 { margin-top: 16px; }
+  footer { margin: 0 20px; }
+}
+</style>
 </head>
 <body>
-
 <header class="topbar">
-  <a class="brand" href="#/">
-    <span class="brand-mark">◆</span>
-    <span class="brand-text">
-      <b>Claude Certified Architect</b>
-      <em id="brandSub">Foundations · 备考站</em>
-    </span>
-  </a>
-  <nav class="nav" id="nav">
-    <a href="#/" id="navHome">总览</a>
-    <a href="#/notes" id="navNotes">复习笔记</a>
-    <a href="#/practice" id="navPractice">刷题</a>
-    <a href="#/wrong"><span id="navWrongLabel">错题集</span><span class="pill" id="wrongPill" hidden>0</span></a>
-    <a href="#/exam" id="navExam">模拟考试</a>
-  </nav>
-  <!-- 工具区：这些不是导航链接，所以放在 <nav> 外面。
-       窄屏下导航要独占一整行，工具区必须能留在第一行。 -->
-  <div class="topbar-tools">
-    <!-- 同一个入口：未登录时是「管理进度」文字按钮，登录后升级成头像胶囊 -->
-    <button class="cloud-chip plain" id="cloudBadge">
-      <span class="cloud-label" id="cloudLabel">管理进度</span>
-      <span class="cloud-ava" id="cloudAva"></span>
-      <span class="cloud-mark" id="cloudMark"></span>
-    </button>
-    <div class="lang-wrap">
-      <button class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false">
-        <span id="langCur">中文</span><span class="chev" aria-hidden="true">▾</span>
-      </button>
-      <div class="lang-menu" id="langMenu" role="listbox" hidden>
-        <button class="lang-opt" data-lang="zh" role="option">中文</button>
-        <button class="lang-opt" data-lang="en" role="option">English</button>
-      </div>
-    </div>
-    <button class="icon-btn" id="themeBtn" title="切换深浅色">◐</button>
-  </div>
+  <a class="brand" href="/" aria-label="signal0 首页"><span class="brand-mark" aria-hidden="true">◆</span>signal0</a>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="切换深浅色" title="切换深浅色">◐</button>
 </header>
-
-<main id="app"></main>
-
-<footer class="foot">
-  <span id="footPrivacy">默认不登录：数据只存在本机浏览器 localStorage，不上传。登录后才会同步到云端。</span>
-  <button class="btn sm" id="progBtn">管理进度</button>
-  <a class="link-btn" href="#/privacy" id="privacyLink">隐私政策</a>
-  <button class="link-btn" id="feedbackLink">反馈 / 报错</button>
-  <input type="file" id="importFile" accept="application/json,.json" hidden>
-</footer>
-
-<div class="modal" id="progModal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="progTitle">
-    <div class="modal-head">
-      <h2 id="progTitle">进度管理</h2>
-      <button class="icon-btn" id="progClose" aria-label="关闭">✕</button>
-    </div>
-    <div class="modal-body" id="progBody"></div>
-  </div>
-</div>
-
-<!-- 反馈面板：结构固定，文案由 openFeedback() 按当前语言填。
-     故意不直接跳 mailto —— 没配邮件客户端的设备点了会毫无反应，
-     这里先把邮箱明文摆出来并可复制，保证任何环境下都能联系上。 -->
-<div class="modal" id="fbModal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
-    <div class="modal-head">
-      <h2 id="fbTitle">反馈 / 报错</h2>
-      <button class="icon-btn" id="fbClose" aria-label="关闭">✕</button>
-    </div>
-    <div class="modal-body">
-      <p class="sub" id="fbIntro"></p>
-      <h3 id="fbAddrH"></h3>
-      <div class="row">
-        <code id="fbAddr"></code>
-        <button class="btn sm" id="fbCopyAddr"></button>
-      </div>
-      <h3 id="fbTplH"></h3>
-      <p class="sub" id="fbTplNote"></p>
-      <pre class="fb-tpl" id="fbTpl"></pre>
-      <div class="row" style="margin-top:16px">
-        <a class="btn primary" id="fbOpen"></a>
-        <button class="btn sm" id="fbCopyTpl"></button>
-      </div>
-      <p class="sub" id="fbFallback" style="margin-top:14px"></p>
-    </div>
-  </div>
-</div>
-
-<script src="assets/data/notes.js?v=37"></script>
-<script src="assets/data/questions.js?v=41"></script>
-<script src="assets/data/i18n.js?v=37"></script>
-<script src="assets/data/privacy.js?v=37"></script>
-<script src="assets/data/config.js?v=37"></script>
-<script src="assets/data/content.en.js?v=37"></script>
-<script src="assets/data/content.en.q1.js?v=41"></script>
-<script src="assets/data/content.en.q2.js?v=41"></script>
-<script src="assets/app.js?v=47"></script>
-<script src="assets/sync.js?v=37"></script>
+<main>
+  <p class="eyebrow">SIGNAL0 / 学习与练习</p>
+  <h1>今天，练习什么？</h1>
+  <p class="intro">选一个主题，从一道题开始。</p>
+  <nav class="apps" aria-label="学习应用">
+    <a class="card" href="/cca-f/">
+      <span class="number">01 / CCA-F</span>
+      <h2>Claude Certified Architect · Foundations</h2>
+      <p class="description">168 道情景题 · 官方规格模拟考 · 中英双语</p>
+      <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">进入备考站 →</span></span>
+    </a>
+    <a class="card" href="/ts/">
+      <span class="number">02 / TYPESCRIPT</span>
+      <h2>TypeScript · 21 天每日测试</h2>
+      <p class="description">每天一组题，练习 TypeScript 类型与语法。</p>
+      <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">开始每日测试 →</span></span>
+    </a>
+    <a class="card" href="/react/">
+      <span class="number">03 / REACT</span>
+      <h2>React · 21 天每日测试</h2>
+      <p class="description">每天一组题，练习 React 组件与交互。</p>
+      <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">开始每日测试 →</span></span>
+    </a>
+  </nav>
+</main>
+<footer>signal0 · 开发者学习与测验</footer>
+<script>
+const themeButton = document.getElementById('themeBtn');
+function paintThemeButton() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  themeButton.textContent = dark ? '☀' : '◐';
+  themeButton.setAttribute('aria-pressed', String(dark));
+}
+themeButton.addEventListener('click', () => {
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('signal0.theme', theme); } catch (_) {}
+  paintThemeButton();
+});
+paintThemeButton();
+// 直接打开文件时，入口仍指向同目录下的三个应用。
+if (location.protocol === 'file:') {
+  document.querySelector('.brand').href = 'index.html';
+  document.querySelectorAll('.card').forEach(link => {
+    link.href = '.' + link.getAttribute('href') + 'index.html';
+  });
+}
+</script>
 </body>
 </html>

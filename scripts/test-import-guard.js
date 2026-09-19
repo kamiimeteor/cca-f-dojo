@@ -10,12 +10,12 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
-const source = fs.readFileSync('assets/app.js', 'utf8');
+const source = fs.readFileSync('cca-f/assets/app.js', 'utf8');
 
 const keysMatch = source.match(/^const ARCHIVE_KEYS = \[[\s\S]*?\];\n/m);
-assert(keysMatch, 'assets/app.js 缺少 ARCHIVE_KEYS');
+assert(keysMatch, 'cca-f/assets/app.js 缺少 ARCHIVE_KEYS');
 const fnMatch = source.match(/^function looksLikeArchive\([\s\S]*?^}\n/m);
-assert(fnMatch, 'assets/app.js 缺少 looksLikeArchive()');
+assert(fnMatch, 'cca-f/assets/app.js 缺少 looksLikeArchive()');
 
 const sandbox = {};
 vm.runInNewContext(`${keysMatch[0]}${fnMatch[0]}`, sandbox, { filename: 'looksLikeArchive.js' });
@@ -67,7 +67,7 @@ assert.equal(
 
 /* ---- stageImport 必须在 sanitizeState 之前调用这道闸 ---- */
 const stage = source.match(/^function stageImport\([\s\S]*?^}\n/m);
-assert(stage, 'assets/app.js 缺少 stageImport()');
+assert(stage, 'cca-f/assets/app.js 缺少 stageImport()');
 const guardAt = stage[0].indexOf('looksLikeArchive');
 const sanitizeAt = stage[0].indexOf('sanitizeState');
 assert(guardAt !== -1, 'stageImport() 没有调用 looksLikeArchive()');

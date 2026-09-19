@@ -2,9 +2,9 @@
 const assert = require('assert');
 const fs = require('fs');
 
-const source = fs.readFileSync('assets/app.js', 'utf8');
+const source = fs.readFileSync('cca-f/assets/app.js', 'utf8');
 const match = source.match(/^function buildPracticeResume\([\s\S]*?^}\n/m);
-assert(match, 'assets/app.js 缺少 buildPracticeResume()');
+assert(match, 'cca-f/assets/app.js 缺少 buildPracticeResume()');
 
 const buildPracticeResume = new Function(
   'shuffle',

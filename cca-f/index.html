@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Certified Architect — 备考站</title>
+<link rel="stylesheet" href="assets/styles.css?v=47">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◆</text></svg>">
+</head>
+<body>
+
+<!-- TEMP: 第 2 步抽共享顶栏时替换掉 -->
+<a href="../index.html" style="display:block;width:max-content;padding:4px 12px;font:12px/20px system-ui,sans-serif;color:inherit;text-decoration:underline;">← signal0</a>
+
+<header class="topbar">
+  <a class="brand" href="#/">
+    <span class="brand-mark">◆</span>
+    <span class="brand-text">
+      <b>Claude Certified Architect</b>
+      <em id="brandSub">Foundations · 备考站</em>
+    </span>
+  </a>
+  <nav class="nav" id="nav">
+    <a href="#/" id="navHome">总览</a>
+    <a href="#/notes" id="navNotes">复习笔记</a>
+    <a href="#/practice" id="navPractice">刷题</a>
+    <a href="#/wrong"><span id="navWrongLabel">错题集</span><span class="pill" id="wrongPill" hidden>0</span></a>
+    <a href="#/exam" id="navExam">模拟考试</a>
+  </nav>
+  <!-- 工具区：这些不是导航链接，所以放在 <nav> 外面。
+       窄屏下导航要独占一整行，工具区必须能留在第一行。 -->
+  <div class="topbar-tools">
+    <!-- 同一个入口：未登录时是「管理进度」文字按钮，登录后升级成头像胶囊 -->
+    <button class="cloud-chip plain" id="cloudBadge">
+      <span class="cloud-label" id="cloudLabel">管理进度</span>
+      <span class="cloud-ava" id="cloudAva"></span>
+      <span class="cloud-mark" id="cloudMark"></span>
+    </button>
+    <div class="lang-wrap">
+      <button class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false">
+        <span id="langCur">中文</span><span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <div class="lang-menu" id="langMenu" role="listbox" hidden>
+        <button class="lang-opt" data-lang="zh" role="option">中文</button>
+        <button class="lang-opt" data-lang="en" role="option">English</button>
+      </div>
+    </div>
+    <button class="icon-btn" id="themeBtn" title="切换深浅色">◐</button>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <span id="footPrivacy">默认不登录：数据只存在本机浏览器 localStorage，不上传。登录后才会同步到云端。</span>
+  <button class="btn sm" id="progBtn">管理进度</button>
+  <a class="link-btn" href="#/privacy" id="privacyLink">隐私政策</a>
+  <button class="link-btn" id="feedbackLink">反馈 / 报错</button>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+</footer>
+
+<div class="modal" id="progModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="progTitle">
+    <div class="modal-head">
+      <h2 id="progTitle">进度管理</h2>
+      <button class="icon-btn" id="progClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body" id="progBody"></div>
+  </div>
+</div>
+
+<!-- 反馈面板：结构固定，文案由 openFeedback() 按当前语言填。
+     故意不直接跳 mailto —— 没配邮件客户端的设备点了会毫无反应，
+     这里先把邮箱明文摆出来并可复制，保证任何环境下都能联系上。 -->
+<div class="modal" id="fbModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+    <div class="modal-head">
+      <h2 id="fbTitle">反馈 / 报错</h2>
+      <button class="icon-btn" id="fbClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="sub" id="fbIntro"></p>
+      <h3 id="fbAddrH"></h3>
+      <div class="row">
+        <code id="fbAddr"></code>
+        <button class="btn sm" id="fbCopyAddr"></button>
+      </div>
+      <h3 id="fbTplH"></h3>
+      <p class="sub" id="fbTplNote"></p>
+      <pre class="fb-tpl" id="fbTpl"></pre>
+      <div class="row" style="margin-top:16px">
+        <a class="btn primary" id="fbOpen"></a>
+        <button class="btn sm" id="fbCopyTpl"></button>
+      </div>
+      <p class="sub" id="fbFallback" style="margin-top:14px"></p>
+    </div>
+  </div>
+</div>
+
+<script src="assets/data/notes.js?v=37"></script>
+<script src="assets/data/questions.js?v=41"></script>
+<script src="assets/data/i18n.js?v=37"></script>
+<script src="assets/data/privacy.js?v=37"></script>
+<script src="assets/data/config.js?v=37"></script>
+<script src="assets/data/content.en.js?v=37"></script>
+<script src="assets/data/content.en.q1.js?v=41"></script>
+<script src="assets/data/content.en.q2.js?v=41"></script>
+<script src="assets/app.js?v=47"></script>
+<script src="assets/sync.js?v=37"></script>
+</body>
+</html>

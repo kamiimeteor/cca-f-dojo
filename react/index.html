@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>React 21 天 · 每日测试</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◆</text></svg>">
+<style>
+/* ===== 设计系统：暖纸本 + React 蓝 ===== */
+:root{
+  --brand:#087ea4; --brand-soft:#149eca;
+  --paper:#faf9f5; --paper-2:#f2f0e9; --paper-3:#e8e5da;
+  --ink:#23211e; --ink-2:#57534c; --ink-3:#8a847a;
+  --line:#ddd8ca;
+  --ok:#3f7d58; --ok-bg:#e8f2ea;
+  --bad:#b3403a; --bad-bg:#fbeceb;
+  --current:#6b5b95;
+  --warn:#9a6b12; --warn-bg:#fdf3dd;
+  --info:#4a5a7d; --info-bg:#eceef4;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(35,33,30,.06), 0 6px 18px rgba(35,33,30,.05);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Songti SC",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+[data-theme="dark"]{
+  --brand:#58c4dc; --brand-soft:#87ceeb;
+  --paper:#1b1a18; --paper-2:#232120; --paper-3:#2c2a27;
+  --ink:#ece8e0; --ink-2:#b3ada2; --ink-3:#837d73;
+  --line:#3a3733;
+  --ok:#7ec49a; --ok-bg:#1e2c24;
+  --bad:#e08b85; --bad-bg:#2f201f;
+  --current:#b7a4e0;
+  --warn:#d9b45f; --warn-bg:#2c2718;
+  --info:#9aa8c6; --info-bg:#22252d;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:var(--sans); background:var(--paper); color:var(--ink);
+  font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased;
+}
+code,pre,kbd{font-family:var(--mono)}
+code{background:var(--paper-3);border:1px solid var(--line);padding:1px 5px;border-radius:4px;font-size:.88em}
+pre code{background:none;border:0;padding:0}
+a{color:inherit}
+::selection{background:color-mix(in srgb,var(--brand) 26%,transparent)}
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; gap:20px;
+  padding:0 22px; height:60px;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-mark{color:var(--brand);font-size:20px;line-height:1}
+.brand-text{display:flex;flex-direction:column;line-height:1.25}
+.brand-text b{font-family:var(--serif);font-size:15px;letter-spacing:.01em}
+.brand-text em{font-style:normal;font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+.nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+.nav a{
+  padding:7px 13px;border-radius:7px;text-decoration:none;font-size:14px;
+  color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
+}
+.nav a:hover{background:var(--paper-2);color:var(--ink)}
+.nav a.on{background:var(--ink);color:var(--paper)}
+.nav a.on .pill{background:var(--paper);color:var(--ink)}
+.topbar-tools{display:flex;align-items:center;flex:0 0 auto;gap:8px}
+.pill{
+  font-size:11px;font-weight:700;min-width:18px;text-align:center;
+  padding:1px 6px;border-radius:20px;background:var(--brand);color:#fff;
+}
+.pill.due{background:var(--warn)}
+.icon-btn{
+  border:1px solid var(--line);background:transparent;color:var(--ink-2);
+  width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:15px;
+}
+.icon-btn:hover{background:var(--paper-2);color:var(--ink)}
+
+/* 窄屏顶栏：品牌 + 工具一行，导航独占第二行并可横滑 */
+@media (max-width:820px){
+  .topbar{height:auto;flex-wrap:wrap;gap:10px;padding:9px 14px 0}
+  .brand{flex:1 1 0;min-width:0;gap:8px}
+  .brand-text{min-width:0}
+  .brand-text b,.brand-text em{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-text b{font-size:14px}
+  .brand-text em{font-size:10px}
+  .nav{
+    order:3;width:100%;margin-left:0;gap:2px;
+    padding:1px 14px 7px;margin-inline:-14px;
+    overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+  }
+  .nav::-webkit-scrollbar{display:none}
+  .nav a{padding:6px 10px;font-size:13.5px}
+}
+@media (max-width:560px){ .brand-text em{display:none} .brand{min-width:96px} }
+
+/* ---------- layout ---------- */
+main{max-width:1060px;margin:0 auto;padding:30px 22px 70px}
+@media (max-width:560px){ main{padding:20px 15px 56px} }
+h1{font-family:var(--serif);font-size:27px;margin:0 0 4px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-size:20px;margin:34px 0 12px}
+h3{font-size:15px;margin:22px 0 8px}
+@media (max-width:560px){ h1{font-size:22px} h2{font-size:18px;margin-top:26px} }
+.sub{color:var(--ink-3);font-size:13.5px;margin:0 0 26px}
+.sub a{color:var(--brand)}
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g7{grid-template-columns:repeat(7,1fr);gap:10px}
+@media (max-width:900px){ .g7{grid-template-columns:repeat(4,1fr)} }
+@media (max-width:820px){ .g2,.g3,.g4{grid-template-columns:1fr 1fr} }
+@media (max-width:560px){ .g2,.g3,.g4{grid-template-columns:1fr} .g7{grid-template-columns:repeat(3,1fr);gap:8px} }
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 17px;border-radius:8px;border:1px solid var(--line);
+  background:var(--paper-2);color:var(--ink);font:inherit;font-size:14px;
+  cursor:pointer;text-decoration:none;transition:.13s;
+}
+.btn:hover{background:var(--paper-3)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{filter:brightness(.94)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:5px 11px;font-size:13px}
+.btn:focus-visible,.opt:focus-visible,.chip:focus-visible,.icon-btn:focus-visible,.day:focus-visible{
+  outline:2px solid var(--brand);outline-offset:2px;
+}
+.link-btn{
+  background:none;border:0;color:var(--ink-3);font:inherit;font-size:12.5px;
+  cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;
+}
+.link-btn:hover{color:var(--ink)}
+.link-btn.danger:hover{color:var(--bad)}
+.row{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.spacer{flex:1}
+
+/* ---------- tiles / meter ---------- */
+.tile{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px}
+.tile .k{font-size:11.5px;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase}
+.tile .v{font-family:var(--serif);font-size:30px;line-height:1.15;margin-top:4px}
+.tile .v small{font-size:14px;color:var(--ink-3);font-family:var(--sans)}
+.tile .n{font-size:12px;color:var(--ink-3);margin-top:2px}
+.tile .meter{margin-top:9px}
+.meter{height:7px;border-radius:20px;background:var(--paper-3);overflow:hidden}
+.meter>i{display:block;height:100%;background:var(--brand);border-radius:20px;transition:width .4s}
+.meter.ok>i{background:var(--ok)}
+.meter.bad>i{background:var(--bad)}
+
+/* ---------- day grid ---------- */
+.day{
+  position:relative;display:block;width:100%;text-align:left;cursor:pointer;
+  background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 13px;color:var(--ink);font:inherit;transition:.13s;
+}
+.day:hover{border-color:var(--brand);transform:translateY(-1px);box-shadow:var(--shadow)}
+.day .dn,.day .dp,.day .ds{display:block}
+.day .dn{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.04em}
+.day .dp{font-size:13.5px;margin-top:3px;line-height:1.4;min-height:2.8em}
+.day .ds{font-size:12px;color:var(--ink-3);margin-top:7px;font-variant-numeric:tabular-nums}
+.day.exam{border-style:dashed}
+/* 完成状态要一眼看出来：左侧色条 + 角标 + 分数配色，三重冗余。
+   只靠一个 ✓ 在 7 列网格里太容易被扫过去。 */
+.day.done,.day.part{border-style:solid;padding-left:16px}
+.day.done::before,.day.part::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  border-radius:var(--radius) 0 0 var(--radius);
+}
+.day.done{border-color:color-mix(in srgb,var(--ok) 55%,var(--line));background:var(--ok-bg)}
+.day.done::before{background:var(--ok)}
+.day.done .ds{color:var(--ok);font-weight:600}
+.day.done .dn{color:color-mix(in srgb,var(--ok) 70%,var(--ink-3))}
+.day.part{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.day.part::before{background:var(--warn)}
+.day.part .ds{color:var(--warn);font-weight:600}
+.day .mark{
+  position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;
+  display:grid;place-items:center;font-size:11px;line-height:1;
+  background:var(--ok);color:var(--paper);
+}
+.day .mark.part{background:var(--warn)}
+.day .dot{position:absolute;top:11px;right:11px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+
+/* ---------- notes 复习笔记 ---------- */
+.notes-wrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:30px;align-items:start}
+@media (max-width:900px){ .notes-wrap{grid-template-columns:minmax(0,1fr);gap:20px} }
+.toc{
+  position:sticky;top:calc(var(--topbar-h,60px) + 18px);
+  max-height:calc(100vh - 110px);overflow:auto;
+  border-right:1px solid var(--line);padding-right:14px;
+}
+.toc input{
+  width:100%;padding:8px 11px;border-radius:8px;border:1px solid var(--line);
+  background:var(--paper-2);color:var(--ink);font:inherit;font-size:13.5px;margin-bottom:12px;
+}
+.toc input:focus{outline:none;border-color:var(--brand)}
+.toc-w{margin-bottom:14px}
+.toc-w>b{
+  display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:5px;
+}
+.toc a{
+  display:flex;gap:8px;align-items:baseline;padding:5px 9px;border-radius:6px;
+  text-decoration:none;font-size:13.5px;color:var(--ink-2);line-height:1.45;
+}
+.toc a:hover{background:var(--paper-2);color:var(--ink)}
+.toc a.on{background:var(--brand);color:#fff}
+.toc a .num{font-family:var(--mono);font-size:11.5px;opacity:.75;flex:none}
+.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok);font-size:12px}
+.toc a.on.done::after{color:#fff}
+@media (max-width:900px){
+  .toc{
+    position:static;max-height:38vh;overflow-y:auto;overscroll-behavior-y:contain;
+    border-right:0;padding-right:0;border-bottom:1px solid var(--line);padding-bottom:12px;
+  }
+  .toc input{position:sticky;top:0;z-index:1;background:var(--paper);margin-bottom:10px}
+}
+.note-body{max-width:760px}
+.note-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.note-body h2{margin:0;font-size:22px}
+.note-key{
+  font-size:15.5px;line-height:1.6;margin:0 0 16px;padding-left:13px;
+  border-left:3px solid var(--brand);color:var(--ink);
+}
+.note-body p{margin:12px 0}
+.note-body ul,.note-body ol{margin:12px 0;padding-left:22px}
+.note-body li{margin:6px 0}
+.note-body pre{
+  background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;overflow-x:auto;font-size:12.8px;line-height:1.6;margin:14px 0;
+}
+.note-nav{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
+.note-src{font-size:12.8px;color:var(--ink-3);margin-top:6px}
+.note-src a{color:var(--brand);word-break:break-all}
+
+/* ---------- tags ---------- */
+.tag{
+  display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;
+  background:var(--brand);color:#fff;letter-spacing:.03em;vertical-align:middle;
+}
+.tag.q{background:var(--paper-3);color:var(--ink-2)}
+.tag.w1{background:#6b5b95} .tag.w2{background:#2e7d7b} .tag.w3{background:#a1662f}
+.tag.multi{background:var(--warn);color:#fff}
+.tag.re{background:var(--current);color:#fff}
+[data-theme="dark"] .tag.w1,[data-theme="dark"] .tag.w2,[data-theme="dark"] .tag.w3,
+[data-theme="dark"] .tag.re,[data-theme="dark"] .tag.multi,[data-theme="dark"] .tag{color:#1b1a18}
+[data-theme="dark"] .tag.q{color:var(--ink-2)}
+
+/* ---------- boxes ---------- */
+.box{border-radius:var(--radius);padding:13px 16px;margin:16px 0;border-left:3px solid}
+.box b.bt{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.box p{margin:0}
+.box.key{background:var(--info-bg);border-color:var(--info)}
+.box.key b.bt{color:var(--info)}
+.box.warn{background:var(--bad-bg);border-color:var(--bad)}
+.box.warn b.bt{color:var(--bad)}
+.box.tip{background:var(--ok-bg);border-color:var(--ok)}
+.box.tip b.bt{color:var(--ok)}
+.box.mn{background:var(--warn-bg);border-color:var(--warn)}
+.box.mn b.bt{color:var(--warn)}
+.box a{color:var(--brand)}
+
+/* ---------- quiz ---------- */
+.quiz{max-width:760px;margin:0 auto}
+.q-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink-3);margin-bottom:10px}
+.q-stem{font-size:16.5px;line-height:1.65;margin:0 0 18px}
+pre.code{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px 15px;overflow-x:auto;font-size:12.8px;line-height:1.6;margin:0 0 18px;color:var(--ink-2);
+}
+.opts{display:grid;gap:9px}
+.opt{
+  display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;
+  padding:13px 15px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--paper-2);color:var(--ink);font:inherit;font-size:14.5px;
+  line-height:1.6;cursor:pointer;transition:.12s;
+}
+.opt:hover:not(:disabled){border-color:var(--current);background:var(--paper-3)}
+.opt .ltr{
+  flex:none;width:24px;height:24px;border-radius:6px;background:var(--paper-3);
+  display:grid;place-items:center;font-size:12.5px;font-weight:700;margin-top:1px;
+}
+.opt.sel{border-color:var(--current);box-shadow:inset 0 0 0 1px var(--current)}
+.opt.sel .ltr{background:var(--current);color:#fff}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.right .ltr{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.wrong .ltr{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.fld{
+  width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);
+  background:var(--paper-2);color:var(--ink);font:inherit;font-size:14px;line-height:1.6;
+}
+.fld:focus{outline:none;border-color:var(--brand)}
+input.fld.mono{font-family:var(--mono)}
+.fld-l{display:block;font-size:13px;color:var(--ink-3);margin-bottom:5px}
+
+.verdict{margin:18px 0 0;padding:15px 17px;border-radius:var(--radius);border-left:3px solid}
+.verdict.good{background:var(--ok-bg);border-color:var(--ok)}
+.verdict.bad{background:var(--bad-bg);border-color:var(--bad)}
+.verdict .vh{font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.verdict.good .vh{color:var(--ok)}
+.verdict.bad .vh{color:var(--bad)}
+.verdict p{margin:0 0 10px;font-size:14px}
+.verdict .ans{font-size:13.5px;color:var(--ink-2);margin:0 0 10px}
+.verdict .ans b{color:var(--ink)}
+
+.progress-strip{display:flex;gap:3px;margin-bottom:20px;flex-wrap:wrap}
+.progress-strip i{
+  width:100%;max-width:22px;flex:1 1 10px;height:4px;border-radius:4px;background:var(--paper-3);
+}
+.progress-strip i.ok{background:var(--ok)}
+.progress-strip i.no{background:var(--bad)}
+.progress-strip i.cur{background:var(--current);transform:scaleY(1.75)}
+
+.qbar{
+  position:sticky;top:var(--topbar-h,60px);z-index:20;
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  padding:11px 0;background:var(--paper);border-bottom:1px solid var(--line);margin-bottom:20px;
+}
+.qbar .ct{font-family:var(--mono);font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.kbd-hint{font-size:12px;color:var(--ink-3)}
+.kbd-hint kbd{
+  background:var(--paper-3);border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:4px;padding:0 5px;font-size:11px;margin:0 1px;
+}
+@media (max-width:560px){ .kbd-hint{display:none} }
+
+.score-hero{text-align:center;padding:30px 20px}
+.score-hero .big{font-family:var(--serif);font-size:66px;line-height:1}
+.score-hero .big.pass{color:var(--ok)}
+.score-hero .big.fail{color:var(--bad)}
+.score-hero .lbl{font-size:13px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.score-hero .msg{font-size:15px;margin-top:12px}
+
+/* ---------- lists ---------- */
+.item{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper-2);padding:14px 16px;margin-bottom:10px}
+.item .ih{display:flex;gap:9px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink-3);margin-bottom:6px}
+.item .iq{font-size:14.5px;line-height:1.6}
+.item .ia{font-size:13.5px;margin-top:8px}
+.item .ia .ua{color:var(--bad)}
+.item .ia .ca{color:var(--ok)}
+.item .ie{font-size:13.5px;color:var(--ink-2);margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+.empty{text-align:center;padding:54px 20px;color:var(--ink-3)}
+.empty .em{font-size:34px;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:6px 13px;border-radius:20px;border:1px solid var(--line);
+  background:var(--paper-2);color:var(--ink-2);font:inherit;font-size:13px;cursor:pointer;
+}
+.chip:hover{border-color:var(--brand);color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.static{cursor:default}
+.chip.static:hover{border-color:var(--line);color:var(--ink-2)}
+.chip .n{opacity:.6;font-size:12px;margin-left:4px}
+
+/* ---------- footer / modal / toast ---------- */
+.foot{
+  max-width:1060px;margin:0 auto;padding:20px 22px 40px;
+  display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+  font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line);
+}
+@media (max-width:560px){ .foot{padding:18px 15px 34px;gap:12px} }
+.modal{
+  position:fixed;inset:0;z-index:100;
+  background:color-mix(in srgb,var(--ink) 42%,transparent);
+  backdrop-filter:blur(3px);display:grid;place-items:center;padding:22px;
+}
+.modal[hidden]{display:none}
+.modal-card{
+  width:100%;max-width:560px;max-height:86vh;overflow:auto;
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.22);
+}
+.modal-head{
+  position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:12px;
+  padding:16px 20px;border-bottom:1px solid var(--line);background:var(--paper);
+}
+.modal-head h2{margin:0;font-family:var(--serif);font-size:19px;flex:1}
+.modal-body{padding:18px 20px 22px}
+.modal-body h3{margin:22px 0 9px;font-size:14px}
+.modal-body h3:first-of-type{margin-top:0}
+.dropzone{
+  border:2px dashed var(--line);border-radius:var(--radius);
+  padding:20px 16px;text-align:center;transition:.15s;background:var(--paper-2);
+}
+.dropzone.over{border-color:var(--brand);background:var(--paper-3)}
+.dz-main{font-size:14px;color:var(--ink-2)}
+.dz-sub{font-size:13px;color:var(--ink-3);margin-top:6px}
+.ok-flash{border-color:var(--ok)!important;color:var(--ok)!important}
+.toast{
+  position:fixed;right:18px;bottom:18px;z-index:2000;max-width:420px;
+  padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+  background:var(--paper);color:var(--ink);box-shadow:0 8px 28px rgba(0,0,0,.18);
+  opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .18s,transform .18s;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.bad{border-color:var(--bad)}
+.toast.good{border-color:var(--ok)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+<!-- TEMP: 第 2 步抽共享顶栏时替换掉 -->
+<a href="../index.html" style="display:block;width:max-content;padding:4px 12px;font:12px/20px system-ui,sans-serif;color:inherit;text-decoration:underline;">← signal0</a>
+
+<header class="topbar">
+  <a class="brand" href="#/">
+    <span class="brand-mark">◆</span>
+    <span class="brand-text">
+      <b>React 21 天</b>
+      <em>react.dev Learn · 每日测试</em>
+    </span>
+  </a>
+  <nav class="nav" id="nav">
+    <a href="#/" data-r="">总览</a>
+    <a href="#/notes" data-r="notes">复习笔记</a>
+    <a href="#/practice" data-r="practice">自由刷题</a>
+    <a href="#/wrong" data-r="wrong">错题集<span class="pill" id="wrongPill" hidden>0</span></a>
+  </nav>
+  <div class="topbar-tools">
+    <button class="icon-btn" id="themeBtn" title="切换深浅色">◐</button>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <span>进度只存在本机浏览器 localStorage，不上传、无需登录。换设备用「管理进度」导出 / 导入。</span>
+  <button class="btn sm" id="progBtn">管理进度</button>
+  <a class="link-btn" href="https://zh-hans.react.dev/learn" target="_blank" rel="noopener">主教材 react.dev/learn</a>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+</footer>
+
+<div class="modal" id="progModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="progTitle">
+    <div class="modal-head">
+      <h2 id="progTitle">进度管理</h2>
+      <button class="icon-btn" id="progClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body" id="progBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============ 题库 · 84 题 · 按 react.dev Learn 三章排布 ============ */
+/* d:天 p:知识点 t:mc|tf|fill q:题干 c:代码 o:选项 a:答案(mc/tf为索引, fill为等价写法数组) e:解析 */
+const BANK=[
+/* ---- Week 1 · 描述 UI ---- */
+{d:1,p:'组件基础',t:'mc',q:'React 组件的本质是什么？',o:['一种特殊的 HTML 模板文件','一个返回 JSX 标签的 JavaScript 函数','一个 CSS 类的集合','浏览器内置的自定义元素'],a:1,e:'组件就是返回标签的 JS 函数。这决定了后面一切：props 是函数入参，渲染就是调用函数。'},
+{d:1,p:'组件基础',t:'tf',q:'组件名必须以大写字母开头，写 <profile /> 会被 React 当成普通 HTML 标签处理。',o:['对','错'],a:0,e:'大小写是 React 区分"组件 vs 原生标签"的唯一信号。小写一律按 HTML 标签处理。'},
+{d:1,p:'组件基础',t:'fill',q:'补全默认导出：export ______ function App() { ... }',a:['default'],e:'export default 一个文件只能有一个；具名导出 export function 可以有多个。'},
+{d:1,p:'组件基础',t:'mc',q:'一个文件里最多可以有几个 default export？',o:['不限','2 个','1 个','0 个，必须用具名导出'],a:2,e:'default 导出每文件唯一；import 时可任意命名。具名导出必须同名（或 as 改名）。'},
+
+{d:2,p:'JSX 语法',t:'mc',q:'JSX 里写 CSS 类为什么用 className 而不是 class？',o:['纯粹是历史习惯','class 是 JavaScript 的保留字','className 性能更好','两者都可以，无区别'],a:1,e:'JSX 是 JavaScript，class 在 JS 里是定义类的关键字，所以 DOM 属性用 className。'},
+{d:2,p:'JSX 语法',t:'tf',q:'组件必须返回单一根节点；要并列多个标签又不想多套一层 div，可以用 <>...</> 包裹。',o:['对','错'],a:0,e:'Fragment（<></>）在 DOM 里不产生真实节点，专治"只是为了包一层"。'},
+{d:2,p:'JSX 语法',t:'fill',q:'JSX 中嵌入 JavaScript 表达式，要用哪对符号包住？（直接输入符号）',a:['{}','｛｝','{ }'],e:'大括号是 JSX 通往 JS 的窗口：{user.name}、{formatDate(d)} 都是表达式。'},
+{d:2,p:'JSX 语法',t:'mc',q:'在 JSX 中，HTML 里的 <img> 必须写成？',o:['<img> 保持不变','<img /> 显式自闭合','<image />','[img]'],a:1,e:'JSX 比 HTML 严格：所有标签必须闭合，无子元素的标签写成自闭合 <img />。'},
+
+{d:3,p:'Props',t:'mc',q:'关于 props 最准确的心智模型是？',o:['组件的内部可变状态','组件的只读入参，像函数参数一样','全局共享的配置对象','DOM 属性的别名'],a:1,e:'组件是函数，props 就是实参。只读——想"改"就让父组件传新的下来。'},
+{d:3,p:'Props',t:'tf',q:'子组件可以直接修改收到的 props 来更新界面。',o:['对','错'],a:1,e:'props 不可变。需要变化时用 state，或请求父组件传入不同的 props。'},
+{d:3,p:'Props',t:'fill',q:'解构时给 prop 设默认值：function Avatar({ size ______ 100 }) { ... }（填运算符）',a:['='],e:'解构默认值 size = 100：只在 size 未传或为 undefined 时生效（传 null 不会触发）。'},
+{d:3,p:'Props',t:'mc',q:'props.children 指的是什么？',o:['组件的子类','组件标签之间嵌套的内容','当前组件的所有实例','子组件的 state'],a:1,e:'<Card><p>hi</p></Card> 中，<p>hi</p> 会作为 children 传给 Card——这是布局类组件的基础。'},
+
+{d:4,p:'条件渲染',t:'mc',q:'要在 JSX 内部内联做条件渲染，最常用的是？',o:['if...else 语句直接写在标签里','三元运算符 cond ? A : B','switch 语句','goto'],a:1,e:'JSX 大括号里只能放表达式，if 是语句。三元和 && 是表达式，所以能内联。'},
+{d:4,p:'条件渲染',t:'tf',q:'当 count 为 0 时，{count && <p>有新消息</p>} 会在页面上渲染出一个 0。',o:['对','错'],a:0,e:'&& 左边是 0 时整个表达式求值为 0，而 React 会渲染数字 0。写成 {count > 0 && ...} 才安全。这是最经典的线上 bug 之一。'},
+{d:4,p:'条件渲染',t:'fill',q:'组件在某种条件下什么都不渲染，应该 return ______',a:['null'],e:'返回 null 表示"这里不渲染任何内容"，比返回空 div 干净。'},
+{d:4,p:'条件渲染',t:'mc',q:'cond && <A /> 的语义是？',o:['cond 为真渲染 A，否则渲染 false 字样','cond 为真渲染 A，否则什么都不渲染','永远渲染 A','语法错误'],a:1,e:'React 不渲染 false/null/undefined，所以 && 是"有则渲染"的简写（注意 0 的陷阱）。'},
+
+{d:5,p:'列表与 key',t:'mc',q:'key 的作用是什么？',o:['给元素加样式钩子','帮 React 在重新渲染时识别每个元素对应哪条数据','提高 SEO','设置 DOM 的 id 属性'],a:1,e:'key 是元素的身份证。列表重排、增删时，React 靠它判断谁动了、谁该保留 state。'},
+{d:5,p:'列表与 key',t:'tf',q:'列表会发生插入、删除或重新排序时，用数组下标 index 作 key 是安全的。',o:['对','错'],a:1,e:'重排后 index 对不上原数据，会导致 state 错位、输入框内容串行等诡异 bug。静态列表勉强可用，动态列表必须用稳定 ID。'},
+{d:5,p:'列表与 key',t:'fill',q:'把数据数组渲染成组件列表，最常用数组的 ______ 方法',a:['map','.map','map()'],e:'todos.map(t => <Item key={t.id} {...t} />) 是 React 最高频的模式。'},
+{d:5,p:'列表与 key',t:'mc',q:'对 key 的要求是？',o:['全应用唯一','兄弟节点之间唯一，且在多次渲染间保持稳定','必须是数字','每次渲染随机生成即可'],a:1,e:'只需兄弟间唯一 + 稳定。用 Math.random() 生成 key 等于每次都告诉 React "全是新元素"。'},
+
+{d:6,p:'纯函数组件',t:'mc',q:'"保持组件纯粹"指的是？',o:['组件代码要短','相同的 props/state 输入永远返回相同的 JSX，渲染期间不改变外部变量','不使用任何第三方库','只用函数组件不用类'],a:1,e:'纯粹 = 可预测。这是 React 能安全地随时重渲染、并发渲染的前提。'},
+{d:6,p:'纯函数组件',t:'tf',q:'在组件渲染过程中修改组件外部的变量（比如全局计数器）是允许的。',o:['对','错'],a:1,e:'渲染期间的副作用会让输出不可预测。副作用属于事件处理函数，或最后才考虑 useEffect。'},
+{d:6,p:'纯函数组件',t:'mc',q:'StrictMode 在开发环境把组件函数调用两次，目的是？',o:['性能测试','暴露不纯的渲染逻辑','兼容旧浏览器','预热缓存'],a:1,e:'纯函数调用两次结果不变；如果两次调用产生了不同结果或副作用翻倍，说明组件不纯。'},
+{d:6,p:'纯函数组件',t:'fill',q:'副作用（如修改 DOM、发请求）应该放在事件处理函数里，或作为最后手段放进 use______',a:['Effect','effect'],e:'优先级：事件处理函数 > useEffect。渲染函数本体必须保持纯粹。'},
+
+{d:7,p:'Week1 验收',t:'mc',q:'【验收】按 Thinking in React，拿到一张设计稿后的第一步是？',o:['先写 CSS','把 UI 拆解成组件层级结构','先搭建路由','先定义全局 state'],a:1,e:'第一步永远是拆组件树——这正是设计师转 React 的天然优势：你本来就会拆界面。'},
+{d:7,p:'Week1 验收',t:'fill',q:'【验收】<Card><p>hi</p></Card> 中，<p>hi</p> 通过名为 ______ 的 prop 传入 Card',a:['children'],e:'children 是 JSX 嵌套内容的固定通道，Card 内部用 {children} 决定它渲染在哪。'},
+{d:7,p:'Week1 验收',t:'tf',q:'【验收】同一个组件可以在多个地方使用，每个实例的 props 和内部状态相互独立。',o:['对','错'],a:0,e:'组件即函数：每次使用都是独立调用，互不干扰。这就是"组件化复用"的含义。'},
+{d:7,p:'Week1 验收',t:'mc',q:'【验收】渲染待办列表，下面哪个 key 的选择最好？',o:['数组下标 index','Math.random()','数据库返回的 todo.id','固定字符串 "item"'],a:2,e:'数据自带的稳定唯一 ID 是标准答案。random 每次都变，index 重排会错位，固定串直接冲突。'},
+
+/* ---- Week 2 · 添加交互 ---- */
+{d:8,p:'事件处理',t:'mc',q:'onClick={handleClick} 和 onClick={handleClick()} 的区别是？',c:'<button onClick={handleClick}>A</button>\n<button onClick={handleClick()}>B</button>',o:['没有区别','前者传入函数，点击时才调用；后者在渲染时就立即调用了','后者性能更好','前者是老写法'],a:1,e:'带括号 = 立即调用，把返回值（通常是 undefined）当处理函数。这是最常见的新手 bug。'},
+{d:8,p:'事件处理',t:'tf',q:'事件处理函数内部可以包含副作用（改 state、发请求等）。',o:['对','错'],a:0,e:'事件处理函数不在渲染期间执行，是副作用的最佳归宿——不需要保持纯粹。'},
+{d:8,p:'事件处理',t:'fill',q:'阻止事件继续向父元素冒泡：e.______()',a:['stopPropagation','stoppropagation'],e:'stopPropagation 阻止冒泡；preventDefault 阻止浏览器默认行为。两个别混。'},
+{d:8,p:'事件处理',t:'mc',q:'点击时要调用 handleDelete(id) 并传参，正确写法是？',o:['onClick={handleDelete(id)}','onClick={() => handleDelete(id)}','onClick="handleDelete(id)"','onClick={handleDelete[id]}'],a:1,e:'包一层箭头函数，点击时才执行。直接写 handleDelete(id) 会在每次渲染时立即调用。'},
+
+{d:9,p:'useState',t:'fill',q:'补全解构：const [count, ______] = useState(0)',a:['setCount','setcount'],e:'useState 返回 [当前值, 更新函数]，约定命名 set + 大写变量名。'},
+{d:9,p:'useState',t:'mc',q:'为什么不用普通局部变量、非要用 state？',c:'let count = 0;\nfunction handleClick() {\n  count = count + 1; // 界面不更新\n}',o:['普通变量不能存数字','普通变量的修改不会触发重新渲染，且每次渲染都会被重置','state 更省内存','这是语法规定'],a:1,e:'两个致命伤：改了不通知 React 重渲染；组件函数重新执行时局部变量归零。state 同时解决这两点。'},
+{d:9,p:'useState',t:'tf',q:'Hook 只能在组件函数的顶层调用，不能放在 if、循环或嵌套函数里。',o:['对','错'],a:0,e:'React 靠调用顺序对应每个 Hook 的内部存储，条件调用会打乱顺序。'},
+{d:9,p:'useState',t:'mc',q:'useState(0) 的返回值是什么？',o:['数字 0','一个含两个元素的数组：[当前值, 更新函数]','一个对象 {value, set}','一个 Promise'],a:1,e:'返回数组所以能自由命名解构：const [count, setCount]、const [name, setName]。'},
+
+{d:10,p:'state 快照',t:'mc',q:'点击按钮后弹窗显示的是旧值 0 而不是 1，为什么？',c:'const [count, setCount] = useState(0);\nfunction handleClick() {\n  setCount(count + 1);\n  alert(count); // 弹出 0\n}',o:['setCount 失败了','state 是本次渲染的快照，本次执行中 count 永远是 0','alert 有延迟','浏览器 bug'],a:1,e:'setCount 是"预约下一次渲染"，不改变本次渲染中的 count。每次渲染拿到的是那一刻的快照。'},
+{d:10,p:'state 快照',t:'tf',q:'在同一个事件处理函数里连写三次 setCount(count + 1)，count 会增加 3。',o:['对','错'],a:1,e:'三次用的都是同一个快照值，等于 setCount(0+1) 三遍——结果只加 1。要累加需用更新函数 c => c + 1。'},
+{d:10,p:'state 快照',t:'mc',q:'调用 setState 之后，紧接着在同一函数里读这个 state 变量，读到的是？',o:['新值','旧值（本次渲染的快照）','undefined','随机'],a:1,e:'新值要到下一次渲染才可见。这是理解 React 数据流最重要的一条。'},
+{d:10,p:'state 快照',t:'fill',q:'一次渲染期间，state 的值在这次渲染的整个执行过程中保持______（填两个字）',a:['不变'],e:'把每次渲染想成一张定格照片：事件处理函数"记住"的是它诞生那次渲染的值。'},
+
+{d:11,p:'批处理与更新函数',t:'fill',q:'用更新函数累加：setCount(c ______ c + 1)（填箭头符号）',a:['=>','＝＞'],e:'c => c + 1 拿到的是队列中最新的值，不是渲染时的快照。'},
+{d:11,p:'批处理与更新函数',t:'mc',q:'连写三次 setCount(c => c + 1)，count 增加多少？',o:['1','2','3','0'],a:2,e:'更新函数会依次进入队列、逐个基于前一个结果计算：0→1→2→3。对比 Day 10 的快照题。'},
+{d:11,p:'批处理与更新函数',t:'tf',q:'React 会等事件处理函数全部执行完，再统一处理 state 更新队列（批处理）。',o:['对','错'],a:0,e:'批处理避免半成品渲染、减少重复渲染次数。所以函数中途看不到"已更新"的 state。'},
+{d:11,p:'批处理与更新函数',t:'mc',q:'什么场景下必须用更新函数形式 setX(prev => ...)？',o:['所有场景都必须','同一事件中要基于前一次更新结果再次更新时','只在 useEffect 里','只在 TypeScript 项目里'],a:1,e:'普通 setX(值) 够用就用它；连续依赖前值的更新才需要 updater。判断标准就一句：下一个值是否依赖上一个值。'},
+
+{d:12,p:'更新对象',t:'mc',q:'为什么不能直接 user.name = "Kami" 来更新 state 对象？',o:['语法错误','React 通过对象引用是否变化来检测更新，原地修改不会触发重渲染','会内存泄漏','name 是保留字'],a:1,e:'state 中的对象要视为只读。必须创建新对象，React 比较引用发现变了才重渲染。'},
+{d:12,p:'更新对象',t:'fill',q:'用展开语法复制再覆盖：setUser({ ______user, name: "Kami" })（填符号）',a:['...','…'],e:'{...user, name: "Kami"}：先浅拷贝所有字段，再覆盖 name。顺序很重要——写反了会被旧值盖回去。'},
+{d:12,p:'更新对象',t:'tf',q:'展开语法 ... 是深拷贝，嵌套对象也会被完整复制。',o:['对','错'],a:1,e:'... 只拷贝一层（浅拷贝）。嵌套字段拷的是引用，改深层属性仍会污染原对象。'},
+{d:12,p:'更新对象',t:'mc',q:'更新嵌套对象 user.address.city，正确做法是？',c:'setUser({\n  ...user,\n  address: { ...user.address, city: "London" }\n})',o:['user.address.city = "London" 即可','从被改的那层到最外层，每一层都要创建新副本','只复制最外层就够','嵌套对象不能放进 state'],a:1,e:'不可变更新要一路复制到顶：改哪层，哪层以上全部换新引用。'},
+
+{d:13,p:'更新数组',t:'mc',q:'下面哪组数组方法可以直接用于 state 更新（因为返回新数组）？',o:['push / pop / splice','map / filter / concat / [...arr]','sort / reverse（原地）','以上都可以'],a:1,e:'口诀：返回新数组的能用，原地修改的不能。sort/reverse 要先 [...arr] 复制一份再操作。'},
+{d:13,p:'更新数组',t:'tf',q:'push 和 splice 直接修改原数组，因此不应直接用在 state 数组上。',o:['对','错'],a:0,e:'添加用 [...todos, newTodo]，删除用 filter，替换用 map——全部生成新数组。'},
+{d:13,p:'更新数组',t:'fill',q:'删除 id 为 x 的项：setTodos(todos.______(t => t.id !== x))',a:['filter','.filter'],e:'filter 留下"不等于 x"的所有项，返回新数组——删除的标准写法。'},
+{d:13,p:'更新数组',t:'mc',q:'要替换数组中某一项（比如把 id=3 的 todo 标记完成），应该用？',o:['splice','map，命中该项时返回新对象，其余原样返回','delete 关键字','直接下标赋值 todos[i] = ...'],a:1,e:'todos.map(t => t.id === 3 ? {...t, done: true} : t)——map + 条件三元是替换的标准范式。'},
+
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】每次点击执行 setCount(count+1); setCount(count+1); 两句，单次点击后 count 增加多少？',o:['2','1','0','报错'],a:1,e:'两句用的是同一个快照，等价于重复预约同一个值。快照 + 批处理，Week 2 的两大概念在这一题汇合。'},
+{d:14,p:'Week2 验收',t:'fill',q:'【验收】阻止表单提交刷新页面：e.______()',a:['preventDefault','preventdefault'],e:'preventDefault 阻止浏览器默认行为（表单提交跳转）；和 stopPropagation（阻止冒泡）区分开。'},
+{d:14,p:'Week2 验收',t:'tf',q:'【验收】state 更新是排队异步处理的，所以本次渲染的代码里读不到更新后的值。',o:['对','错'],a:0,e:'set 函数 = 请求下一次渲染，不 = 修改当前变量。这句话能脱口而出，Week 2 就过关了。'},
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】React 坚持不可变更新（新对象/新数组）的核心原因是？',o:['JS 不支持修改对象','靠引用比较高效检测变化，且让每次渲染可预测、可回溯','为了兼容 IE','减少代码量'],a:1,e:'引用一变就知道该更新，配合快照机制让 UI 状态可预测——这也是调试时能"时间旅行"的基础。'},
+
+/* ---- Week 3 · 管理状态 ---- */
+{d:15,p:'声明式 UI',t:'mc',q:'声明式 UI 与命令式 UI 的本质区别是？',o:['声明式代码更短','声明式描述"每种状态下 UI 长什么样"，命令式一步步指挥 DOM 怎么变','声明式不能做动画','没有本质区别'],a:1,e:'你声明状态→UI 的映射，React 负责操作 DOM。就像打车报目的地，而不是给司机逐条指路。'},
+{d:15,p:'声明式 UI',t:'mc',q:'按 react.dev 的方法，设计一个表单交互的第一步是？',o:['先写提交逻辑','找出组件所有的视觉状态（empty / typing / submitting / success / error）','先选 UI 库','先做动效'],a:1,e:'枚举所有状态再连线触发关系——这一步和设计师画 user flow 是同一件事，只是产出物是 state 设计。'},
+{d:15,p:'声明式 UI',t:'tf',q:'在 React 中，应该拿到 DOM 节点手动修改 style 来切换显示/隐藏，作为主要手段。',o:['对','错'],a:1,e:'那是命令式思维。React 的方式：改 state，让 JSX 根据 state 渲染出对应的样子。'},
+{d:15,p:'声明式 UI',t:'fill',q:'React 的核心公式：UI = f(______)',a:['state','状态'],e:'界面是状态的函数。状态定了，界面就定了——这也是原型可以被 evals 测试的理论基础。'},
+
+{d:16,p:'state 结构',t:'mc',q:'设计 state 结构的首要原则是？',o:['state 越多越灵活','避免冗余、重复和自相矛盾的 state','全部放进一个大对象','全部用字符串存储'],a:1,e:'每一份多余的 state 都是一个待同步的 bug 源。最小化 state，其余现场计算。'},
+{d:16,p:'state 结构',t:'tf',q:'能从 props 或已有 state 计算出来的值，也应该单独存一份 state 以便读取。',o:['对','错'],a:1,e:'fullName 能由 firstName + lastName 算出就别存——存了就要手动同步，忘了同步就是 bug。'},
+{d:16,p:'state 结构',t:'mc',q:'isTyping 和 isSubmitting 两个布尔值可能同时为 true（矛盾状态），更好的设计是？',o:['加第三个布尔值来标记矛盾','用一个 status state：\'typing\' | \'submitting\' | \'success\'','用 try/catch 处理','忽略，反正不常发生'],a:1,e:'联合类型的单一 status 让非法状态"无法被表示"——正是你 TS 学过的字面量联合在 state 设计里的应用。'},
+{d:16,p:'state 结构',t:'fill',q:'从现有 state 或 props 计算出来（而不单独存储）的值，叫______值（两个字）',a:['派生','衍生'],e:'派生值在渲染时现算：const fullName = first + last。不进 state，永不失步。'},
+
+{d:17,p:'状态提升',t:'mc',q:'两个兄弟组件需要共享同一份状态，标准做法是？',o:['用全局变量','把 state 提升到它们最近的公共父组件，通过 props 下发','各存一份手动同步','写进 localStorage'],a:1,e:'状态提升（lifting state up）：父组件持有 state，兄弟组件一个通过 props 读，另一个通过回调写。'},
+{d:17,p:'状态提升',t:'tf',q:'受控组件的显示值完全由父组件通过 props 驱动，自己不持有这份 state。',o:['对','错'],a:0,e:'受控 = 值由 props 进、变更由回调出。组件自己不"记"，所以父组件永远知道真相。'},
+{d:17,p:'状态提升',t:'fill',q:'父传子用 props；子要通知父发生了变化，则通过父传下来的______函数（两个字）',a:['回调','回掉'],e:'onChange、onSelect 这类函数 prop 就是反向数据流的通道：子调用，父更新 state。'},
+{d:17,p:'状态提升',t:'mc',q:'"单一数据源"（single source of truth）原则指的是？',o:['整个应用只能有一个 state','每个独立的 state 都有唯一一个"拥有"它的组件','所有数据放在服务器','只能用一个 useState'],a:1,e:'不是集中所有 state，而是每份 state 有唯一归属。需要共享就提升，而不是复制。'},
+
+{d:18,p:'保留与重置',t:'mc',q:'React 决定"保留还是重置组件 state"的依据是？',o:['组件的名字','组件在 UI 树中的位置','组件的代码行数','props 是否变化'],a:1,e:'同一位置渲染同一组件 → state 保留；位置上的组件类型变了 → state 整棵销毁重建。'},
+{d:18,p:'保留与重置',t:'tf',q:'同一位置上前后渲染的是同一个组件，即使 props 变了，它的 state 也会保留。',o:['对','错'],a:0,e:'props 变化不重置 state。想让"看起来一样的组件"重置，需要给它不同的 key。'},
+{d:18,p:'保留与重置',t:'fill',q:'想强制重置一个组件的 state（比如切换聊天对象时清空输入框），给组件换一个不同的 ______',a:['key'],e:'<Chat key={to.id} />：key 变 = 身份变 = 旧的销毁、新的重建。key 不只是列表专用。'},
+{d:18,p:'保留与重置',t:'mc',q:'同一位置从 <Counter /> 换成渲染 <p>，再换回 <Counter />，计数还在吗？',o:['在，React 有缓存','不在，位置上组件类型变过，state 已被销毁','在，只要变量名相同','取决于浏览器'],a:1,e:'类型一换，整个子树的 state 就地销毁。换回来的是一个全新的 Counter。'},
+
+{d:19,p:'Reducer 与 Context',t:'mc',q:'什么信号提示你该把 useState 迁移到 useReducer？',o:['state 是数字的时候','多个事件处理函数以复杂方式更新同一份 state，逻辑散落各处','组件超过 100 行','用了 TypeScript'],a:1,e:'reducer 把"发生了什么"（action）和"state 怎么变"（reducer 函数）分离，更新逻辑集中一处、可单独测试。'},
+{d:19,p:'Reducer 与 Context',t:'fill',q:'dispatch({ type: "added", id, text }) 中传给 dispatch 的这个对象叫______（两个字母单词）',a:['action','Action'],e:'action 描述"用户做了什么"，reducer 决定"state 因此怎么变"。命名尽量用业务语言（added/deleted），不是技术语言（setX）。'},
+{d:19,p:'Reducer 与 Context',t:'mc',q:'Context 主要解决什么问题？',o:['替代所有 state','跨多层组件传递数据，避免一层层手动透传 props（prop drilling）','提升渲染性能','服务端渲染'],a:1,e:'主题、当前用户这类"树上大范围都要"的数据适合 Context；两三层的传递，props 反而更清晰。'},
+{d:19,p:'Reducer 与 Context',t:'tf',q:'既然 Context 能跨层传数据，就应该用它替代所有 props 传递。',o:['对','错'],a:1,e:'Context 让数据来源变得不显式，滥用会让组件难以复用和测试。先试 props 和 children 组合，不行再上 Context。'},
+
+{d:20,p:'ref 与 effect 初识',t:'mc',q:'useRef 与 useState 的关键区别是？',o:['ref 只能存 DOM 节点','修改 ref.current 不会触发重新渲染','ref 是全局的','没有区别'],a:1,e:'ref 是"不参与渲染的记事本"：存定时器 ID、DOM 节点。要驱动界面变化的数据才放 state。'},
+{d:20,p:'ref 与 effect 初识',t:'fill',q:'读写 ref 保存的值，通过 ref.______ 属性',a:['current'],e:'useRef(初始值) 返回 { current: 初始值 }，读写都走 .current。'},
+{d:20,p:'ref 与 effect 初识',t:'mc',q:'useEffect 的定位是？',o:['所有逻辑的默认容器','在渲染之后与外部系统同步（订阅、请求、操作非 React 控件）','替代事件处理函数','让代码执行更快'],a:1,e:'Effect 是"逃生舱"：只有当某件事必须因为"组件出现在屏幕上"而发生、又没有对应用户事件时才用。'},
+{d:20,p:'ref 与 effect 初识',t:'tf',q:'能在事件处理函数里完成、或能在渲染期间直接计算的逻辑，也推荐搬进 useEffect。',o:['对','错'],a:1,e:'官方文档整章《你可能不需要 Effect》就在讲这个：Effect 是最后手段，不是默认选项。滥用 Effect 是 AI 生成代码最常见的坏味道——这正是你要练的判断力。'},
+
+{d:21,p:'Week3 验收',t:'mc',q:'【验收】Thinking in React 五步的正确顺序是？',o:['写代码→拆组件→加 state→调试→上线','拆组件层级→搭静态版→找最小 state→确定 state 放哪→添加反向数据流','找 state→拆组件→静态版→数据流→美化','没有固定顺序'],a:1,e:'先结构后交互、先静态后状态。面试白板题就按这五步走，报出步骤本身就是加分项。'},
+{d:21,p:'Week3 验收',t:'mc',q:'【验收】判断一个数据"是不是 state"的三个检验是？',o:['是否重要/是否常用/是否复杂','会随时间变化吗？能从现有 props/state 算出来吗？是由 props 传入的吗？','是否数字/是否字符串/是否对象','老板是否要求'],a:1,e:'不变的→常量；能算的→派生；props 给的→不归你管。三问过后剩下的才是 state——最小化的秘诀。'},
+{d:21,p:'Week3 验收',t:'fill',q:'【验收】子组件通过回调把变更传回父组件、父组件更新 state 再向下流动，这叫______数据流（两个字）',a:['反向','逆向'],e:'数据向下流（props），变更向上报（回调）——单向数据流的完整闭环。'},
+{d:21,p:'Week3 验收',t:'tf',q:'【验收】"让 state 保持最小，其余全部在渲染时派生计算"是 React 组件设计的核心原则。',o:['对','错'],a:0,e:'21 天的收束句。state 是你要管理的复杂度，派生是免费的正确性——设计系统如此，代码亦然。'}
+];
+/* ---- 扩充题库 · 每天 +2（含多选 ms）· 追加式保证旧进度题目索引不变 ---- */
+BANK.push(
+{d:1,p:'组件基础',t:'ms',q:'关于组件，下面哪些说法正确？（多选）',o:['组件名必须以大写字母开头','一个组件可以在 JSX 里渲染另一个组件','props 是可变的，子组件可以随意修改','组件本质是返回 JSX 的函数'],a:[0,1,3],e:'大写开头、可组合、是函数——三个都对；props 只读是铁律。'},
+{d:1,p:'组件基础',t:'tf',q:'不要把一个组件的定义写在另一个组件的函数体内部，否则每次渲染都会重建它，导致 state 丢失。',o:['对','错'],a:0,e:'嵌套定义 = 每次渲染都是"新组件"，React 认不出它，state 每次归零。组件永远定义在顶层。'},
+{d:2,p:'JSX 语法',t:'ms',q:'下面哪些 JSX 写法是正确的？（多选）',o:['className="btn"','style={{ color: "red" }}','<label for="name">','<button onclick={handleClick}>'],a:[0,1],e:'for → htmlFor，onclick → onClick（驼峰）。style 接对象所以是双大括号：外层进 JS，内层是对象字面量。'},
+{d:2,p:'JSX 语法',t:'fill',q:'JSX 中 HTML 的 for 属性要写成 html______',a:['For','for'],e:'htmlFor——和 className 同理，避开 JS 保留字，且 DOM 属性统一驼峰。'},
+{d:3,p:'Props',t:'ms',q:'哪些传 props 的写法是合法的？（多选）',o:['<Avatar size={100} />','<Avatar size="100" />','<Avatar {...props} />','<Avatar size=100 />'],a:[0,1,2],e:'数字用大括号、字符串用引号、展开转发都合法；裸值是语法错误。注意 size="100" 传的是字符串——TS 会帮你抓这种类型错。'},
+{d:3,p:'Props',t:'mc',q:'props 变化时，子组件的界面是如何更新的？',o:['子组件监听 props 并手动刷新','父组件重新渲染时传入新 props，子组件随之重新执行','props 不能变化','浏览器自动 diff HTML'],a:1,e:'props 的"变"来自父组件的重新渲染。数据永远从上往下流，这就是单向数据流。'},
+{d:4,p:'条件渲染',t:'ms',q:'哪些方式可以实现条件渲染？（多选）',o:['三元运算符 cond ? A : B','逻辑与 cond && A','在 JSX 大括号里直接写 if 语句','在 return 之前用 if 给变量赋不同 JSX，再嵌入'],a:[0,1,3],e:'if 是语句进不了大括号，但完全可以在 JSX 外面用——变量存 JSX 是被低估的清晰写法。'},
+{d:4,p:'条件渲染',t:'fill',q:'{isPacked ? "✓" : ______} 想在未打包时什么都不显示，空格处填',a:['null'],e:'三元的另一分支给 null，React 就什么都不渲染。'},
+{d:5,p:'列表与 key',t:'ms',q:'关于 key，哪些说法正确？（多选）',o:['key 是给 React 用的，不会作为 props 传入组件','组件内部读 props.key 拿不到值','key 可以用 Math.random() 现场生成','key 只需要在兄弟节点之间唯一'],a:[0,1,3],e:'key 是 React 的内部身份标识，组件自己看不到；random 等于每次都换身份证，state 全丢。'},
+{d:5,p:'列表与 key',t:'tf',q:'两个不同的数组渲染的两个列表里，可以出现相同的 key。',o:['对','错'],a:0,e:'唯一性只要求兄弟之间。不同列表是不同的"家庭"，key 互不冲突。'},
+{d:6,p:'纯函数组件',t:'ms',q:'哪些属于渲染期间不允许的行为？（多选）',o:['修改渲染前就已存在的全局变量','直接修改收到的 props 对象','在渲染过程中无条件调用 setState','修改本次渲染中自己新建的局部数组'],a:[0,1,2],e:'前三个都破坏纯粹性（第三个还会造成无限循环）；局部突变是允许的——对象是这次渲染自己造的，外界不知道。'},
+{d:6,p:'纯函数组件',t:'mc',q:'渲染中对"本次渲染刚创建的数组"做 push，允许吗？',o:['不允许，所有突变都禁止','允许，这叫局部突变——对象诞生于本次渲染，外部无感知','只在开发环境允许','只有类组件允许'],a:1,e:'纯粹性禁止的是"改外面的东西"。自己刚建出来的对象随便改，这是构建 JSX 列表的日常操作。'},
+{d:7,p:'Week1 验收',t:'ms',q:'【验收】Week 1 综合，哪些说法正确？（多选）',o:['小写标签名会被当成原生 HTML 元素','Fragment <></> 不会在 DOM 中产生真实节点','动态列表用 index 当 key 是安全的','组件标签之间的内容通过 children 传入'],a:[0,1,3],e:'四个知识点各来自一天：大小写规则、Fragment、key 陷阱、children——错哪个回哪天。'},
+{d:7,p:'Week1 验收',t:'fill',q:'【验收】<>...</> 这个不产生额外 DOM 节点的语法叫______（英文单词）',a:['Fragment','fragment'],e:'需要传 key 的场景（列表项里包多个元素）必须用完整写法 <Fragment key={...}>。'},
+{d:8,p:'事件处理',t:'ms',q:'关于事件处理，哪些说法正确？（多选）',o:['onClick 应传入函数引用而不是调用结果','事件默认会向上冒泡','e.preventDefault() 阻止浏览器默认行为','onClick={handleClick()} 是正确的传法'],a:[0,1,2],e:'第四项是渲染时立即执行——Day 8 的第一题就在防这个，多选里再犯就要警惕了。'},
+{d:8,p:'事件处理',t:'fill',q:'约定俗成，事件处理函数以 ______ 开头命名（如 ___Click、___Submit）',a:['handle','Handle'],e:'handleClick、handleSubmit——prop 端则约定 on 开头：onClick、onSubmit。一收一发，命名即文档。'},
+{d:9,p:'useState',t:'ms',q:'关于 useState，哪些说法正确？（多选）',o:['同一个组件里可以多次调用 useState','返回值是 [当前值, 更新函数]','调用更新函数会触发重新渲染','可以写在 if 分支里按条件调用'],a:[0,1,2],e:'多个 state 各自独立、互不干扰；但调用顺序必须每次渲染都一致，所以不能进 if。'},
+{d:9,p:'useState',t:'mc',q:'useState(expensiveInit()) 的初始值参数，什么时候被使用？',o:['每次渲染都用','仅首次渲染时使用，之后被忽略','仅更新时使用','从不使用'],a:1,e:'初始值只在挂载时生效。顺带一提：昂贵的初始化应传函数 useState(() => expensiveInit())，避免每次渲染白算一遍。'},
+{d:10,p:'state 快照',t:'mc',q:'点击后 3 秒，alert 弹出什么？',c:'const [number, setNumber] = useState(0);\nfunction handleClick() {\n  setNumber(number + 5);\n  setTimeout(() => alert(number), 3000);\n}',o:['0','5','取决于 3 秒内是否重新渲染','undefined'],a:0,e:'定时器里的 number 来自创建它那次渲染的快照——哪怕界面早已显示 5，弹的还是 0。闭包锁住的是过去。'},
+{d:10,p:'state 快照',t:'tf',q:'事件处理函数"记住"的是创建它的那次渲染的 state 值，即使它在未来才被执行。',o:['对','错'],a:0,e:'这就是上一题的原理总结：每次渲染有自己的 props、state 和事件处理函数——全套快照。'},
+{d:11,p:'批处理与更新函数',t:'mc',q:'初始 0，点击执行 setNumber(number + 5); setNumber(n => n + 1); 下次渲染 number 是？',o:['5','6','1','2'],a:1,e:'队列依次处理：先"替换为 5"，再"基于最新值 +1"→ 6。替换值和更新函数可以混排，按顺序结算。'},
+{d:11,p:'批处理与更新函数',t:'tf',q:'React 只会批处理同一个事件内的更新，两次独立的用户点击不会被合并成一次渲染。',o:['对','错'],a:0,e:'批处理的边界是"一次事件"。两次点击 = 两个事件 = 各自独立的渲染，界面不会跳步。'},
+{d:12,p:'更新对象',t:'ms',q:'更新 state 中的对象，哪些说法正确？（多选）',o:['必须创建新对象而不是原地修改','展开语法 ... 是浅拷贝','直接改属性不会触发重新渲染','React 会深度比较对象的每个字段来决定是否更新'],a:[0,1,2],e:'React 只比较引用（浅比较），不做深比较——这正是"必须换新对象"的原因，第四项恰好说反了。'},
+{d:12,p:'更新对象',t:'fill',q:'{ ...user, name: "Kami" } 中 ... 的中文名称：______语法（两个字）',a:['展开','扩展'],e:'展开语法（spread）。记住它的两个特性：浅拷贝、写在后面的字段覆盖前面的。'},
+{d:13,p:'更新数组',t:'ms',q:'哪些数组操作返回新数组、可直接用于 state？（多选）',o:['map','filter','concat','push'],a:[0,1,2],e:'push 返回的是新长度还原地改数组——双重出局。要"加一项"用 [...arr, item] 或 concat。'},
+{d:13,p:'更新数组',t:'mc',q:'要在数组中间某个位置插入一项（非头非尾），推荐用？',o:['splice 直接插','slice 切两段 + 展开语法拼接','下标赋值','unshift'],a:1,e:'[...arr.slice(0, i), newItem, ...arr.slice(i)]——slice 不改原数组（splice 改，一字之差）。'},
+{d:14,p:'Week2 验收',t:'ms',q:'【验收】Week 2 综合，哪些说法正确？（多选）',o:['state 是本次渲染的快照','更新函数 n => n+1 基于队列中的最新值计算','展开语法是深拷贝','push 不能直接用于 state 数组'],a:[0,1,3],e:'第三项是 Week 2 最常见的错误认知——... 只拷一层，嵌套结构要逐层复制。'},
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】setTodos(todos.push(newTodo)) 错在哪里？',o:['语法错误','push 原地修改了 state 数组，且返回值是新长度（数字）而不是数组','todos 未定义','没有错'],a:1,e:'双错合一：既污染了原 state，又把一个数字塞给了 setTodos。正确写法 setTodos([...todos, newTodo])。'},
+{d:15,p:'声明式 UI',t:'ms',q:'用声明式方法设计一个交互，包含哪些步骤？（多选）',o:['枚举组件所有的视觉状态','确定哪些事件触发状态变化','用 useState 表示这些状态','拿到 DOM 节点手动切换 class'],a:[0,1,2],e:'前三步就是 react.dev 教的流程；第四项是命令式残留——那是 jQuery 的世界。'},
+{d:15,p:'声明式 UI',t:'tf',q:'通过合并冗余状态、重构 state 结构，可以让"不可能的状态"在代码层面无法被表示出来。',o:['对','错'],a:0,e:'比如用 status: "typing" | "submitting" 替代两个布尔——非法组合直接消失。让错误无法发生 > 处理错误。'},
+{d:16,p:'state 结构',t:'ms',q:'哪些是 state 结构设计的坏味道？（多选）',o:['两个布尔值组合可能出现矛盾状态','存储了能从其他 state 算出来的值','state 里存了整个对象，而其实只需要它的 id','用联合类型的单一 status 表示互斥状态'],a:[0,1,2],e:'第四项是解药不是病。存整个对象的问题：源数据更新后你手里的副本就过期了——存 id、渲染时查找。'},
+{d:16,p:'state 结构',t:'fill',q:'fullName 能由 firstName + lastName 算出，它应该在______时计算，而不是存进 state（两个字）',a:['渲染'],e:'渲染时派生：const fullName = firstName + " " + lastName。永不失步，零维护成本。'},
+{d:17,p:'状态提升',t:'ms',q:'状态提升到父组件后，父子如何协作？（多选）',o:['父通过 props 把值传给子','子通过父传下来的回调通知变更','子直接修改父组件的 state 变量','兄弟组件各自保存一份数据副本，手动保持同步'],a:[0,1],e:'值下行、事件上行，仅此两条通道。第三项做不到（拿不到），第四项是 bug 制造机。'},
+{d:17,p:'状态提升',t:'tf',q:'非受控组件自己用内部 state 管理值，父组件无法通过 props 直接决定它显示什么。',o:['对','错'],a:0,e:'受控/非受控的分界就是"真相在谁手里"。做设计系统组件时，这是每个输入类组件都要做的决策。'},
+{d:18,p:'保留与重置',t:'ms',q:'哪些操作会导致组件 state 被重置？（多选）',o:['同一位置渲染的组件类型变了','组件的 key 变了','组件被移出渲染树（卸载）','组件收到的 props 变了'],a:[0,1,2],e:'props 变化从不重置 state——这是最容易记错的一条。想靠 props 重置，正确姿势是把它设为 key。'},
+{d:18,p:'保留与重置',t:'mc',q:'{isA ? <Counter /> : <Counter />} 切换 isA 时，计数会？',o:['清零','保留——同一位置、同一组件类型','报错','随机'],a:1,e:'React 看的是"位置 + 类型"，不看你在源码里写了几个标签。想要两个独立的 Counter，给它们不同的 key。'},
+{d:19,p:'Reducer 与 Context',t:'ms',q:'关于 reducer，哪些说法正确？（多选）',o:['reducer 必须是纯函数','action 描述"用户做了什么"','dispatch 之后能在下一行同步读到新 state','更新逻辑集中在一个函数里，可以脱离组件单独测试'],a:[0,1,3],e:'dispatch 和 setState 一样是排队的——快照规则在 reducer 世界照样生效。"可单独测试"正是它对 evals 思维的价值。'},
+{d:19,p:'Reducer 与 Context',t:'fill',q:'在组件树上层提供 Context 数据：<ThemeContext.______ value={theme}>',a:['Provider','provider'],e:'Provider 提供、useContext 消费。React 19 里可以直接写 <ThemeContext value={...}>，但 Provider 写法通行所有版本。'},
+{d:20,p:'ref 与 effect 初识',t:'ms',q:'哪些数据适合放进 ref 而不是 state？（多选）',o:['setTimeout 返回的定时器 ID','DOM 节点引用','需要显示在界面上的计数值','不参与渲染、只做内部记录的上一次值'],a:[0,1,3],e:'判断标准一句话：这个值变化时界面要不要跟着变？要 → state；不要 → ref。第三项要驱动界面，必须是 state。'},
+{d:20,p:'ref 与 effect 初识',t:'fill',q:'useEffect(fn, []) 第二个参数传空数组，表示 effect 只在组件______后运行一次（两个字）',a:['挂载','出现'],e:'空数组 = 无依赖 = 只跑一次。省略参数则每次渲染都跑——两者天差地别，AI 生成代码经常在这里出错。'},
+{d:21,p:'Week3 验收',t:'ms',q:'【验收】哪些做法体现了"最小 state"原则？（多选）',o:['选中项只存 id，渲染时按 id 查找完整对象','列表和搜索词分开存，过滤结果渲染时现算','fullName 单独存一份 state 方便读取','互斥状态用一个联合类型 status 而不是多个布尔'],a:[0,1,3],e:'第三项是 Day 16 的原题坏味道。三周下来你应该能条件反射：能算的不存。'},
+{d:21,p:'Week3 验收',t:'mc',q:'【验收】评审 AI 生成的原型代码：它把"能从 props 算出的值"存进了 state，再用 useEffect 监听 props 变化去同步这个 state。你的判断是？',o:['很规范，保留','坏味道：删掉这组 state 和 effect，改成渲染时直接派生计算','加个注释就行','改用 ref 存储'],a:1,e:'这是 AI 生成 React 代码最高频的坏味道，官方文档《你可能不需要 Effect》专门批判过。能一眼指出它并说明为什么——这就是你要向面试官展示的判断力。'}
+);
+
+/* ---- 进阶题组 · 每天 +4（全部带代码）· 追加式，不动前面任何索引 ----
+   前 126 题偏“认定义”，这一组全部是读代码判断输出、找 bug、评审坏味道 ——
+   也就是实际工作和面试里真正会考的形态。 */
+BANK.push(
+/* ===== Day 1 ===== */
+{d:1,p:'组件基础',t:'mc',q:'这段代码里的输入框每输入一个字符就失焦、内容被清空。原因是？',c:'function Page() {\n  const [q, setQ] = useState("");\n\n  function SearchBox() {\n    return <input value={q} onChange={e => setQ(e.target.value)} />;\n  }\n\n  return <SearchBox />;\n}',o:['input 少了 key','SearchBox 定义在 Page 内部，Page 每次渲染都创建一个全新的函数 = 全新的组件类型，React 把旧的整个卸载再挂载新的','onChange 的写法不对','应该用 defaultValue 代替 value'],a:1,e:'组件定义必须放在文件顶层。写在函数体内，每次渲染都是一个新的组件类型，DOM 节点被替换，焦点和 state 全丢。这个 bug 不报错，只表现为“输入框很奇怪”。'},
+{d:1,p:'组件基础',t:'mc',q:'下面这段代码在页面上渲染出什么？',c:'function profile() {\n  return <p>Kami</p>;\n}\n\nexport default function App() {\n  return <profile />;\n}',o:['渲染出 Kami','渲染出一个空的 <profile></profile> 标签，你的函数根本没被调用','控制台报错，页面白屏','渲染出 profile 这个字符串'],a:1,e:'小写开头的标签一律被当作原生 HTML 标签交给 DOM，函数不会被调用。它不报错，只是“什么都没发生”——所以最难查。'},
+{d:1,p:'组件基础',t:'mc',q:'Gallery.js 这样导出，App.js 里哪一种 import 是对的？',c:'// Gallery.js\nexport default function Gallery() { /* ... */ }\nexport function Profile() { /* ... */ }',o:['import { Gallery, Profile } from "./Gallery.js"','import Gallery, { Profile } from "./Gallery.js"','import Gallery, Profile from "./Gallery.js"','import { Gallery }, Profile from "./Gallery.js"'],a:1,e:'default 导出不加花括号且可任意命名；具名导出必须加花括号且同名。两者同时 import 时 default 写在前面。'},
+{d:1,p:'组件基础',t:'mc',q:'下面两行的本质区别是什么？',c:'const a = <Profile />;\nconst b = Profile();',o:['完全等价，只是写法不同','a 创建一个 React 元素，Profile 成为独立组件（有自己的 state、能被 key 重置）；b 只是普通函数调用，返回的 JSX 被内联展开，没有组件边界','b 一定会报错','a 一定会报错'],a:1,e:'有没有组件边界，决定了 state 归谁、key 能不能重置它。b 的写法里 Profile 内部的 useState 会算到调用方头上。'},
+
+/* ===== Day 2 ===== */
+{d:2,p:'JSX 语法',t:'mc',q:'这段 JSX 报错，问题在哪？',c:'function App() {\n  return (\n    <h1>标题</h1>\n    <p>正文</p>\n  );\n}',o:['h1 不能和 p 并列','返回了两个并列的根节点。必须包一层；不想多一个真实 DOM 节点就用 <>...</>','缺少 className','p 必须写成自闭合'],a:1,e:'组件只能返回单一根节点。Fragment <></> 专治“只是为了包一层”。'},
+{d:2,p:'JSX 语法',t:'mc',q:'这两行里有几处写错了？',c:'<label for="name">姓名</label>\n<input id="name" class="fld" onclick={focus} />',o:['只有 for 错','只有 class 错','三处都错：应为 htmlFor、className、onClick','都是对的'],a:2,e:'for 和 class 是 JS 保留字所以改名，事件一律驼峰。前两个 React 会给警告，但 onclick 是完全静默失效的——被当成未知的小写属性写进 DOM，点了没反应。'},
+{d:2,p:'JSX 语法',t:'mc',q:'哪一个能正确设置内联样式？',c:'// A\n<div style="color: red">\n// B\n<div style={{ color: "red" }}>\n// C\n<div style={ color: "red" }>\n// D\n<div style={"color: red"}>',o:['A','B','C','D'],a:1,e:'style 接对象不接字符串。外层大括号是“进入 JS”，内层是对象字面量，所以看起来是双大括号——它不是什么特殊语法。'},
+{d:2,p:'JSX 语法',t:'mc',q:'页面上显示的是 user.name 这几个字而不是用户名，为什么？',c:'function Hi({ user }) {\n  return <h1>你好，user.name</h1>;\n}',o:['user 没有传进来','JSX 里的普通文本就是字面量，要读 JS 变量必须用大括号：{user.name}','应该写成 ${user.name}','h1 标签里不支持变量'],a:1,e:'大括号是 JSX 通往 JavaScript 的唯一窗口。'},
+
+/* ===== Day 3 ===== */
+{d:3,p:'Props',t:'mc',q:'点按钮界面不更新，为什么？',c:'function Counter({ count }) {\n  function handleClick() {\n    count = count + 1;\n  }\n  return <button onClick={handleClick}>{count}</button>;\n}',o:['count 应该用 let 声明','props 只读：改它既不触发重渲染，父组件下次渲染还会把它覆盖回去。要变化就用 state，或让父组件传新值下来','应该写成 count++','onClick 绑定方式不对'],a:1,e:'props 是函数入参，属于父组件。想改，只能请父组件改。'},
+{d:3,p:'Props',t:'mc',q:'这样调用时，size 最终是多少？',c:'function Avatar({ size = 100 }) {\n  return <img width={size} />;\n}\n\n<Avatar size={null} />',o:['100，因为写了默认值','null。解构默认值只在传 undefined 或不传时生效，传 null 会原样使用','报错','0'],a:1,e:'默认值的触发条件是“严格等于 undefined”。null 是一个明确的值，会照单全收——TypeScript 项目里很常见的一类 null 穿透 bug。'},
+{d:3,p:'Props',t:'mc',q:'这样写，<p>hi</p> 会渲染出来吗？',c:'function Card({ title }) {\n  return <div className="card"><h2>{title}</h2></div>;\n}\n\n<Card title="关于"><p>hi</p></Card>',o:['会，自动渲染在 div 末尾','不会。嵌套内容作为 children 传进来了，但组件没有接收也没有渲染 {children}，所以被丢弃','会报错','p 标签不能嵌套在组件里'],a:1,e:'children 是通道，但渲染在哪、渲不渲染，由组件自己决定。这是所有容器类组件的基础。'},
+{d:3,p:'Props',t:'mc',q:'最终渲染出的 className 是什么？',c:'function Btn(props) {\n  return <button {...props} className="btn" />;\n}\n\n<Btn className="danger" onClick={f} />',o:['"danger btn"','"danger"','"btn" —— 展开在前、className 在后，后写的覆盖先写的','两个都不生效'],a:2,e:'JSX 属性和对象字面量一样，重复的键后者覆盖前者。想让外部传入的 className 生效就把 {...props} 放到后面。写组件库时这个顺序要写进文档。'},
+
+/* ===== Day 4 ===== */
+{d:4,p:'条件渲染',t:'mc',q:'messages 是空数组时，页面上出现什么？',c:'function Inbox({ messages }) {\n  return (\n    <div>\n      {messages.length && <p>你有 {messages.length} 条消息</p>}\n    </div>\n  );\n}',o:['什么都不显示','显示一个 0','显示 false','报错'],a:1,e:'0 是假值，&& 直接返回左边的 0，而 React 会渲染数字（它只跳过 false / null / undefined）。改成 messages.length > 0 && ... 才安全。最经典的线上 bug。'},
+{d:4,p:'条件渲染',t:'mc',q:'isPacked 为 false 时渲染出什么？',c:'return <li>{name} {isPacked ? "✅" : null}</li>;',o:['渲染出 null 这四个字母','只渲染 name，三元的 null 分支什么都不渲染','报错','渲染出 false'],a:1,e:'React 不渲染 null / undefined / false，所以它们是“这里什么都不要”的标准写法。'},
+{d:4,p:'条件渲染',t:'mc',q:'这段代码错在哪？',c:'return (\n  <div>\n    {if (isLoggedIn) { return <Admin />; }}\n  </div>\n);',o:['isLoggedIn 没有定义','大括号里只能放表达式，if 是语句。要么用三元，要么把 if 写到 return 之前先算出一个变量再嵌入','应该用 === 比较','Admin 需要自闭合'],a:1,e:'把 JSX 存进变量再嵌入是被严重低估的写法——分支一多，它比嵌套三元清楚得多。'},
+{d:4,p:'条件渲染',t:'mc',q:'没有内容时希望整个组件不渲染，哪个是标准做法？',c:'function Alert({ text }) {\n  // ???\n  return <div className="alert">{text}</div>;\n}',o:['if (!text) return <div />;','if (!text) return null;','if (!text) return "";','if (!text) return false;'],a:1,e:'返回空 div 会在 DOM 里留下真实节点，可能被 :empty、间距规则或 flex gap 影响到。return null 才是干净的。'},
+
+/* ===== Day 5 ===== */
+{d:5,p:'列表与 key',t:'mc',q:'用户在第一项的输入框里打了字，然后删掉了第一项。会发生什么？',c:'{todos.map((todo, i) =>\n  <TodoRow key={i} todo={todo} />\n)}',o:['输入的内容跟着第一项一起消失','原来的第二项挪到 index 0，React 认为 key=0 的组件只是 props 变了，于是把刚才输入的内容留在了新的第一项上','整个列表重新挂载，所有输入都清空','React 会直接报错'],a:1,e:'index 不是身份，是座位号。座位没变、坐的人换了，React 却以为还是同一个人——state 就串行了。'},
+{d:5,p:'列表与 key',t:'mc',q:'key 应该加在哪里？',c:'{people.map(person =>\n  <li>\n    <img src={person.img} />\n    <p>{person.name}</p>\n  </li>\n)}',o:['加在 img 上','加在 li 上 —— key 要放在 map 直接返回的那个最外层元素上','加在 p 上','三个都要加'],a:1,e:'key 是给“兄弟之间”用的，所以只加在数组里直接产生的那一层。'},
+{d:5,p:'列表与 key',t:'mc',q:'一个列表项要并排渲染 dt 和 dd 两个元素，又不想多包一层 div，还要给 key，怎么写？',c:'{items.map(item =>\n  // 需要同时渲染 <dt> 和 <dd>\n)}',o:['用 <>...</> 并直接在上面写 key','用完整写法 <Fragment key={item.id}>...</Fragment>，简写的 <> 不能接收 key','必须包一层 div','这种情况下 key 可以省略'],a:1,e:'<></> 是 Fragment 的语法糖，但语法糖不能带属性。需要 key 就得写全称并 import { Fragment }。'},
+{d:5,p:'列表与 key',t:'mc',q:'这样生成 key 有什么后果？',c:'{todos.map(todo =>\n  <Item key={Math.random()} todo={todo} />\n)}',o:['没问题，能保证唯一','每次渲染 key 都变，等于告诉 React “全是新元素”：整个列表每次都卸载重建，state 全丢，性能也差','只是性能稍差一点','会报重复 key 的警告'],a:1,e:'key 要求的是稳定，不只是唯一。random 每次都换身份证。'},
+
+/* ===== Day 6 ===== */
+{d:6,p:'纯函数组件',t:'mc',q:'开发环境下这个组件显示的是 2 而不是 1，为什么？',c:'let count = 0;\n\nfunction Counter() {\n  count = count + 1;\n  return <p>{count}</p>;\n}',o:['+1 写错了位置','组件不纯：渲染期间修改了外部变量。StrictMode 下 React 故意调用两次组件函数来暴露这个问题','这是 React 的 bug','count 应该用 const'],a:1,e:'纯函数调用两次结果应该一样。两次结果不同，就说明它在渲染期间碰了外部世界。这是免费的体检，不是打扰。'},
+{d:6,p:'纯函数组件',t:'mc',q:'这个组件纯不纯？',c:'function List({ items }) {\n  const rows = [];\n  for (const i of items) {\n    rows.push(<li key={i.id}>{i.text}</li>);\n  }\n  return <ul>{rows}</ul>;\n}',o:['不纯，因为用了 push','纯的。rows 是本次渲染中自己创建的，改它属于局部突变，外界感知不到','不纯，应该改用 map','取决于 items 是不是新数组'],a:1,e:'纯粹性禁止的是“影响渲染之前就已存在的东西”。自己刚造出来的对象随便改——不必为了纯粹强行改写成 map。'},
+{d:6,p:'纯函数组件',t:'mc',q:'这段代码运行会发生什么？',c:'function Bad() {\n  const [n, setN] = useState(0);\n  setN(n + 1);\n  return <p>{n}</p>;\n}',o:['正常渲染出 1','无限循环：set 触发重渲染，重渲染又 set。React 会抛出 Too many re-renders','只渲染一次就停下','n 一直是 0，但不报错'],a:1,e:'渲染期间无条件 setState 是自我触发的死循环。要在渲染时算出的值，直接算就好，不要过一道 state。'},
+{d:6,p:'纯函数组件',t:'mc',q:'哪一行破坏了纯粹性？',c:'function Profile({ user }) {\n  user.name = user.name.trim();                       // A\n  const initial = user.name[0];                       // B\n  const cls = ["card", user.vip && "vip"].join(" ");  // C\n  return <p className={cls}>{initial}</p>;            // D\n}',o:['A —— 直接修改了传进来的 props 对象，它属于父组件','B','C','D'],a:0,e:'要清洗数据就产生一个新值：const name = user.name.trim()。C 行也创建了数组，但那是本次渲染新建的，属于允许的局部突变。'},
+
+/* ===== Day 7 ===== */
+{d:7,p:'Week1 验收',t:'mc',q:'【验收】这段代码有几处问题？',c:'function App({ items }) {\n  return (\n    <div class="app">\n      {items.map(i => <item key={i.id} data={i} />)}\n    </div>\n  );\n}',o:['1 处','2 处：class 应为 className；<item> 小写会被当成原生 HTML 标签，组件名必须大写','3 处','没有问题'],a:1,e:'两个都是 Week 1 的核心规则。小写标签那个尤其危险——它静默失败。'},
+{d:7,p:'Week1 验收',t:'mc',q:'【验收】Card 收到的 props 对象里有什么？',c:'<Card title="关于" size={2}>\n  <p>hi</p>\n</Card>',o:['{ title: "关于", size: "2" }','{ title: "关于", size: 2, children: <p>hi</p> }','{ title: "关于", size: 2 }，嵌套内容要另外取','只有 children'],a:1,e:'嵌套内容会自动作为 children 进入 props 对象；size={2} 传的是数字 2，而 size="2" 传的才是字符串。'},
+{d:7,p:'Week1 验收',t:'mc',q:'【验收】这个组件违反了哪条 Week 1 规则？',c:'const cache = {};\n\nfunction Row({ id, text }) {\n  cache[id] = text;\n  return <li>{text}</li>;\n}',o:['组件名大小写不对','渲染期间写了外部变量 cache，组件不纯','key 缺失','props 解构方式不对'],a:1,e:'cache 在渲染之前就存在，写它就是制造副作用。要缓存，交给事件处理函数或者干脆放到组件外的逻辑层。'},
+{d:7,p:'Week1 验收',t:'ms',q:'【验收】关于下面这段代码，哪些说法正确？（多选）',c:'export default function Gallery() {\n  return (\n    <>\n      <Profile />\n      <Profile />\n    </>\n  );\n}',o:['两个 Profile 实例的 state 互相独立','<>...</> 不会在 DOM 里产生真实节点','这个文件里不能再有第二个 export default','两个 Profile 必须加 key 才合法'],a:[0,1,2],e:'同一组件多次使用就是多次独立调用；Fragment 不产生节点；default 每文件唯一。手写并列的元素不需要 key，只有数组产生的列表才需要。'},
+
+/* ===== Day 8 ===== */
+{d:8,p:'事件处理',t:'mc',q:'页面一加载就弹出了对话框，还没点按钮。为什么？',c:'<button onClick={alert("嗨")}>点我</button>',o:['alert 本身有问题','带括号是立即调用：渲染时就执行了 alert，然后把它的返回值 undefined 当成了事件处理函数','应该写成 onclick','button 缺少 type 属性'],a:1,e:'应写 onClick={() => alert("嗨")}。这是最高频的新手 bug，症状是“该点的时候没反应，不该弹的时候弹了”。'},
+{d:8,p:'事件处理',t:'mc',q:'点击时要调用 handleDelete(todo.id)，哪个写法对？',c:'// A onClick={handleDelete(todo.id)}\n// B onClick={() => handleDelete(todo.id)}\n// C onClick={handleDelete(todo.id())}\n// D onClick="handleDelete(todo.id)"',o:['A','B','C','D'],a:1,e:'包一层箭头函数，点击时才执行。A 会在每次渲染时立即调用。'},
+{d:8,p:'事件处理',t:'mc',q:'点击按钮时，控制台的输出顺序是？',c:'<div onClick={() => console.log("div")}>\n  <button onClick={() => console.log("button")}>点我</button>\n</div>',o:['div, button','button, div —— 事件从目标元素向上冒泡','只有 button','只有 div'],a:1,e:'想让外层不响应，在 button 的处理函数里调用 e.stopPropagation()。'},
+{d:8,p:'事件处理',t:'mc',q:'表单提交后整个页面刷新、输入全没了。应该补哪一句？',c:'function handleSubmit(e) {\n  // ???\n  saveDraft(text);\n}\n\n<form onSubmit={handleSubmit}>',o:['e.stopPropagation()','e.preventDefault() —— 阻止浏览器提交表单的默认跳转行为','return false','e.cancel()'],a:1,e:'preventDefault 阻止的是浏览器自带的动作（表单跳转、链接跳转）；stopPropagation 阻止的是事件继续往上传。这题问的是前者。'},
+
+/* ===== Day 9 ===== */
+{d:9,p:'useState',t:'mc',q:'点按钮数字不变，为什么？',c:'function Counter() {\n  let count = 0;\n  function handleClick() {\n    count = count + 1;\n  }\n  return <button onClick={handleClick}>{count}</button>;\n}',o:['应该用 const 声明','普通局部变量有两个致命伤：改了不通知 React 重新渲染；就算重新渲染了，函数重新执行又会把它初始化回 0','handleClick 没有绑定成功','应该写 count++'],a:1,e:'useState 一次解决这两点：值被 React 保管，set 会请求重新渲染。'},
+{d:9,p:'useState',t:'mc',q:'父组件传下来的 userId 变了，但 Form 里的 id 始终是最初那个值。为什么？',c:'function Form({ userId }) {\n  const [id, setId] = useState(userId);\n  return <p>{id}</p>;\n}',o:['应该用 let','useState 的参数只在首次渲染（挂载）时作为初始值使用，之后每次渲染都被忽略','props 没有正确传下来','useState 不能接收变量作为初始值'],a:1,e:'这是“把 props 复制进 state”的经典坑：产生了两个真相来源。要么直接用 props 不存 state，要么给组件换 key 强制重建。'},
+{d:9,p:'useState',t:'mc',q:'这样写为什么不行？',c:'function Form({ showEmail }) {\n  const [name, setName] = useState("");\n  if (showEmail) {\n    const [email, setEmail] = useState("");\n  }\n}',o:['email 应该给默认值','Hook 必须在顶层无条件调用：React 靠调用顺序对应内部存储，条件调用会让下一次渲染时顺序对不上','应该用 let 声明','if 里面不能声明常量'],a:1,e:'需要条件化的不是 Hook，而是它的值。把 useState 提到顶层，用条件决定怎么用它。'},
+{d:9,p:'useState',t:'mc',q:'哪种写法能避免每次渲染都白跑一次昂贵的初始化？',c:'// A\nconst [data] = useState(loadHugeJSON());\n// B\nconst [data] = useState(() => loadHugeJSON());',o:['A，两者完全等价','B —— 传函数时 React 只在挂载时调用它；传值则每次渲染都会先求值，然后被丢弃','A 更快','两个都会每次执行'],a:1,e:'叫做惰性初始化。A 的浪费是隐形的：结果被忽略了，但计算实实在在发生了。'},
+
+/* ===== Day 10 ===== */
+{d:10,p:'state 快照',t:'mc',q:'点一次按钮，alert 弹出什么？',c:'const [n, setN] = useState(0);\n\nfunction handleClick() {\n  setN(n + 1);\n  setN(n + 1);\n  alert(n);\n}',o:['2','1','0 —— 本次渲染里 n 始终是快照值，set 只是预约下一次渲染','undefined'],a:2,e:'state 在一次渲染的整个执行过程中保持不变。要看到新值，必须等下一次渲染。'},
+{d:10,p:'state 快照',t:'mc',q:'接上题，这次点击结束后界面上显示几？',c:'const [n, setN] = useState(0);\n\nfunction handleClick() {\n  setN(n + 1);\n  setN(n + 1);\n}',o:['2','1 —— 两句都是 setN(0 + 1)，等于重复预约同一个结果','0','3'],a:1,e:'两句用的是同一个快照。要真正累加两次，得用更新函数 setN(c => c + 1)。'},
+{d:10,p:'state 快照',t:'mc',q:'点击后 3 秒，alert 弹出什么？（这期间界面上早已显示 5）',c:'const [n, setN] = useState(0);\n\nfunction handleClick() {\n  setN(n + 5);\n  setTimeout(() => alert(n), 3000);\n}',o:['5','0 —— 定时器里的 n 来自创建它那次渲染的快照，闭包锁住的是过去','undefined','取决于机器速度'],a:1,e:'每次渲染有自己的 props、state 和事件处理函数，整整一套。异步回调记住的是它诞生那一刻的世界。'},
+{d:10,p:'state 快照',t:'mc',q:'这一行读到的是什么？',c:'setCount(count + 1);\nconsole.log(count);',o:['新值，set 是同步的','旧值。set 不修改当前渲染里的变量，它是“请求下一次渲染”','undefined','取决于是不是在事件处理函数里'],a:1,e:'这句话能脱口而出，Week 2 就过了一半：set 函数 ≠ 赋值语句。'},
+
+/* ===== Day 11 ===== */
+{d:11,p:'批处理与更新函数',t:'mc',q:'初始 0，点一次按钮后 number 是几？',c:'setNumber(number + 5);\nsetNumber(n => n + 1);',o:['1','5','6 —— 队列先“替换为 5”，再“基于最新值 +1”','2'],a:2,e:'替换值和更新函数可以混排，按入队顺序依次结算。'},
+{d:11,p:'批处理与更新函数',t:'mc',q:'初始 0，点一次按钮后 number 是几？',c:'setNumber(number + 5);\nsetNumber(n => n + 1);\nsetNumber(42);',o:['42 —— 最后一句是直接替换，把前面的结果整个盖掉','6','48','43'],a:0,e:'队列结算到最后一项时，它不关心前面算出了什么，直接替换。顺序决定一切。'},
+{d:11,p:'批处理与更新函数',t:'mc',q:'这三行执行完，count 增加多少？',c:'setCount(c => c + 1);\nsetCount(c => c + 1);\nsetCount(c => c + 1);',o:['1','3 —— 更新函数依次入队，各自基于前一个的结果计算：0→1→2→3','0','取决于渲染时机'],a:1,e:'和 Day 10 那道“连写三次只加 1”对照着记：区别只在于传的是值还是函数。'},
+{d:11,p:'批处理与更新函数',t:'mc',q:'用户快速点了两次按钮，React 会把它们合并成一次渲染吗？',c:'<button onClick={() => setCount(c => c + 1)}>+1</button>',o:['会，React 会合并掉所有更新','不会。批处理的边界是“一次事件”，两次点击是两个独立事件，各自触发渲染，所以界面不会跳步','取决于两次点击的间隔','只有 React 18 以上会'],a:1,e:'批处理是为了避免一次事件里出现半成品渲染，不是为了省略用户的操作。'},
+
+/* ===== Day 12 ===== */
+{d:12,p:'更新对象',t:'mc',q:'输入框里打字没反应，为什么？',c:'const [form, setForm] = useState({ name: "", email: "" });\n\nfunction handleName(e) {\n  form.name = e.target.value;\n  setForm(form);\n}',o:['setForm 用错了','原地改了对象又把同一个引用传回去：React 比较引用发现没变，不重新渲染','应该拆成两个 useState','e.target.value 取不到值'],a:1,e:'正确写法 setForm({ ...form, name: e.target.value })。React 只做引用比较，这正是必须换新对象的原因。'},
+{d:12,p:'更新对象',t:'mc',q:'这样写，name 最终是什么？',c:'setUser({ name: "Kami", ...user });',o:['"Kami"','user 里原来的 name —— 展开写在后面会把前面的覆盖掉，顺序反了','两个都保留','报错'],a:1,e:'先浅拷贝、再覆盖，顺序不能反。写反了的症状是“改了没生效”，很容易看半天看不出来。'},
+{d:12,p:'更新对象',t:'mc',q:'改完 city 之后，原来的 user 对象也被改了。为什么？',c:'const next = { ...user };\nnext.address.city = "London";\nsetUser(next);',o:['setUser 用错了','展开只拷贝一层：next.address 和 user.address 指向同一个对象，改它等于改原对象','应该用 Object.assign','city 字段不能被修改'],a:1,e:'浅拷贝只换了最外层的壳。嵌套字段拷的是引用。'},
+{d:12,p:'更新对象',t:'mc',q:'正确更新 user.address.city 的写法是？',c:'const [user, setUser] = useState({\n  name: "Kami",\n  address: { city: "Shanghai", zip: "200000" }\n});',o:['setUser({ ...user, address: { ...user.address, city: "London" } })','setUser({ ...user, city: "London" })','setUser({ address: { city: "London" } })','user.address.city = "London"; setUser(user);'],a:0,e:'改哪一层，那一层以上全部换新引用。嵌套越深越痛苦——所以 Day 16 会讲“尽量别嵌太深”。'},
+
+/* ===== Day 13 ===== */
+{d:13,p:'更新数组',t:'mc',q:'这一行里有两个错误，分别是什么？',c:'setTodos(todos.push(newTodo));',o:['其实只有一个错误','push 原地修改了 state 数组（污染），而且它返回的是新长度这个数字，等于把一个数字塞给了 setTodos','push 这个方法不存在','方法名应该是 pushItem'],a:1,e:'正确写法 setTodos([...todos, newTodo])。双错合一，是最值得记住的一个反例。'},
+{d:13,p:'更新数组',t:'mc',q:'点“排序”后列表没变，再点一次才变。为什么？',c:'function handleSort() {\n  setItems(items.sort((a, b) => a.n - b.n));\n}',o:['sort 的比较函数写错了','sort 原地排序并返回同一个数组引用：React 发现引用没变就不渲染。要先复制：setItems([...items].sort(...))','应该用 sortBy','列表需要加 key'],a:1,e:'“再点一次才变”是引用相等类 bug 的典型症状——上一次的修改其实生效了，只是没触发渲染。'},
+{d:13,p:'更新数组',t:'mc',q:'把 id 为 3 的项标记成已完成，正确写法是？',c:'const [todos, setTodos] = useState([\n  { id: 1, text: "读", done: false },\n  { id: 3, text: "敲", done: false }\n]);',o:['todos[1].done = true; setTodos(todos);','setTodos(todos.map(t => t.id === 3 ? { ...t, done: true } : t))','setTodos(todos.splice(1, 1))','setTodos(todos.filter(t => t.id === 3))'],a:1,e:'map + 条件三元是“替换某一项”的标准范式：命中的返回新对象，其余原样返回。'},
+{d:13,p:'更新数组',t:'mc',q:'要在下标 i 处插入一项，哪个写法不会污染原数组？',c:'// slice 返回新数组；splice 原地修改。一字之差',o:['arr.splice(i, 0, item)','[...arr.slice(0, i), item, ...arr.slice(i)]','arr[i] = item','arr.unshift(item)'],a:1,e:'口诀：返回新数组的能用，原地修改的不能用。slice 能用，splice 不能。'},
+
+/* ===== Day 14 ===== */
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】点一次按钮，数字从 0 变成几？',c:'function handleClick() {\n  setN(n + 1);\n  setN(n + 1);\n  setN(c => c + 1);\n}',o:['3','2 —— 前两句都基于快照 0 算出 1，第三句基于队列最新值 1 再 +1','1','0'],a:1,e:'快照和队列两个概念在这一题里正面相遇。前两句是“替换为 1”，第三句才是真正的累加。'},
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】评审这段代码，问题在哪？',c:'const [user, setUser] = useState({ name: "", tags: [] });\n\nfunction addTag(t) {\n  user.tags.push(t);\n  setUser({ ...user });\n}',o:['没有问题，外层已经换了新对象','外层虽然换了新对象，但 tags 是原地 push 的，它和旧 state 里的是同一个引用，历史值被一起改掉了','把 push 换成 concat 就够了','tags 不应该放在对象里'],a:1,e:'正确写法 setUser({ ...user, tags: [...user.tags, t] })。这种“表面上换了新对象”的写法最阴——界面能正常更新，但时间旅行调试和任何依赖历史值的逻辑都会出错。'},
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】下面四句里哪一句是错的？',c:'// 三句对、一句错',o:['state 是本次渲染的快照','更新函数 c => c + 1 拿到的是队列中最新的值','展开语法 ... 是深拷贝，嵌套对象也会被完整复制','React 会等事件处理函数执行完再统一处理更新队列'],a:2,e:'展开只拷一层。这是 Week 2 最常见的错误认知，嵌套结构必须逐层复制。'},
+{d:14,p:'Week2 验收',t:'mc',q:'【验收】第二个输入框打不了字，为什么？',c:'const [text, setText] = useState("");\n\n<input value={text} onChange={e => setText(e.target.value)} />\n<input value={text} />',o:['第一个输入框才有问题','第二个：给了 value 却没有 onChange，值被 state 锁死，输入改变不了它','两个都有问题','都应该改用 defaultValue'],a:1,e:'受控组件的完整形态是 value + onChange 成对出现。只给 value 就是只读，React 也会在控制台提醒你。'},
+
+/* ===== Day 15 ===== */
+{d:15,p:'声明式 UI',t:'mc',q:'把这段命令式代码改成 React 写法，核心思路是？',c:'// jQuery 时代\nif (isLoading) {\n  document.querySelector("#btn").disabled = true;\n  document.querySelector("#spinner").style.display = "block";\n}',o:['用 useRef 拿到节点后照样这么写','用 state 描述状态，让 JSX 根据 state 渲染出对应的样子：<button disabled={isLoading}> 和 {isLoading && <Spinner />}','放进 useEffect 里操作 DOM','两种写法都行，看个人习惯'],a:1,e:'你声明状态到 UI 的映射，React 负责操作 DOM。就像打车报目的地，而不是给司机逐条指路。'},
+{d:15,p:'声明式 UI',t:'mc',q:'这两个布尔值可能同时为 true，出现矛盾状态。更好的设计是？',c:'const [isTyping, setIsTyping] = useState(false);\nconst [isSubmitting, setIsSubmitting] = useState(false);',o:['再加一个布尔值标记冲突','合并成一个 status：useState("typing")，取值 typing | submitting | success，让非法组合根本无法被表示','改用 useReducer 就能解决','加注释说明不能同时为 true'],a:1,e:'让错误无法发生，优于处理错误。这正是你在 TS 里学过的字面量联合类型在 state 设计上的应用。'},
+{d:15,p:'声明式 UI',t:'mc',q:'按 react.dev 的流程，实现这个表单交互的第一步是？',c:'// 需求：输入 → 提交 → 加载中 → 成功 / 失败',o:['先把提交请求写出来','先枚举组件所有的视觉状态：empty / typing / submitting / success / error','先选一个 UI 组件库','先做加载动画'],a:1,e:'枚举状态再连线触发关系。这一步和设计师画 user flow 是同一件事，只是产出物变成了 state 设计。'},
+{d:15,p:'声明式 UI',t:'mc',q:'这个按钮的 disabled 应该怎么来？',c:'const [text, setText] = useState("");\nconst [sending, setSending] = useState(false);',o:['再加一个 canSubmit 的 state，每次输入时同步更新它','直接派生：disabled={sending || text.trim() === ""}，不需要额外的 state','用 useEffect 监听 text 去更新 canSubmit','用 ref 存起来'],a:1,e:'能算出来的就别存。多存一个 canSubmit，就多一处需要手动同步的地方。'},
+
+/* ===== Day 16 ===== */
+{d:16,p:'state 结构',t:'mc',q:'这段代码的坏味道是什么？',c:'const [first, setFirst] = useState("");\nconst [last, setLast] = useState("");\nconst [fullName, setFullName] = useState("");',o:['变量命名不够清楚','fullName 能从 first + last 算出来，存成 state 就要手动同步，忘一处就是 bug。渲染时派生即可','应该合并成一个对象','应该改用 useReducer'],a:1,e:'const fullName = first + " " + last —— 现算，永不失步，零维护成本。'},
+{d:16,p:'state 结构',t:'mc',q:'把选中项的整个对象存进 state，有什么问题？',c:'const [items, setItems] = useState(list);\nconst [selected, setSelected] = useState(list[0]);',o:['没有问题','selected 是一份副本：items 里那一项被更新后，selected 还是旧值。应该存 id，渲染时按 id 查找','应该用数组存','应该改用 Context'],a:1,e:'存副本 = 存了一个会过期的快照。存 id 则永远指向最新的那一份数据。'},
+{d:16,p:'state 结构',t:'mc',q:'搜索框过滤列表，哪种结构更好？',c:'// A: items + query + filteredItems 三个 state\n// B: items + query 两个 state，过滤结果渲染时现算',o:['A，缓存过滤结果性能更好','B —— 过滤结果是派生值。A 里的 filteredItems 需要在 items 或 query 变化时手动同步，漏一次就错','两者完全一样','取决于列表有多长'],a:1,e:'真到了性能瓶颈，办法是 useMemo 缓存计算，而不是多存一份 state。'},
+{d:16,p:'state 结构',t:'mc',q:'这个 state 结构最大的问题是？',c:'const [state, setState] = useState({\n  user: { profile: { address: { city: "" } } }\n});',o:['字段太少了','嵌套太深：更新最里层的 city 要逐层复制四次，极容易写错。能扁平化就扁平化','应该用数组','变量名太长'],a:1,e:'不可变更新的成本和嵌套深度成正比。深层嵌套的代价会在每一次更新时反复付出。'},
+
+/* ===== Day 17 ===== */
+{d:17,p:'状态提升',t:'mc',q:'两个 Panel 要做到“同时只能展开一个”，state 应该放哪？',c:'function Accordion() {\n  return (\n    <>\n      <Panel title="关于" />\n      <Panel title="词源" />\n    </>\n  );\n}',o:['各自在 Panel 内部用 useState','提升到最近的公共父组件 Accordion，用 activeIndex 控制，通过 props 下发、回调上报','用一个全局变量','存进 localStorage'],a:1,e:'需要协调的状态，必须由能同时看到两边的那个组件持有。'},
+{d:17,p:'状态提升',t:'mc',q:'这个组件是受控还是非受控？',c:'function Input({ value, onChange }) {\n  return <input value={value} onChange={onChange} />;\n}',o:['非受控','受控：值由 props 进、变更由回调出，组件自己不持有这份 state','两者都不是','取决于父组件怎么用'],a:1,e:'受控 = 真相在父组件手里。做设计系统组件时，这是每个输入类组件都要做的决策。'},
+{d:17,p:'状态提升',t:'mc',q:'子组件要通知父组件“我被选中了”，正确做法是？',c:'function Row({ item, ??? }) {\n  return <li onClick={???}>{item.text}</li>;\n}',o:['子组件直接修改父组件的 state 变量','父组件传一个回调 prop（比如 onSelect），子组件在事件里调用它','用一个全局事件总线','用 ref 反查父组件'],a:1,e:'值往下流（props），事件往上报（回调）。仅此两条通道，第一项在技术上也做不到。'},
+{d:17,p:'状态提升',t:'mc',q:'这样写有什么隐患？',c:'function Parent() {\n  const [text, setText] = useState("");\n  return <Child text={text} />;\n}\n\nfunction Child({ text }) {\n  const [copy, setCopy] = useState(text);\n  return <input value={copy} onChange={e => setCopy(e.target.value)} />;\n}',o:['没有问题，这样更灵活','把 props 复制进了 state，产生两个真相来源：父组件的 text 变化后 Child 不会跟着更新，两边会失步','应该用 useEffect 同步这两个值','应该改用 useRef'],a:1,e:'第三项是很多人会给的“修复”，但它是在给错误的设计打补丁——多渲染一次，而且仍然容易失步。要么受控，要么用 key 重建。'},
+
+/* ===== Day 18 ===== */
+{d:18,p:'保留与重置',t:'mc',q:'切换 isFancy，Counter 里的计数会清零吗？',c:'{isFancy\n  ? <Counter isFancy={true} />\n  : <Counter isFancy={false} />}',o:['会清零','不会。位置相同、组件类型相同，React 认为是同一个组件，只是 props 变了，state 保留','会报错','取决于 isFancy 的初始值'],a:1,e:'React 看的是“位置 + 类型”，不看你在源码里写了几个标签。props 变化从不重置 state。'},
+{d:18,p:'保留与重置',t:'mc',q:'这样切换呢？',c:'{isPaused\n  ? <p>暂停中</p>\n  : <Counter />}',o:['计数保留','计数清零：位置上的组件类型从 Counter 变成了 p，整棵子树的 state 被销毁，切回来是全新的 Counter','会报错','只有开发环境会清零'],a:1,e:'类型一换，state 就地销毁。这也是为什么“把组件临时换成 loading 占位”会丢掉用户填了一半的表单。'},
+{d:18,p:'保留与重置',t:'mc',q:'切换聊天对象时，没发出去的草稿串到了下一个人那里。最好的修法是？',c:'function Messenger({ to }) {\n  return <Chat contact={to} />;\n}',o:['在 Chat 里用 useEffect 监听 contact 变化去清空各个字段','给 Chat 加 key：<Chat key={to.id} contact={to} /> —— key 变即身份变，旧的销毁、新的重建','把所有 state 提升到 Messenger','用 useRef 分别存每个人的草稿'],a:1,e:'一行解决，而且不会漏字段。用 Effect 手动清空要列举每一个 state，加了新字段就容易忘——这是 key 最实用的一个场景。'},
+{d:18,p:'保留与重置',t:'mc',q:'下面哪个操作不会重置组件的 state？',c:'// 三个会重置，一个不会',o:['同一位置渲染的组件类型变了','组件的 key 变了','组件被移出渲染树后又放回来','组件收到的 props 变了'],a:3,e:'props 变化从不重置 state —— 这是最容易记反的一条。'},
+
+/* ===== Day 19 ===== */
+{d:19,p:'Reducer 与 Context',t:'mc',q:'这个 reducer 有什么问题？',c:'function reducer(state, action) {\n  if (action.type === "added") {\n    state.items.push(action.item);\n    return state;\n  }\n}',o:['只是缺了 default 分支','reducer 必须是纯函数并返回新 state：这里原地 push 又返回同一个引用，React 认为没变化，不会重新渲染','应该改用 switch 写法','action.type 不能用字符串'],a:1,e:'reducer 里的不可变要求和 setState 完全一致。顺带一提，它确实也该有 default 分支（通常是抛出未知 action 的错误）。'},
+{d:19,p:'Reducer 与 Context',t:'mc',q:'哪一组 action 命名更好？',c:'// A: { type: "setText" } / { type: "setDone" }\n// B: { type: "added_todo" } / { type: "toggled_todo" }',o:['A，和 setState 的命名保持一致','B —— action 描述“用户做了什么”，而不是“怎么改 state”。怎么改是 reducer 的职责','两者等价，看团队规范','取决于用不用 TypeScript'],a:1,e:'用业务语言命名 action，reducer 才有资格决定怎么变。这样一个 action 也可以同时改多份 state。'},
+{d:19,p:'Reducer 与 Context',t:'mc',q:'dispatch 之后紧接着读 state，读到的是？',c:'dispatch({ type: "added", text });\nconsole.log(todos.length);',o:['已经加上新项之后的长度','旧长度。dispatch 和 setState 一样是排队的，新 state 要到下一次渲染才可见','undefined','会报错'],a:1,e:'快照规则在 reducer 世界照样生效。换了 API，心智模型不变。'},
+{d:19,p:'Reducer 与 Context',t:'mc',q:'把 reducer 和 Context 结合起来，解决的是什么问题？',c:'const TasksContext = createContext(null);\nconst TasksDispatchContext = createContext(null);\n\nfunction TasksProvider({ children }) {\n  const [tasks, dispatch] = useReducer(reducer, initial);\n  // ...\n}',o:['提升渲染性能','让深层组件既能读到数据、又能发出更新，而不必把 tasks 和 dispatch 一层层透传下去','用来替代所有的 props','用来实现服务端渲染'],a:1,e:'这是 Scaling Up with Reducer and Context 那一节的核心：reducer 管“怎么变”，Context 管“谁能拿到”。通常拆成数据和 dispatch 两个 Context —— dispatch 是稳定的，分开可以少一些无谓的重渲染。'},
+
+/* ===== Day 20 ===== */
+{d:20,p:'ref 与 effect 初识',t:'mc',q:'点按钮数字不变，为什么？',c:'function Counter() {\n  const count = useRef(0);\n  function handleClick() {\n    count.current = count.current + 1;\n  }\n  return <button onClick={handleClick}>{count.current}</button>;\n}',o:['应该写成 count.value','修改 ref 不会触发重新渲染。值确实加上去了，只是界面不知道','ref 不能用来存数字','handleClick 没有绑定成功'],a:1,e:'判断标准一句话：这个值变化时界面要不要跟着变？要 → state；不要 → ref。这里显然要。'},
+{d:20,p:'ref 与 effect 初识',t:'mc',q:'这段 Effect 的问题是？',c:'useEffect(() => {\n  const id = setInterval(tick, 1000);\n}, []);',o:['依赖数组应该写成 [tick]','没有返回清理函数：组件卸载后定时器还在跑，反复挂载会越堆越多','setInterval 用错了','这段逻辑应该放进事件处理函数'],a:1,e:'凡是建立了订阅、定时器、连接的 Effect，都要 return 一个清理函数。StrictMode 下开发环境会故意挂载两次，正是为了让你发现漏掉的清理。'},
+{d:20,p:'ref 与 effect 初识',t:'mc',q:'评审这段 AI 生成的代码，它的坏味道是什么？',c:'const [items, setItems] = useState([]);\nconst [count, setCount] = useState(0);\n\nuseEffect(() => {\n  setCount(items.length);\n}, [items]);',o:['依赖数组写得不对','count 完全能从 items 派生：这组 state 加 Effect 应该整个删掉，直接写 const count = items.length','应该改用 useMemo','应该用 useRef 来存 count'],a:1,e:'官方《你可能不需要 Effect》整章批判的模式，也是 AI 生成 React 代码最高频的坏味道：多渲染一次，还可能短暂地不同步。能一眼指出并说清原因，就是面试里最值钱的那一分钟。'},
+{d:20,p:'ref 与 effect 初识',t:'mc',q:'下面哪个值适合放进 ref 而不是 state？',c:'// 判断标准：这个值变化时，界面要不要跟着变？',o:['要显示在按钮上的点击次数','setInterval 返回的定时器 ID','决定是否显示弹窗的布尔值','输入框里的文本'],a:1,e:'定时器 ID 只是内部记录，界面从不显示它。其余三个都直接驱动界面，必须是 state。'},
+
+/* ===== Day 21 ===== */
+{d:21,p:'Week3 验收',t:'mc',q:'【验收】按“三问”判断，下面哪一个不该是 state？',c:'// 一个商品列表页\n// A: 用户输入的搜索词\n// B: 服务端返回的商品数组\n// C: 过滤后的商品数组\n// D: 复选框“只看有货”的勾选状态',o:['A','B','C —— 它能由 B + A + D 算出来，属于派生值，渲染时现算','D'],a:2,e:'三问：会随时间变化吗？能从现有数据算出来吗？是 props 传进来的吗？C 卡在第二问上。'},
+{d:21,p:'Week3 验收',t:'mc',q:'【验收】评审这段代码，最该改的是哪里？',c:'function Search({ products }) {\n  const [query, setQuery] = useState("");\n  const [results, setResults] = useState(products);\n\n  useEffect(() => {\n    setResults(products.filter(p => p.name.includes(query)));\n  }, [query, products]);\n\n  return <List items={results} />;\n}',o:['依赖数组漏了 setResults','results 和这个 Effect 都该删掉，改成渲染时派生：const results = products.filter(...)','应该用 useCallback 包一层','应该把 filter 提到组件外面去'],a:1,e:'这段代码能跑，但每次输入都要渲染两轮：先渲染旧结果，Effect 再触发一次。删掉之后不仅更快，而且不可能失步。'},
+{d:21,p:'Week3 验收',t:'mc',q:'【验收】这段代码的数据流设计哪里不好？',c:'function Parent() {\n  const [items, setItems] = useState([]);\n  return <Child items={items} setItems={setItems} />;\n}',o:['完全没问题，这是标准写法','把 setItems 整个交给子组件，等于让子组件任意改写父组件的 state。更好的做法是传语义化的回调（onAdd、onRemove），由父组件决定怎么改','应该改用 Context','应该把 state 移进 Child'],a:1,e:'不是语法错误，是设计问题——面试里最容易拉开差距的那一类。传 setState 下去，父组件就失去了对自己 state 的控制权，也没法在更新前后做校验、去重或埋点。'},
+{d:21,p:'Week3 验收',t:'ms',q:'【验收】哪些做法体现了“让 state 保持最小”？（多选）',c:'// 一个待办应用',o:['选中项只存 id，需要完整对象时按 id 查找','列表和搜索词分开存，过滤结果渲染时现算','互斥状态用一个联合类型的 status，而不是多个布尔值','用 useEffect 让多份 state 保持同步'],a:[0,1,2],e:'第四项是坏味道本身：需要用 Effect 同步的两份 state，说明其中一份本来就不该存在。三周下来，你应该能条件反射：能算的不存。'}
+);
+
+/* ============ 每日材料卡 ============ */
+const DOC='https://zh-hans.react.dev/learn/';
+const MAT={
+ 1:{t:'你的第一个组件 · 组件的导入与导出',u:[DOC+'your-first-component',DOC+'importing-and-exporting-components']},
+ 2:{t:'使用 JSX 书写标签语言 · 在 JSX 中使用大括号',u:[DOC+'writing-markup-with-jsx',DOC+'javascript-in-jsx-with-curly-braces']},
+ 3:{t:'将 Props 传递给组件',u:[DOC+'passing-props-to-a-component']},
+ 4:{t:'条件渲染',u:[DOC+'conditional-rendering']},
+ 5:{t:'渲染列表',u:[DOC+'rendering-lists']},
+ 6:{t:'保持组件纯粹',u:[DOC+'keeping-components-pure']},
+ 7:{t:'验收日 · 将 UI 视为树 + Week 1 复盘',u:[DOC+'understanding-your-ui-as-a-tree']},
+ 8:{t:'响应事件',u:[DOC+'responding-to-events']},
+ 9:{t:'State：组件的记忆',u:[DOC+'state-a-components-memory']},
+ 10:{t:'渲染和提交 · state 如同一张快照',u:[DOC+'render-and-commit',DOC+'state-as-a-snapshot']},
+ 11:{t:'把一系列 state 更新加入队列',u:[DOC+'queueing-a-series-of-state-updates']},
+ 12:{t:'更新 state 中的对象',u:[DOC+'updating-objects-in-state']},
+ 13:{t:'更新 state 中的数组',u:[DOC+'updating-arrays-in-state']},
+ 14:{t:'验收日 · Week 2 复盘（快照 + 批处理 + 不可变）',u:[DOC+'adding-interactivity']},
+ 15:{t:'用 State 响应输入（声明式思维）',u:[DOC+'reacting-to-input-with-state']},
+ 16:{t:'选择 State 结构',u:[DOC+'choosing-the-state-structure']},
+ 17:{t:'在组件间共享状态（状态提升）',u:[DOC+'sharing-state-between-components']},
+ 18:{t:'对 state 进行保留和重置',u:[DOC+'preserving-and-resetting-state']},
+ 19:{t:'迁移状态逻辑至 Reducer · 使用 Context 深层传递参数 · 用 Reducer 和 Context 扩展你的应用（概览即可）',u:[DOC+'extracting-state-logic-into-a-reducer',DOC+'passing-data-deeply-with-context',DOC+'scaling-up-with-reducer-and-context']},
+ 20:{t:'使用 ref 引用值 · 使用 Effect 同步（初识，不求全懂）',u:[DOC+'referencing-values-with-refs',DOC+'synchronizing-with-effects']},
+ 21:{t:'验收日 · Thinking in React（精读第三遍）',u:['https://zh-hans.react.dev/learn/thinking-in-react']}
+};
+const WEEKS=[
+ {label:'{/* Week 1 · 描述 UI —— 组件 / JSX / Props / key / 纯函数 */}',days:[1,2,3,4,5,6,7]},
+ {label:'{/* Week 2 · 添加交互 —— 事件 / useState / 快照 / 批处理 / 不可变更新 */}',days:[8,9,10,11,12,13,14]},
+ {label:'{/* Week 3 · 管理状态 —— 声明式 / state 结构 / 状态提升 / reducer / 逃生舱 */}',days:[15,16,17,18,19,20,21]}
+];
+
+/* ============ 存储 ============
+   默认 localStorage；window.storage 存在时（沙盒环境）优先用它。
+   键名沿用 v1，老进度可以无缝读出来。 */
+const KEY='react-quiz-v1';
+const DAY_MS=864e5;
+const POINTS=[...new Set(BANK.map(q=>q.p))];
+let DB={days:{},wrong:[],points:{},prefs:{theme:''}};
+
+/* 进度可以从 JSON 导入，所以落库前一律洗一遍：
+   收窄成已知形状 + 强制数字，渲染时才敢把它们直接拼进模板。 */
+function sanitizeDB(){
+  DB.days=DB.days&&typeof DB.days==='object'?DB.days:{};
+  DB.points=DB.points&&typeof DB.points==='object'?DB.points:{};
+  DB.prefs=DB.prefs&&typeof DB.prefs==='object'?DB.prefs:{};
+  const th=DB.prefs.theme, ln=Math.floor(+DB.prefs.lastNote||0);
+  DB.prefs={
+    theme: th==='dark'?'dark':th==='light'?'light':'',
+    lastNote: (ln>=1&&ln<=21)?ln:0        // 复习笔记读到哪一节，0 = 路线与用法
+  };
+
+  const days={};
+  Object.keys(DB.days).forEach(k=>{
+    const d=+k, r=DB.days[k];
+    if(!(d>=1&&d<=21)||!r||typeof r!=='object') return;
+    const total=Math.max(0,Math.floor(+r.total||0));
+    if(!total) return;
+    days[d]={score:Math.min(Math.max(0,Math.floor(+r.score||0)),total),total,ts:+r.ts||Date.now()};
+  });
+  DB.days=days;
+
+  const pts={};
+  Object.keys(DB.points).forEach(p=>{
+    if(!POINTS.includes(p)) return;
+    const n=Math.max(0,Math.floor(+DB.points[p]||0));
+    if(n) pts[p]=n;
+  });
+  DB.points=pts;
+
+  const seen=new Set();
+  DB.wrong=(Array.isArray(DB.wrong)?DB.wrong:[])
+    .filter(w=>w&&BANK[w.qi]&&!seen.has(w.qi)&&seen.add(w.qi))
+    .map(w=>({qi:Math.floor(+w.qi),ua:String(w.ua==null?'':w.ua).slice(0,300),
+              ts:+w.ts||Date.now(),due:+w.due||((+w.ts||Date.now())+DAY_MS)}));
+}
+
+async function load(){
+  let raw=null;
+  try{
+    if(window.storage){ const r=await window.storage.get(KEY); raw=r&&r.value; }
+    else raw=localStorage.getItem(KEY);
+  }catch(e){}
+  if(raw){ try{ Object.assign(DB,JSON.parse(raw)); }catch(e){} }
+  // 老版本用题目副本反查索引，会写进 qi:-1 的幽灵错题：
+  // 列表里永远渲染不出来，只把角标计数顶高。sanitize 顺手清掉。
+  sanitizeDB();
+}
+let storageWarned=false;
+async function save(){
+  const s=JSON.stringify(DB);
+  try{
+    if(window.storage) await window.storage.set(KEY,s);
+    else localStorage.setItem(KEY,s);
+  }catch(e){
+    // 每答一题都弹一次会很吵，只提醒一次
+    if(!storageWarned){
+      storageWarned=true;
+      toast('这次的进度无法保存：当前打开方式下浏览器禁用了本地存储。用浏览器直接打开本文件即可正常记录。','bad');
+    }
+  }
+}
+
+/* ============ 工具 ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const LTR='ABCDEFGH';
+const TYPE={mc:'单选',ms:'多选',tf:'判断',fill:'填空'};
+const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,'').replace(/[“”‘’]/g,'');
+const weekOf=d=>d<=7?1:d<=14?2:3;
+const isExam=d=>d===7||d===14||d===21;
+const pointDay=p=>{const q=BANK.find(x=>x.p===p);return q?q.d:0;};
+const dueWrong=()=>DB.wrong.filter(w=>w.due<=Date.now());
+const alertPoints=()=>Object.entries(DB.points).filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]);
+const answerText=q=>q.t==='fill'?q.a[0]:q.t==='ms'?q.a.map(i=>q.o[i]).join('、'):q.o[q.a];
+const answerLetters=q=>q.t==='fill'?'':[].concat(q.a).map(i=>LTR[i]).join(' ');
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const codeBlock=c=>'<pre class="code">'+esc(c)+'</pre>';
+const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;};
+const dayIdx=d=>BANK.map((q,i)=>i).filter(i=>BANK[i].d===d);
+const pad2=n=>String(n).padStart(2,'0');
+
+function stats(){
+  const rows=Object.values(DB.days);
+  const total=rows.reduce((s,r)=>s+r.total,0);
+  const score=rows.reduce((s,r)=>s+r.score,0);
+  return {done:rows.length,total,score,rate:pct(score,total),wrong:DB.wrong.length,due:dueWrong().length};
+}
+
+let toastTimer=null;
+function toast(msg,kind){
+  const el=$('#toast');
+  el.textContent=msg;
+  el.className='toast show'+(kind?' '+kind:'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{el.className='toast';},3200);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      const ok=document.execCommand('copy'); ta.remove(); return ok;
+    }catch(e2){ return false; }
+  }
+}
+function flash(btn,label){
+  const old=btn.textContent;
+  btn.textContent=label; btn.classList.add('ok-flash');
+  setTimeout(()=>{ btn.textContent=old; btn.classList.remove('ok-flash'); },1400);
+}
+
+/* ============ 主题 ============ */
+function applyTheme(){
+  const t=DB.prefs.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  document.documentElement.dataset.theme=t;
+  $('#themeBtn').textContent=t==='dark'?'☀':'◐';
+}
+$('#themeBtn').onclick=()=>{
+  DB.prefs.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  applyTheme(); save();
+};
+
+/* 顶栏实际高度写进 --topbar-h，供 sticky 的答题条对齐 */
+function trackTopbarHeight(){
+  const set=()=>document.documentElement.style
+    .setProperty('--topbar-h',Math.round($('.topbar').getBoundingClientRect().height)+'px');
+  set();
+  addEventListener('resize',set);
+  // 移动端地址栏收放时 resize 不一定触发，断点变化用 matchMedia 兜底
+  [560,820,900].forEach(bp=>matchMedia('(max-width:'+bp+'px)').addEventListener('change',set));
+}
+
+function updateWrongPill(){
+  const n=DB.wrong.length, due=dueWrong().length;
+  const el=$('#wrongPill');
+  el.hidden=!n;
+  el.textContent=n;
+  el.className='pill'+(due?' due':'');
+  el.title=due?due+' 道今日到期':'';
+}
+
+/* ============ 路由 ============ */
+let RUN=null;    // 进行中的一轮答题
+let ROUTE='#/';  // 内部当前路由
+
+/* 某些打开方式下 URL 是不可写的（应用内静态预览会把页面转成 data: URL，
+   opaque origin 下 location.hash 赋值不生效，所有跳转都会静默失灵——
+   表现就是「页面看着正常，点什么都没反应」）。
+   所以路由以内部 ROUTE 为准，URL 只是尽力同步的一份镜像。 */
+function go(route){
+  ROUTE=route;
+  try{ if(location.hash!==route) location.hash=route; }catch(e){}
+  // hash 没能写进去 → 不会有 hashchange 事件，这里直接驱动一次
+  if(location.hash!==route) router();
+}
+
+function router(){
+  // hash 可用时以 hash 为准（支持前进/后退和刷新），否则回落到内部路由
+  const src=location.hash||ROUTE;
+  ROUTE=src;
+  const parts=(src.replace(/^#\/?/,'')).split('/').filter(Boolean);
+  const head=parts[0]||'';
+  $$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===(head==='day'?'':head)));
+  scrollTo(0,0);
+  if(head==='') return renderHome();
+  if(head==='path'){ go('#/notes'); return; }
+  if(head==='notes') return renderNotes(parts[1]);
+  if(head==='wrong') return renderWrong();
+  if(head==='practice'){
+    if(parts[1]==='run'){
+      if(!RUN||RUN.kind!=='free'){ go('#/practice'); return; }
+      return renderQuiz();
+    }
+    return renderPractice();
+  }
+  if(head==='day'){
+    const d=+parts[1];
+    if(!(d>=1&&d<=21)){ go('#/'); return; }
+    if(!(RUN&&RUN.kind==='day'&&RUN.day===d&&RUN.i<RUN.list.length)) startDay(d);
+    return renderQuiz();
+  }
+  go('#/');
+}
+addEventListener('hashchange',router);
+
+/* 站内 <a href="#/..."> 同样会因为 URL 不可写而失灵，统一接管。
+   target="_blank" 的（解析里「回看笔记」）要放行，那是刻意开新标签的。 */
+document.addEventListener('click',ev=>{
+  const a=ev.target.closest&&ev.target.closest('a[href^="#/"]');
+  if(!a||a.target==='_blank') return;
+  if(ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.button!==0) return;
+  ev.preventDefault();
+  go(a.getAttribute('href'));
+});
+
+const WEEK_TITLE=['Week 1 · 描述 UI','Week 2 · 添加交互','Week 3 · 管理状态'];
+const WEEK_DESC=['组件 / JSX / Props / 条件与列表 / 纯函数',
+                 '事件 / useState / 快照 / 批处理 / 不可变更新',
+                 '声明式 / state 结构 / 状态提升 / reducer / 逃生舱'];
+
+/* ============ 总览 ============ */
+function renderHome(){
+  const s=stats();
+  const ap=alertPoints();
+  let h='<h1>React 21 天 · 每日测试</h1>'
+  +'<p class="sub">主线 <a href="https://react.dev/learn" target="_blank" rel="noopener">react.dev / Learn</a> 三章：Describing the UI → Adding Interactivity → Managing State。'
+  +'每天四步：<b>①读材料 → ②亲手敲 → ③用自己的话复述并让 AI 挑错 → ④回来做当日 10 题</b>。</p>'
+
+  +'<div class="grid g4">'
+  +'<div class="tile"><div class="k">完成天数</div><div class="v">'+s.done+'<small> / 21</small></div>'
+  +'<div class="meter'+(s.done>=21?' ok':'')+'"><i style="width:'+pct(s.done,21)+'%"></i></div></div>'
+  +'<div class="tile"><div class="k">累计正确率</div><div class="v">'+s.rate+'<small>%</small></div>'
+  +'<div class="n">'+s.score+' / '+s.total+' 题</div></div>'
+  +'<div class="tile"><div class="k">错题集</div><div class="v">'+s.wrong+'</div>'
+  +'<div class="n">'+(s.due?s.due+' 道今日到期':'暂无到期')+'</div></div>'
+  +'<div class="tile"><div class="k">题库</div><div class="v">'+BANK.length+'</div>'
+  +'<div class="n">21 天 × 10 题</div></div></div>';
+
+  if(s.due){
+    h+='<div class="box mn"><b class="bt">今日复习</b>'
+    +'<p><b>'+s.due+'</b> 道错题已到期，会自动混进你下一次日测（带 ↻ 标记）。也可以现在单独过一遍。</p>'
+    +'<div class="row" style="margin-top:10px">'
+    +'<button class="btn sm primary" id="dueNow">立即重练到期错题</button>'
+    +'<a class="btn sm ghost" href="#/wrong">看错题集</a></div></div>';
+  }
+  if(ap.length){
+    h+='<div class="box warn"><b class="bt">需要回炉的知识点</b>'
+    +'<p style="margin-bottom:9px">累计错 2 次以上，建议回到对应那天重读材料再练。</p><div class="chips">'
+    +ap.map(([p,n])=>'<button class="chip" data-goto="'+pointDay(p)+'">'+esc(p)
+      +'<span class="n">'+n+' 错 · Day '+pointDay(p)+'</span></button>').join('')
+    +'</div></div>';
+  }
+
+  WEEKS.forEach((w,wi)=>{
+    const rows=w.days.map(d=>DB.days[d]).filter(Boolean);
+    const ws=rows.reduce((a,r)=>a+r.score,0), wt=rows.reduce((a,r)=>a+r.total,0);
+    h+='<h2>'+WEEK_TITLE[wi]+'</h2><p class="sub" style="margin-bottom:14px">'+WEEK_DESC[wi]
+      +(wt?' · 本周正确率 '+pct(ws,wt)+'%':'')+'</p><div class="grid g7">';
+    w.days.forEach(d=>{
+      const r=DB.days[d];
+      const full=r&&r.score===r.total;
+      const cls=['day',isExam(d)?'exam':'',r?(full?'done':'part'):''].filter(Boolean).join(' ');
+      const badge=r?'<span class="mark'+(full?'':' part')+'" title="'+(full?'已完成 · 全对':'已完成')+'">✓</span>'
+        :(s.due?'<span class="dot" title="有到期错题将混入"></span>':'');
+      h+='<button class="'+cls+'" data-day="'+d+'">'+badge
+        +'<span class="dn">DAY '+pad2(d)+'</span>'
+        +'<span class="dp">'+esc(BANK.find(q=>q.d===d).p)+'</span>'
+        +'<span class="ds">'+(r?r.score+' / '+r.total+(full?' 全对':''):isExam(d)?'验收日 · 未做':'未开始')+'</span></button>';
+    });
+    h+='</div>';
+  });
+
+  $('#app').innerHTML=h;
+  $$('.day').forEach(b=>b.onclick=()=>go('#/day/'+b.dataset.day));
+  $$('[data-goto]').forEach(b=>b.onclick=()=>go('#/day/'+b.dataset.goto));
+  const dn=$('#dueNow'); if(dn) dn.onclick=()=>startFree(dueWrong().map(w=>w.qi),'到期错题');
+}
+
+/* ============ 复习笔记 ============
+   按 zh-hans.react.dev / react.dev Learn 三章的顺序自己整理的中文笔记：
+   每天一节，只留“考点 + 坑 + 速记”，原文链接放在节末，需要展开时点过去看官方。 */
+const NOTES=[
+{d:1,t:'你的第一个组件 · 导入与导出',k:'组件就是一个返回标签的 JavaScript 函数。',b:[
+ {p:'React 里没有「模板文件」这种东西。你写的每个组件都是一个普通函数，它返回 JSX。所以 props 是函数入参、渲染就是调用这个函数——后面所有规则都能从这一句推导出来。'},
+ {code:'function Profile() {\n  return <img src="/kami.jpg" alt="Kami" />;\n}\n\nexport default function Gallery() {\n  return (\n    <section>\n      <h1>作品</h1>\n      <Profile />\n      <Profile />\n    </section>\n  );\n}'},
+ {ul:['组件名<b>必须大写开头</b>。大小写是 React 区分「组件 vs 原生标签」的唯一信号，写 &lt;profile /&gt; 会被当成未知的 HTML 标签。',
+      '一个文件只能有一个 <code>export default</code>，import 时可以任意命名；具名导出可以有多个，import 时要同名（或用 as 改名）。',
+      '同一个组件可以在多个地方使用，每个实例的 props 和内部状态互相独立——这就是「组件化复用」的实际含义。']},
+ {box:['warn','最容易踩的坑','不要把一个组件的定义写在另一个组件的函数体内部。父组件每次渲染都会重新创建这个「新」组件，React 认不出它是同一个，内部 state 每次归零。组件永远定义在文件顶层。']},
+ {box:['mn','速记','大写 = 组件，小写 = HTML；default 每文件一个，具名可以多个。']}
+]},
+
+{d:2,t:'JSX 语法 · 大括号',k:'JSX 是 JavaScript，不是 HTML——所以它更严格，还要避开 JS 保留字。',b:[
+ {ul:['必须返回<b>单一根节点</b>。不想为了包一层多套一个 div，就用 Fragment <code>&lt;&gt;...&lt;/&gt;</code>，它不会在 DOM 里产生真实节点。',
+      '所有标签必须闭合：<code>&lt;img /&gt;</code>、<code>&lt;br /&gt;</code>。',
+      '<code>class</code> → <code>className</code>，<code>for</code> → <code>htmlFor</code>，<code>onclick</code> → <code>onClick</code>。前两个是因为它们是 JS 保留字，其余属性统一驼峰。',
+      '大括号 <code>{}</code> 是 JSX 通往 JS 的窗口，里面只能放<b>表达式</b>，不能放 if / for 这类语句。']},
+ {code:'<img\n  className="avatar"\n  src={user.imageUrl}\n  style={{ width: 100, height: 100 }}\n/>'},
+ {box:['tip','双大括号不是特殊语法','<code>style={{...}}</code> 外层大括号是「进入 JS」，内层是一个普通对象字面量。看懂这一层，就不会再把它当成新语法背了。']},
+ {box:['mn','速记','单根、全闭合、驼峰、大括号里放表达式。']}
+]},
+
+{d:3,t:'将 Props 传递给组件',k:'props 是组件的只读入参，像函数参数一样。',b:[
+ {ul:['组件是函数，props 就是实参对象。子组件<b>永远不能修改</b>收到的 props。',
+      '想要「改」，就让父组件重新渲染、传新的值下来——这是单向数据流。',
+      '解构时可以给默认值：<code>{ size = 100 }</code>，只在未传或传 undefined 时生效（传 null 不会触发）。',
+      '<code>{...props}</code> 可以整包转发，但用多了通常说明层级该重新设计了。',
+      '标签之间嵌套的内容会自动作为 <code>children</code> 传入——这是所有卡片 / 布局类组件的基础。']},
+ {code:'function Card({ title, children }) {\n  return (\n    <section className="card">\n      <h2>{title}</h2>\n      {children}\n    </section>\n  );\n}\n\n<Card title="关于"><p>hi</p></Card>'},
+ {box:['mn','速记','值往下流（props），事件往上报（回调）。']}
+]},
+
+{d:4,t:'条件渲染',k:'JSX 大括号里只能放表达式，所以条件用三元或 &&。',b:[
+ {ul:['<code>cond ? &lt;A /&gt; : &lt;B /&gt;</code> 内联二选一；<code>cond && &lt;A /&gt;</code> 是「有则渲染」。',
+      'React 不渲染 <code>null</code> / <code>undefined</code> / <code>false</code>，所以「什么都不渲染」就 <code>return null</code>，比返回空 div 干净。',
+      'if 语句进不了大括号，但完全可以写在 return 之前，把 JSX 存进变量再嵌入。分支一多，这种写法比嵌套三元清楚得多——它被严重低估了。']},
+ {box:['warn','最经典的线上 bug','<code>{count && &lt;p&gt;有新消息&lt;/p&gt;}</code> 在 count 为 0 时，会在页面上渲染出一个「0」——因为 && 左边是 0 时整个表达式求值为 0，而 React 会渲染数字。写成 <code>{count > 0 && ...}</code> 才安全。']},
+ {box:['mn','速记','拿数字当条件，先转成布尔。']}
+]},
+
+{d:5,t:'渲染列表 · key',k:'key 是元素的身份证，不是样式钩子。',b:[
+ {code:'{todos.map(todo =>\n  <Item key={todo.id} {...todo} />\n)}'},
+ {ul:['列表重排、增删时，React 靠 key 判断谁动了、谁该保留自己的 state。',
+      'key 只需要<b>兄弟节点之间唯一</b>，且在多次渲染之间<b>保持稳定</b>。不同列表之间可以重名。',
+      'key 是给 React 用的，不会作为 props 传进组件——组件内部读 <code>props.key</code> 拿不到值。',
+      '一个列表项里要渲染多个并列元素又需要 key 时，用完整写法 <code>&lt;Fragment key={id}&gt;</code>。']},
+ {box:['warn','index 当 key 的代价','会插入 / 删除 / 重排的列表用数组下标当 key，重排后 index 对不上原数据，会导致 state 错位——典型症状是删掉第一项后，输入框内容串到了别人身上。<code>Math.random()</code> 更糟：等于每次渲染都告诉 React「全是新元素」，state 全丢。']},
+ {box:['mn','速记','稳定 ID > index > random（random 永远不要）。']}
+]},
+
+{d:6,t:'保持组件纯粹',k:'相同的输入永远返回相同的 JSX，渲染期间不碰外部世界。',b:[
+ {ul:['纯粹 = 可预测。这是 React 敢于随时重新渲染、并发渲染的前提。',
+      '渲染期间不允许：修改渲染前就已存在的变量、直接改收到的 props、无条件调用 setState（还会死循环）。',
+      '但<b>局部突变是允许的</b>：本次渲染中自己刚创建的数组或对象，随便改——外界感知不到。拼 JSX 列表天天在这么干。',
+      '副作用的归属顺序：事件处理函数 &gt; useEffect。渲染函数本体必须保持纯粹。']},
+ {box:['tip','StrictMode 是免费体检','开发环境下 React 会故意把组件函数调用两次。纯函数两次结果一样；如果结果不同或副作用翻倍，说明组件不纯。']},
+ {box:['mn','速记','改外面的东西 = 不纯；改自己刚造出来的东西 = 没关系。']}
+]},
+
+{d:7,t:'验收日 · 将 UI 视为树',k:'React 眼里的应用是一棵树，位置决定身份。',b:[
+ {p:'今天不学新概念，把 Week 1 串成一条线：组件（函数）→ JSX（返回值）→ props（入参）→ 条件与列表（表达式）→ 纯粹（约束）。'},
+ {ul:['<b>渲染树</b>描述组件之间的父子关系。React 用「组件在树中的位置」判断它是不是同一个组件——Day 18 的保留 / 重置规则整个建立在这条上。',
+      '<b>模块依赖树</b>是另一棵树，决定打包体积和加载顺序。两棵树别混。']},
+ {box:['tip','自检三问','为什么组件名必须大写？为什么动态列表不能用 index 当 key？为什么渲染期间不能改外部变量？有一个答不上，就回对应那天重读。']}
+]},
+
+{d:8,t:'响应事件',k:'传函数本身，不要传调用结果。',b:[
+ {code:'<button onClick={handleClick}>对</button>\n<button onClick={handleClick()}>错：渲染时就执行了</button>\n<button onClick={() => handleDelete(id)}>要传参就包一层</button>'},
+ {ul:['带括号 = 立即调用，把返回值（通常是 undefined）当成了事件处理函数。这是最高频的新手 bug。',
+      '命名约定：函数用 <code>handleXxx</code>，prop 用 <code>onXxx</code>。一收一发，命名即文档。',
+      '事件默认向上冒泡。<code>e.stopPropagation()</code> 阻止冒泡，<code>e.preventDefault()</code> 阻止浏览器默认行为（比如表单提交后刷新页面）。两个别混。']},
+ {box:['tip','副作用的正当归宿','事件处理函数不在渲染期间执行，所以它不需要保持纯粹——改 state、发请求都放这里最合适。']}
+]},
+
+{d:9,t:'State：组件的记忆',k:'普通局部变量当不了记忆，state 才行。',b:[
+ {p:'普通变量有两个致命伤：改了不会通知 React 重新渲染；组件函数重新执行时又会被重置回初始值。useState 一次解决这两点。'},
+ {code:'const [count, setCount] = useState(0);'},
+ {ul:['返回一个两元素数组 <code>[当前值, 更新函数]</code>，所以能自由命名解构。约定用 <code>set</code> + 大写变量名。',
+      '同一个组件里可以多次调用 useState，各自独立、互不干扰。',
+      '初始值只在<b>首次渲染（挂载）</b>时使用，之后被忽略。昂贵的初始化要传函数：<code>useState(() => expensiveInit())</code>，否则每次渲染都白算一遍。']},
+ {box:['warn','Hook 的铁律','只能在组件函数<b>顶层</b>调用，不能放进 if、循环或嵌套函数。React 靠调用顺序对应每个 Hook 的内部存储，条件调用会打乱顺序。']},
+ {box:['mn','速记','这个值变化时界面要不要跟着变？要 → state。']}
+]},
+
+{d:10,t:'渲染和提交 · state 如同一张快照',k:'state 是本次渲染的快照，set 之后当前变量不会变。',b:[
+ {code:'const [count, setCount] = useState(0);\n\nfunction handleClick() {\n  setCount(count + 1);\n  alert(count);        // 弹出 0，不是 1\n}'},
+ {ul:['<code>setCount</code> 不修改当前变量，它是「预约下一次渲染」。新值要到下一次渲染才可见。',
+      '每次渲染都有属于自己的 props、state 和事件处理函数——是一整套快照。',
+      '所以 setTimeout / 异步回调里读到的，是它诞生那次渲染的值，哪怕界面早就更新过了。闭包锁住的是过去。']},
+ {box:['warn','连写三次只加一','同一个事件里连写三次 <code>setCount(count + 1)</code>，三次用的都是同一个快照值，等于重复预约同一个结果——只加 1。']},
+ {box:['mn','速记','set 函数 = 请求下一次渲染，≠ 修改当前变量。']}
+]},
+
+{d:11,t:'把一系列 state 更新加入队列',k:'下一个值依赖上一个值时，用更新函数。',b:[
+ {code:'setCount(c => c + 1);\nsetCount(c => c + 1);\nsetCount(c => c + 1);   // 0 → 1 → 2 → 3'},
+ {ul:['React 会等事件处理函数<b>全部执行完</b>，再统一处理 state 队列（批处理），避免半成品渲染。',
+      '<code>c => c + 1</code> 拿到的是队列中最新的值，而不是渲染时的快照。',
+      '替换值和更新函数可以混排，按入队顺序结算：<code>setNumber(number + 5); setNumber(n => n + 1);</code> 结果是 6。',
+      '批处理的边界是「一次事件」。两次独立点击是两个事件，各自渲染，界面不会跳步。']},
+ {box:['mn','速记','下一个值依赖上一个值 → 用 updater；否则直接传值就好。']}
+]},
+
+{d:12,t:'更新 state 中的对象',k:'state 里的对象要当成只读，永远换新的。',b:[
+ {p:'React 通过比较<b>引用</b>判断有没有变（浅比较）。原地修改属性引用没变，界面不会更新。'},
+ {code:'// 错\nuser.name = "Kami";\n\n// 对：先浅拷贝，再覆盖\nsetUser({ ...user, name: "Kami" });\n\n// 嵌套：改哪层，哪层以上全部换新\nsetUser({\n  ...user,\n  address: { ...user.address, city: "London" }\n});'},
+ {ul:['展开语法先浅拷贝所有字段，再覆盖指定字段——顺序写反会被旧值盖回去。',
+      '<code>...</code> <b>只拷贝一层</b>。嵌套字段拷的是引用，改深层属性仍然会污染原对象。',
+      'React 不做深比较。这正是「必须换新对象」的原因。']},
+ {box:['mn','速记','改哪一层，那一层以上全部换新引用。']}
+]},
+
+{d:13,t:'更新 state 中的数组',k:'返回新数组的方法能用，原地修改的不能。',b:[
+ {ul:['能直接用：<code>map</code> / <code>filter</code> / <code>concat</code> / <code>slice</code> / <code>[...arr]</code>',
+      '不能直接用：<code>push</code> / <code>pop</code> / <code>splice</code> / <code>sort</code> / <code>reverse</code>（都原地改）。要排序先 <code>[...arr].sort()</code> 复制一份。']},
+ {code:'// 添加\nsetTodos([...todos, newTodo]);\n// 删除\nsetTodos(todos.filter(t => t.id !== id));\n// 替换\nsetTodos(todos.map(t => t.id === id ? { ...t, done: true } : t));\n// 中间插入\nsetTodos([...arr.slice(0, i), item, ...arr.slice(i)]);'},
+ {box:['warn','双错合一','<code>setTodos(todos.push(newTodo))</code>：既原地污染了 state 数组，又把 push 的返回值（新长度，一个数字）塞给了 setTodos。另外注意 <code>slice</code> 不改原数组、<code>splice</code> 改，一字之差。']}
+]},
+
+{d:14,t:'验收日 · Week 2 复盘',k:'快照、批处理、不可变，三件事其实是同一件事。',b:[
+ {p:'React 需要可靠地判断两件事：什么变了，以及这次渲染该长什么样。<b>快照</b>让每次渲染自洽，<b>批处理</b>让更新成批结算，<b>不可变</b>让变化可以用引用比较检测出来。三者互相支撑，也是「时间旅行调试」的基础。'},
+ {box:['tip','自检四问','① 连写两次 setCount(count+1) 加几？（1）② 连写两次 setCount(c=>c+1) 加几？（2）③ 展开语法是深拷贝吗？（不是）④ push 为什么不能用在 state 数组上？（原地改 + 返回数字）']}
+]},
+
+{d:15,t:'用 State 响应输入（声明式思维）',k:'你描述每种状态下 UI 长什么样，React 负责操作 DOM。',b:[
+ {p:'命令式是一步步指挥 DOM 怎么变（jQuery 思维）；声明式是报目的地，路线交给司机。'},
+ {ol:['找出组件<b>所有的视觉状态</b>：empty / typing / submitting / success / error',
+      '确定是什么<b>触发</b>状态改变：用户输入、网络返回',
+      '用 <code>useState</code> 表示这些状态',
+      '删掉多余、可以推导出来的 state 变量',
+      '把事件处理函数接上去']},
+ {box:['tip','这一步你有天然优势','第 1 步「枚举所有视觉状态」和设计师画 user flow / 状态图是同一件事，只是产出物变成了 state 设计。']},
+ {box:['mn','速记','UI = f(state)。状态定了，界面就定了。']}
+]},
+
+{d:16,t:'选择 State 结构',k:'让 state 保持最小，其余全部在渲染时派生计算。',b:[
+ {ul:['<b>避免冗余</b>：能从 props 或已有 state 算出来的值不要存。<code>fullName</code> 存了就要手动同步，忘了同步就是 bug——渲染时现算，永不失步。',
+      '<b>避免自相矛盾</b>：<code>isTyping</code> 和 <code>isSubmitting</code> 两个布尔可能同时为 true。改成一个 <code>status: \'typing\' | \'submitting\' | \'success\'</code>，非法状态在类型层面就无法被表示。',
+      '<b>避免重复</b>：存了整个对象的副本，源数据一更新副本就过期。存 id，渲染时按 id 查找。',
+      '<b>避免深层嵌套</b>：嵌套越深，不可变更新越痛苦。能扁平化就扁平化。']},
+ {box:['mn','速记','每一份多余的 state 都是一个待同步的 bug 源。']}
+]},
+
+{d:17,t:'在组件间共享状态（状态提升）',k:'两个组件要共享的数据，放到它们最近的公共父组件。',b:[
+ {ul:['父组件持有 state，通过 props 把值发下去，通过回调函数接收变更。仅此两条通道。',
+      '<b>受控组件</b>：显示什么完全由 props 决定，自己不持有这份 state，父组件永远知道真相。',
+      '<b>非受控组件</b>：自己用内部 state 管，父组件管不着。',
+      '<b>单一数据源</b>不是「全放一处」，而是每份 state 有唯一的拥有者。需要共享就<b>提升</b>，而不是各存一份手动同步。']},
+ {box:['tip','设计系统里的必答题','每个输入类组件都要决定「受控还是非受控」，或者两者都支持。这是做组件库时最先被问到的问题之一。']}
+]},
+
+{d:18,t:'对 state 进行保留和重置',k:'决定 state 去留的是「位置 + 组件类型」，不是变量名。',b:[
+ {ul:['同一位置渲染同一类型的组件 → state <b>保留</b>，哪怕 props 全变了。',
+      '位置上的组件类型变了，或组件被移出渲染树 → 整棵子树的 state <b>销毁</b>。换回来的是全新实例。',
+      '<code>{isA ? &lt;Counter /&gt; : &lt;Counter /&gt;}</code> 切换时计数会保留——React 看的是位置和类型，不看你在源码里写了几个标签。',
+      '想强制重置，给它一个不同的 <code>key</code>：<code>&lt;Chat key={to.id} /&gt;</code>，切换聊天对象时输入框自动清空。']},
+ {box:['warn','最容易记反的一条','props 变化<b>从不</b>重置 state。想靠某个 prop 触发重置，正确姿势是把它设成 key。']},
+ {box:['mn','速记','key 不只是列表专用，它是「这还是不是同一个东西」的通用答案。']}
+]},
+
+{d:19,t:'Reducer 与 Context',k:'更新逻辑变复杂就收进 reducer；跨层传数据才用 Context。',b:[
+ {ul:['迁移信号：多个事件处理函数以复杂方式更新同一份 state，逻辑散落各处 → 换 <code>useReducer</code>。',
+      'reducer 必须是<b>纯函数</b>，接收 <code>(state, action)</code> 返回新 state。',
+      '<code>action</code> 描述「用户做了什么」（added / deleted / changed_text），不是「怎么改 state」（setX）。命名尽量用业务语言。',
+      '更新逻辑集中在一个纯函数里，可以<b>脱离组件单独测试</b>——这一条对做 evals 的人格外值钱。',
+      'Context 解决的是 prop drilling：主题、当前用户这类「树上大范围都要」的数据。',
+      'reducer + Context 合用：reducer 管「怎么变」，Context 管「谁能拿到」。通常拆成<b>数据</b>和 <b>dispatch</b> 两个 Context —— dispatch 是稳定的，分开能少一些无谓的重渲染。']},
+ {code:'dispatch({ type: "added", id, text });\n\n<ThemeContext.Provider value={theme}>\n  <App />\n</ThemeContext.Provider>'},
+ {box:['warn','两个常见误解','① dispatch 和 setState 一样是排队的，下一行读不到新 state——快照规则在 reducer 世界照样生效。② Context 不是 props 的替代品，它让数据来源变得不显式，滥用会让组件难以复用和测试。先试 props 和 children 组合，不行再上 Context。']}
+]},
+
+{d:20,t:'使用 ref 引用值 · 使用 Effect 同步',k:'ref 是不参与渲染的记事本，Effect 是同步外部系统的逃生舱。',b:[
+ {ul:['修改 <code>ref.current</code> <b>不会</b>触发重新渲染。适合存定时器 ID、DOM 节点、上一次的值这类内部记录。',
+      '<code>useRef(初始值)</code> 返回 <code>{ current: 初始值 }</code>，读写都走 <code>.current</code>。',
+      '<code>useEffect</code> 的定位是「渲染之后与外部系统同步」：订阅、操作非 React 控件、必要的数据请求。',
+      '依赖数组：<code>[]</code> 只在挂载后运行一次；<b>省略</b>则每次渲染都运行。两者天差地别。']},
+ {box:['warn','《你可能不需要 Effect》','官方专门写了一整章批判滥用。能在事件处理函数里做的、能在渲染时直接算出来的，都不要塞进 Effect。用 Effect 去同步一份能从 props 派生的 state，是 AI 生成 React 代码最高频的坏味道——一眼指出它并说清原因，就是你要向面试官展示的判断力。']},
+ {box:['mn','速记','要驱动界面 → state；只做内部记录 → ref；必须和外部世界同步 → effect。']}
+]},
+
+{d:21,t:'验收日 · Thinking in React（读三遍）',k:'拿到设计稿之后，按五步走。',b:[
+ {p:'这一篇是整条路线的收束，也是这门手艺的方法论本身。别人当入门文章扫过去，你要当方法论精读——它讲的就是「如何把一张静态设计稿拆成组件树 + 状态」。'},
+ {ol:['把 UI <b>拆成组件层级</b>（按单一职责画框，和你切图层、分组件的思路是同一件事）',
+      '用 props 搭一个<b>静态版本</b>，先不加任何 state',
+      '找出<b>最小且完整</b>的 state',
+      '确定每个 state 该<b>放在哪个组件</b>',
+      '添加<b>反向数据流</b>（回调）']},
+ {p:'判断一个数据是不是 state，问三句：'},
+ {ul:['会随时间变化吗？不会 → 常量',
+      '能从现有 props / state 算出来吗？能 → 派生值，渲染时现算',
+      '是由 props 传进来的吗？是 → 不归这个组件管']},
+ {box:['tip','面试用法','白板题就按这五步走，能主动报出步骤本身就是加分项。数据向下流（props）、变更向上报（回调），就是单向数据流的完整闭环。']}
+]}
+];
+
+/* 笔记正文的极简块渲染：内容是本文件里写死的静态文本，允许带 <b>/<code> 标签；
+   代码块仍然走 esc()，否则示例里的 <img /> 会被浏览器当真标签解析掉。 */
+function noteBlocks(n){
+  return n.b.map(x=>{
+    if(x.p) return '<p>'+x.p+'</p>';
+    if(x.ul) return '<ul>'+x.ul.map(i=>'<li>'+i+'</li>').join('')+'</ul>';
+    if(x.ol) return '<ol>'+x.ol.map(i=>'<li>'+i+'</li>').join('')+'</ol>';
+    if(x.code) return '<pre><code>'+esc(x.code)+'</code></pre>';
+    if(x.box) return '<div class="box '+x.box[0]+'"><b class="bt">'+x.box[1]+'</b>'
+      +(Array.isArray(x.box[2])?'<ul>'+x.box[2].map(i=>'<li>'+i+'</li>').join('')+'</ul>':'<p>'+x.box[2]+'</p>')+'</div>';
+    return '';
+  }).join('');
+}
+
+const NOTE_INTRO=
+ '<div class="note-head"><span class="tag q">读法</span><h2>路线与用法</h2></div>'
++'<p class="note-key">英文主线 react.dev / Learn，中文版用来卡壳时对照——两边术语一致，不会打架。</p>'
++'<div class="box key"><b class="bt">只走这三章</b><p>Describing the UI → Adding Interactivity → Managing State，走完就停。'
++'最后的 Escape Hatches（useRef / useEffect）用到再回来查，别顺序读。'
++'旧的 legacy.reactjs.org 已明确停更，搜到就关掉。</p></div>'
++'<div class="box tip"><b class="bt">Thinking in React 单独读三遍</b>'
++'<p>它讲的就是「如何把一张静态设计稿拆成组件树 + 状态」——这几乎是目标岗位的技能定义本身。'
++'别人当入门文章扫过，你要当方法论精读。'
++'<a href="https://react.dev/learn/thinking-in-react" target="_blank" rel="noopener">英文原文</a> · '
++'<a href="https://zh-hans.react.dev/learn/thinking-in-react" target="_blank" rel="noopener">中文对照</a>（Day 21）</p></div>'
++'<div class="box mn"><b class="bt">中文版的正确用法</b>'
++'<p>zh-hans.react.dev 是官方翻译，同步更新、质量可靠。<b>不要当主线，当卡壳时的对照</b>：'
++'英文某个概念绕不过去，切中文看同一节，通常十秒就通。第三方中文教程最大的问题是过时，不要用。</p></div>'
++'<div class="box"><b class="bt" style="color:var(--ink-3)">每天四步</b>'
++'<ol><li>读今日材料（左侧笔记是浓缩版，展开细节点官方链接）</li>'
++'<li>在项目或沙盒里<b>亲手敲</b>一遍</li>'
++'<li>用自己的话复述给 AI，让它挑错</li>'
++'<li>回来做当日 10 题验收（前 6 题记概念，后 4 题读代码）</li></ol>'
++'<p style="font-size:13.5px;color:var(--ink-3);margin-bottom:0">Day 7 / 14 / 21 是验收日。做题只是验收，不是学习本身。</p></div>';
+
+function renderNotes(sel){
+  // 区分「没指定节号」和「明确指定了第 0 节」：
+  // #/notes 走记忆恢复，#/notes/0 是用户主动点了「路线与用法」，要照办。
+  const explicit=sel!==undefined&&sel!=='';
+  const cur=explicit ? ((+sel>=1&&+sel<=21)?+sel:0) : (DB.prefs.lastNote||0);
+  if(DB.prefs.lastNote!==cur){ DB.prefs.lastNote=cur; save(); }
+
+  let toc='<input id="tocSearch" placeholder="搜索笔记…" autocomplete="off" aria-label="搜索笔记">'
+   +'<div class="toc-w"><b>怎么用</b>'
+   +'<a href="#/notes/0" class="'+(cur===0?'on':'')+'" data-t="读法 路线 三章 中文 thinking in react">'
+   +'<span class="num">00</span><span>路线与用法</span></a></div>';
+  WEEKS.forEach((w,wi)=>{
+    toc+='<div class="toc-w"><b>'+WEEK_TITLE[wi]+'</b>';
+    w.days.forEach(d=>{
+      const n=NOTES.find(x=>x.d===d), r=DB.days[d];
+      const done=r&&r.score===r.total;
+      toc+='<a href="#/notes/'+d+'" class="'+(cur===d?'on ':'')+(done?'done':'')
+        +'" data-t="'+esc(n.t+' '+n.k+' '+BANK.find(q=>q.d===d).p)+'">'
+        +'<span class="num">'+pad2(d)+'</span><span>'+esc(n.t)+'</span></a>';
+    });
+    toc+='</div>';
+  });
+
+  let body;
+  if(cur===0){
+    body=NOTE_INTRO;
+  }else{
+    const n=NOTES.find(x=>x.d===cur), m=MAT[cur], r=DB.days[cur];
+    const status=r
+      ? '<span class="tag" style="background:'+(r.score===r.total?'var(--ok)':'var(--warn)')+'">已完成 '+r.score+' / '+r.total+'</span>'
+      : '<span class="tag q">未做题</span>';
+    body='<div class="note-head"><span class="tag w'+weekOf(cur)+'">Day '+pad2(cur)+'</span>'
+      +'<h2>'+esc(n.t)+'</h2>'+status+'</div>'
+      +'<p class="note-key">'+n.k+'</p>'
+      +noteBlocks(n)
+      +'<div class="note-src">官方原文（中文 · 卡壳时对照英文）：<br>'
+      +m.u.map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.replace('https://',''))+'</a>'
+         +' · <a href="'+esc(u.replace('zh-hans.react.dev','react.dev'))+'" target="_blank" rel="noopener">EN</a>').join('<br>')
+      +'</div>'
+      +'<div class="note-nav">'
+      +(cur>1?'<a class="btn sm ghost" href="#/notes/'+(cur-1)+'">← Day '+pad2(cur-1)+'</a>':'')
+      +'<button class="btn sm primary" data-day="'+cur+'">'+(r?'重做 Day '+pad2(cur)+' 的 10 题':'做 Day '+pad2(cur)+' 的 10 题')+'</button>'
+      +(cur<21?'<a class="btn sm ghost" href="#/notes/'+(cur+1)+'">Day '+pad2(cur+1)+' →</a>':'')
+      +'</div>';
+  }
+
+  $('#app').innerHTML='<h1>复习笔记</h1>'
+   +'<p class="sub">按 react.dev Learn 三章顺序整理的中文浓缩笔记，每天一节：只留考点、坑和速记，展开细节点节末的官方原文。</p>'
+   +'<div class="notes-wrap"><aside class="toc">'+toc+'</aside><article class="note-body">'+body+'</article></div>';
+
+  $$('.note-body [data-day]').forEach(b=>b.onclick=()=>go('#/day/'+b.dataset.day));
+  // 目录是独立滚动容器，用 nearest 只在必要时滚动，不抢整页焦点
+  const on=$('.toc a.on');
+  if(on) on.scrollIntoView({block:'nearest'});
+
+  const box=$('#tocSearch');
+  box.oninput=()=>{
+    const kw=box.value.trim().toLowerCase();
+    $$('.toc a').forEach(a=>{
+      const hit=!kw||(a.dataset.t+' '+a.textContent).toLowerCase().includes(kw);
+      a.style.display=hit?'':'none';
+    });
+    $$('.toc-w').forEach(g=>{
+      g.style.display=[...g.querySelectorAll('a')].some(a=>a.style.display!=='none')?'':'none';
+    });
+  };
+}
+
+/* ============ 自由刷题 ============ */
+const SCOPE={scope:'all',size:10};
+function poolFor(scope){
+  if(scope==='all') return BANK.map((q,i)=>i);
+  if(scope==='wrong') return DB.wrong.map(w=>w.qi);
+  if(/^w[123]$/.test(scope)) return BANK.map((q,i)=>i).filter(i=>weekOf(BANK[i].d)===+scope.slice(1));
+  if(scope.startsWith('p:')) return BANK.map((q,i)=>i).filter(i=>BANK[i].p===scope.slice(2));
+  return [];
+}
+function scopeLabel(){
+  const s=SCOPE.scope;
+  if(s==='all') return '全部题库';
+  if(s==='wrong') return '我的错题';
+  if(/^w[123]$/.test(s)) return 'Week '+s.slice(1);
+  return s.slice(2);
+}
+function renderPractice(){
+  const pool=poolFor(SCOPE.scope);
+  const take=Math.min(SCOPE.size||pool.length,pool.length);
+  let h='<h1>自由刷题</h1>'
+  +'<p class="sub">不计入每日记录，只用来临时补练。答错照样进错题集、答对照样把错题移出。</p>'
+  +'<div class="card"><h3 style="margin-top:0">范围</h3><div class="chips" id="scopeChips">'
+  +'<button class="chip'+(SCOPE.scope==='all'?' on':'')+'" data-s="all">全部题库<span class="n">'+BANK.length+'</span></button>'
+  +[1,2,3].map(w=>'<button class="chip'+(SCOPE.scope==='w'+w?' on':'')+'" data-s="w'+w+'">Week '+w
+     +'<span class="n">'+BANK.filter(q=>weekOf(q.d)===w).length+'</span></button>').join('')
+  +'<button class="chip'+(SCOPE.scope==='wrong'?' on':'')+'" data-s="wrong">我的错题<span class="n">'+DB.wrong.length+'</span></button>'
+  +'</div><h3>指定知识点</h3><select class="fld" id="pointSel"><option value="">— 不限（用上面的范围）—</option>'
+  +POINTS.map(p=>'<option value="'+esc(p)+'"'+(SCOPE.scope==='p:'+p?' selected':'')+'>Day '+pad2(pointDay(p))+' · '
+     +esc(p)+'（'+BANK.filter(q=>q.p===p).length+' 题）</option>').join('')
+  +'</select><h3>题量</h3><div class="chips" id="sizeChips">'
+  +[10,20,0].map(n=>'<button class="chip'+(SCOPE.size===n?' on':'')+'" data-n="'+n+'">'+(n||'全部')+'</button>').join('')
+  +'</div><div class="row" style="margin-top:18px">'
+  +'<button class="btn primary" id="startFree"'+(pool.length?'':' disabled')+'>开始（'+take+' 题）</button>'
+  +'<span class="sub" style="margin:0">当前范围共 '+pool.length+' 题，随机抽取</span></div></div>';
+  $('#app').innerHTML=h;
+  $$('#scopeChips .chip').forEach(b=>b.onclick=()=>{ SCOPE.scope=b.dataset.s; renderPractice(); });
+  $$('#sizeChips .chip').forEach(b=>b.onclick=()=>{ SCOPE.size=+b.dataset.n; renderPractice(); });
+  $('#pointSel').onchange=e=>{ SCOPE.scope=e.target.value?('p:'+e.target.value):'all'; renderPractice(); };
+  $('#startFree').onclick=()=>startFree(shuffle(pool).slice(0,SCOPE.size||pool.length),scopeLabel());
+}
+
+/* ============ 答题 ============ */
+function startDay(d){
+  const daily=dayIdx(d);
+  const due=dueWrong().map(w=>w.qi).filter(i=>!daily.includes(i));
+  RUN={kind:'day',day:d,label:'Day '+pad2(d)+' · '+MAT[d].t.split(' · ')[0],
+       list:[...daily.map(qi=>({qi,re:false})),...due.map(qi=>({qi,re:true}))],
+       i:0,res:[],answered:false,picks:[]};
+}
+function startFree(idxList,label){
+  if(!idxList.length){ toast('这个范围里没有题'); return; }
+  const wrongSet=new Set(DB.wrong.map(w=>w.qi));
+  RUN={kind:'free',day:null,label:label,
+       list:idxList.map(qi=>({qi,re:wrongSet.has(qi)})),
+       i:0,res:[],answered:false,picks:[]};
+  if(ROUTE==='#/practice/run') renderQuiz();
+  else go('#/practice/run');
+}
+
+function renderQuiz(){
+  if(!RUN){ go('#/'); return; }
+  if(RUN.i>=RUN.list.length) return renderDone();
+  const e=RUN.list[RUN.i], q=BANK[e.qi];
+  const exit=RUN.kind==='day'?'#/':'#/practice';
+  RUN.answered=false; RUN.picks=[];
+
+  const mat=(RUN.kind==='day'&&RUN.i===0)?MAT[RUN.day]:null;
+  const matCard=mat?'<div class="box key"><b class="bt">今日材料</b>'
+    +'<p style="margin-bottom:6px">'+esc(mat.t)+'</p>'
+    +mat.u.map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener" style="font-size:13px">'
+       +esc(u.replace('https://',''))+'</a>').join('<br>')
+    +'<p style="margin-top:8px;font-size:13px;color:var(--ink-3)">先 ①读 → ②敲 → ③复述，再回来做题。做题只是验收，不是学习本身。</p>'
+    +'<div class="row" style="margin-top:10px"><a class="btn sm" href="#/notes/'+RUN.day+'">先看本节笔记</a></div></div>':'';
+
+  const zone = q.t==='fill'
+    ? '<label class="fld-l" for="fillin">输入答案，回车提交</label>'
+      +'<input class="fld mono" id="fillin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="答案">'
+    : '<div class="opts" id="opts">'+q.o.map((o,i)=>
+        '<button class="opt" data-i="'+i+'"><span class="ltr">'+LTR[i]+'</span><span>'+esc(o)+'</span></button>').join('')+'</div>';
+
+  const hint = q.t==='fill' ? '<kbd>Enter</kbd> 提交'
+    : '<kbd>1</kbd>–<kbd>'+q.o.length+'</kbd> 选择'+(q.t==='ms'?' · <kbd>Enter</kbd> 提交':'');
+
+  $('#app').innerHTML='<div class="quiz">'
+   +'<div class="qbar"><a class="btn sm ghost" href="'+exit+'">← 退出</a>'
+   +'<strong style="font-size:14px">'+esc(RUN.label)+'</strong>'
+   +'<span class="spacer"></span><span class="ct">'+(RUN.i+1)+' / '+RUN.list.length+'</span></div>'
+   +'<div class="progress-strip">'+RUN.list.map((_,i)=>
+      '<i class="'+(i<RUN.i?(RUN.res[i]?'ok':'no'):i===RUN.i?'cur':'')+'"></i>').join('')+'</div>'
+   +matCard
+   +'<div class="q-meta"><span class="tag w'+weekOf(q.d)+'">Day '+pad2(q.d)+'</span>'
+   +'<span class="tag q">'+esc(q.p)+'</span><span class="tag q">'+TYPE[q.t]+'</span>'
+   +(q.t==='ms'?'<span class="tag multi">多选</span>':'')
+   +(e.re?'<span class="tag re">↻ 错题复现</span>':'')+'</div>'
+   +'<p class="q-stem">'+esc(q.q)+'</p>'
+   +(q.c?codeBlock(q.c):'')
+   +'<div id="zone">'+zone+'</div>'
+   +'<div class="row" id="acts" style="margin-top:16px">'
+   +((q.t==='fill'||q.t==='ms')?'<button class="btn primary" id="submit">'+(q.t==='fill'?'检查':'提交')+'</button>':'')
+   +'<button class="btn ghost" id="idk">不会，看答案</button>'
+   +'<span class="spacer"></span><span class="kbd-hint">'+hint+' · <kbd>Esc</kbd> 退出</span></div>'
+   +'<div id="verdict"></div></div>';
+
+  if(q.t==='fill'){
+    const inp=$('#fillin');
+    inp.focus();
+    inp.onkeydown=ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); $('#submit').click(); } };
+    $('#submit').onclick=()=>{ if(RUN.answered)return; const v=inp.value; if(v.trim()) grade(v); else inp.focus(); };
+  }else if(q.t==='ms'){
+    $$('.opt').forEach(b=>b.onclick=()=>{ if(!RUN.answered) toggleMs(+b.dataset.i); });
+    $('#submit').onclick=()=>{
+      if(RUN.answered)return;
+      if(RUN.picks.length) grade([...RUN.picks].sort((a,b)=>a-b));
+      else toast('先选至少一项');
+    };
+  }else{
+    $$('.opt').forEach(b=>b.onclick=()=>{ if(!RUN.answered) grade(+b.dataset.i); });
+  }
+  $('#idk').onclick=()=>{ if(!RUN.answered) grade(null,true); };
+}
+function toggleMs(i){
+  const set=new Set(RUN.picks);
+  set.has(i)?set.delete(i):set.add(i);
+  RUN.picks=[...set];
+  $$('.opt').forEach(b=>b.classList.toggle('sel',RUN.picks.includes(+b.dataset.i)));
+}
+
+async function grade(input,idk){
+  const e=RUN.list[RUN.i], q=BANK[e.qi];
+  let ok=false, ua='（不会）';
+  if(idk){ ok=false; }
+  else if(q.t==='fill'){ ua=input; ok=q.a.some(x=>norm(x)===norm(ua)); }
+  else if(q.t==='ms'){
+    const as=new Set(q.a), ss=new Set(input);
+    ua=input.map(i=>q.o[i]).join('、');
+    ok=as.size===ss.size&&[...as].every(i=>ss.has(i));
+  }else{ ua=q.o[input]; ok=input===q.a; }
+
+  RUN.answered=true;
+  RUN.res[RUN.i]=ok;
+
+  if(q.t==='fill'){
+    $('#fillin').disabled=true;
+  }else{
+    const as=new Set([].concat(q.a));
+    const ss=new Set(idk?[]:[].concat(input));
+    $$('.opt').forEach(b=>{
+      const i=+b.dataset.i;
+      b.disabled=true; b.classList.remove('sel');
+      if(as.has(i)) b.classList.add('right');
+      else if(ss.has(i)) b.classList.add('wrong');
+    });
+  }
+
+  if(ok){
+    removeWrong(e.qi);
+  }else{
+    DB.points[q.p]=(DB.points[q.p]||0)+1;
+    const ex=DB.wrong.find(w=>w.qi===e.qi);
+    if(ex){ ex.due=Date.now()+DAY_MS; ex.ua=String(ua).slice(0,300); ex.ts=Date.now(); }
+    else DB.wrong.push({qi:e.qi,ua:String(ua).slice(0,300),ts:Date.now(),due:Date.now()+DAY_MS});
+  }
+  updateWrongPill();
+  $$('.progress-strip i')[RUN.i].className=ok?'ok':'no';
+  $('#acts').remove();
+
+  const last=RUN.i+1>=RUN.list.length;
+  const head=ok?'✓ 答对了':idk?'ℹ 已标记「不会」 — 这个知识点计入预警':'✗ 答错了';
+  const yours=(idk||q.t==='fill')?'<br>你的作答：'+esc(String(ua)):'';
+  const ansLine=ok?'':'<p class="ans">正确答案：<b>'+esc(String(answerText(q)))+'</b>'
+    +(q.t==='fill'?'':'（'+answerLetters(q)+'）')+yours+'</p>';
+
+  $('#verdict').innerHTML='<div class="verdict '+(ok?'good':'bad')+'">'
+   +'<div class="vh">'+head+(ok?'':'<span class="tag q">Day '+q.d+' · '+esc(q.p)+'</span>')+'</div>'
+   +ansLine+'<p>'+esc(q.e)+'</p>'
+   +'<div class="row"><button class="btn sm primary" id="next">'+(last?'看结果':'下一题')+'</button>'
+   +'<a class="btn sm ghost" href="#/notes/'+q.d+'" target="_blank" rel="noopener">回看 Day '+q.d+' 笔记 ↗</a>'
+   +'</div></div>';
+  $('#next').onclick=nextQ;
+  $('#next').focus();
+  await save();
+}
+function nextQ(){ RUN.i++; renderQuiz(); }
+function removeWrong(qi){
+  const i=DB.wrong.findIndex(w=>w.qi===qi);
+  if(i>=0) DB.wrong.splice(i,1);
+}
+
+function renderDone(){
+  const total=RUN.list.length;
+  const score=RUN.res.filter(Boolean).length;
+  // 每日记录只统计当天本身的 10 题：混进来的错题复现不该改变当天满分的分母
+  if(RUN.kind==='day'&&!RUN.saved){
+    RUN.saved=true;
+    const own=RUN.list.map((e,i)=>({e,i})).filter(x=>!x.e.re);
+    DB.days[RUN.day]={score:own.filter(x=>RUN.res[x.i]).length,total:own.length,ts:Date.now()};
+    save();
+  }
+  const rate=pct(score,total);
+  const full=score===total;
+  const missed=RUN.list.filter((e,i)=>!RUN.res[i]).map(e=>e.qi);
+  const msg=full?'全对。明天见。'
+    :rate>=60?'过关。错的已进错题集，明天日测自动复现（↻）。'
+    :'低于 60%，建议回材料重读一遍再做一次。';
+
+  $('#app').innerHTML='<div class="quiz"><div class="card score-hero">'
+   +'<div class="lbl">'+esc(RUN.label)+'</div>'
+   +'<div class="big '+(full?'pass':rate>=60?'':'fail')+'">'+score+' / '+total+'</div>'
+   +'<div class="msg">'+msg+'</div>'
+   +'<div class="row" style="justify-content:center;margin-top:18px">'
+   +(missed.length?'<button class="btn primary" id="redoWrong">立即重练本轮错题（'+missed.length+'）</button>':'')
+   +'<a class="btn'+(missed.length?'':' primary')+'" href="'+(RUN.kind==='day'?'#/':'#/practice')+'">'
+   +(RUN.kind==='day'?'返回总览':'再来一组')+'</a>'
+   +'<a class="btn ghost" href="#/wrong">看错题集</a></div></div>'
+   +(RUN.kind==='day'&&RUN.day<21?'<div class="row" style="justify-content:center;margin-top:14px">'
+     +'<a class="btn sm ghost" href="#/day/'+(RUN.day+1)+'">继续 Day '+pad2(RUN.day+1)+' →</a></div>':'')
+   +'</div>';
+  updateWrongPill();
+  const rw=$('#redoWrong');
+  if(rw) rw.onclick=()=>startFree(missed,'本轮错题重练');
+}
+
+/* ============ 错题集 ============ */
+let wrongFilter='';
+function renderWrong(){
+  const due=dueWrong().length;
+  let h='<h1>错题集</h1>'
+  +'<p class="sub">答错自动进来，<b>1 天后混入你的下一次日测</b>（带 ↻ 标记）；练对即移出，再错就再顺延一天。</p>';
+
+  if(!DB.wrong.length){
+    h+='<div class="empty"><div class="em">◆</div>错题集是空的。<br>要么你太强，要么你还没开始。'
+      +'<div class="row" style="justify-content:center;margin-top:18px">'
+      +'<a class="btn primary" href="#/">回总览开始 Day 01</a></div></div>';
+    $('#app').innerHTML=h;
+    return;
+  }
+
+  const groups={};
+  DB.wrong.forEach(w=>{ const p=BANK[w.qi].p; (groups[p]=groups[p]||[]).push(w); });
+  const keys=Object.keys(groups).sort((a,b)=>pointDay(a)-pointDay(b));
+  if(wrongFilter&&!groups[wrongFilter]) wrongFilter='';
+
+  h+='<div class="row" style="margin-bottom:16px">'
+   +'<button class="btn primary" id="retryAll">全部重练（'+DB.wrong.length+'）</button>'
+   +(due?'<button class="btn" id="retryDue">只练到期（'+due+'）</button>':'')
+   +'<span class="spacer"></span><button class="link-btn danger" id="clear">清空错题集</button></div>'
+   +'<div class="chips" style="margin-bottom:18px">'
+   +'<button class="chip'+(wrongFilter?'':' on')+'" data-f="">全部<span class="n">'+DB.wrong.length+'</span></button>'
+   +keys.map(p=>'<button class="chip'+(wrongFilter===p?' on':'')+'" data-f="'+esc(p)+'">'+esc(p)
+      +'<span class="n">'+groups[p].length+'</span></button>').join('')
+   +'</div>';
+
+  keys.filter(p=>!wrongFilter||p===wrongFilter).forEach(p=>{
+    const n=DB.points[p]||0;
+    h+='<h2 style="margin-top:26px">'+esc(p)+' <span class="tag q">'+groups[p].length+' 题</span>'
+      +(n>=2?' <span class="tag" style="background:var(--bad)">累计 '+n+' 错 → 回 Day '+pointDay(p)+'</span>':'')+'</h2>';
+    groups[p].forEach(w=>{
+      const q=BANK[w.qi];
+      const overdue=w.due<=Date.now();
+      h+='<div class="item"><div class="ih">'
+        +'<span class="tag w'+weekOf(q.d)+'">Day '+pad2(q.d)+'</span>'
+        +'<span class="tag q">'+TYPE[q.t]+'</span>'
+        +(overdue?'<span class="tag" style="background:var(--warn)">已到期 · 下次日测复现</span>'
+          :'<span>'+Math.max(1,Math.ceil((w.due-Date.now())/36e5))+' 小时后到期</span>')
+        +'</div><div class="iq">'+esc(q.q)+'</div>'
+        +(q.c?codeBlock(q.c):'')
+        +'<div class="ia">你的答案：<span class="ua">'+esc(w.ua)+'</span><br>'
+        +'正确答案：<span class="ca">'+esc(String(answerText(q)))+'</span></div>'
+        +'<div class="ie">'+esc(q.e)+'</div></div>';
+    });
+  });
+
+  $('#app').innerHTML=h;
+  $$('[data-f]').forEach(b=>b.onclick=()=>{ wrongFilter=b.dataset.f; renderWrong(); });
+  $('#retryAll').onclick=()=>startFree(shuffle(DB.wrong.map(w=>w.qi)),'错题重练');
+  const rd=$('#retryDue'); if(rd) rd.onclick=()=>startFree(dueWrong().map(w=>w.qi),'到期错题');
+  $('#clear').onclick=async()=>{
+    if(!confirm('清空全部错题？知识点的累计错误次数会保留。')) return;
+    DB.wrong=[]; await save(); updateWrongPill(); renderWrong();
+    toast('错题集已清空','good');
+  };
+}
+
+/* ============ 进度管理 ============ */
+let PENDING=null;
+function digest(db){
+  const rows=Object.values(db&&db.days||{}).filter(r=>r&&+r.total>0);
+  return {days:rows.length,
+          total:rows.reduce((s,r)=>s+(+r.total||0),0),
+          score:rows.reduce((s,r)=>s+(+r.score||0),0),
+          wrong:(db&&Array.isArray(db.wrong)?db.wrong:[]).length};
+}
+function openProgress(){ $('#progModal').hidden=false; renderProgressBody(); }
+function renderProgressBody(){
+  const d=digest(DB);
+  $('#progBody').innerHTML=
+   '<p class="sub" style="margin-top:0">进度只存在这台设备的浏览器里。换设备、清缓存前先导出一份 JSON。</p>'
+  +'<h3>当前进度</h3><div class="chips">'
+  +'<span class="chip static">完成 '+d.days+' / 21 天</span>'
+  +'<span class="chip static">答对 '+d.score+' / '+d.total+'</span>'
+  +'<span class="chip static">正确率 '+pct(d.score,d.total)+'%</span>'
+  +'<span class="chip static">错题 '+d.wrong+'</span></div>'
+  +'<h3>导出</h3><div class="row">'
+  +'<button class="btn sm" id="expDl">下载 JSON</button>'
+  +'<button class="btn sm" id="expCopy">复制到剪贴板</button></div>'
+  +'<h3>导入</h3><div class="dropzone" id="dz">'
+  +'<div class="dz-main">把 JSON 文件拖到这里，或 <button class="link-btn" id="pick">选择文件</button></div>'
+  +'<div class="dz-sub">也可以直接粘贴内容到下面</div></div>'
+  +'<textarea class="fld" id="pasteBox" rows="3" placeholder="粘贴导出的 JSON，然后点「解析」" style="margin-top:10px"></textarea>'
+  +'<div class="row" style="margin-top:9px"><button class="btn sm" id="parseBtn">解析</button></div>'
+  +'<div id="importPreview"></div>'
+  +'<h3 style="margin-top:26px">危险操作</h3><div class="row">'
+  +'<button class="btn sm" id="wipe">清空全部进度</button>'
+  +'<span class="sub" style="margin:0">天数记录、错题、知识点计数全部归零</span></div>';
+
+  $('#expDl').onclick=()=>{
+    const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+    const t=new Date();
+    const stamp=t.getFullYear()+pad2(t.getMonth()+1)+pad2(t.getDate());
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='react-21d-progress-'+stamp+'.json';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+  $('#expCopy').onclick=async ev=>{
+    const ok=await copyText(JSON.stringify(DB));
+    ok?flash(ev.currentTarget,'已复制'):toast('复制失败，请改用「下载 JSON」','bad');
+  };
+  $('#pick').onclick=()=>$('#importFile').click();
+  $('#parseBtn').onclick=()=>stageImport($('#pasteBox').value);
+  const dz=$('#dz');
+  dz.ondragover=ev=>{ ev.preventDefault(); dz.classList.add('over'); };
+  dz.ondragleave=()=>dz.classList.remove('over');
+  dz.ondrop=ev=>{
+    ev.preventDefault(); dz.classList.remove('over');
+    const f=ev.dataTransfer.files[0];
+    if(f) f.text().then(stageImport);
+  };
+  $('#wipe').onclick=async()=>{
+    if(!confirm('清空全部进度？这一步不可撤销，建议先导出备份。')) return;
+    const theme=DB.prefs.theme;
+    DB={days:{},wrong:[],points:{},prefs:{theme:theme,lastNote:0}};
+    RUN=null;
+    await save(); updateWrongPill(); renderProgressBody(); router();
+    toast('进度已清空','good');
+  };
+}
+function stageImport(text){
+  let obj=null;
+  try{ obj=JSON.parse(text); }catch(e){}
+  if(!obj||typeof obj!=='object'||(!obj.days&&!obj.wrong)){
+    $('#importPreview').innerHTML='<div class="box warn" style="margin-top:12px"><p>解析失败：这不是本站导出的进度文件。</p></div>';
+    return;
+  }
+  PENDING=obj;
+  const a=digest(DB), b=digest(obj);
+  $('#importPreview').innerHTML='<div class="box key" style="margin-top:12px"><b class="bt">导入预览</b>'
+   +'<p style="font-size:13.5px">当前：'+a.days+' 天 · '+a.score+'/'+a.total+' 题 · '+a.wrong+' 错题<br>'
+   +'文件：'+b.days+' 天 · '+b.score+'/'+b.total+' 题 · '+b.wrong+' 错题</p>'
+   +'<div class="row" style="margin-top:10px">'
+   +'<button class="btn sm primary" id="doMerge">合并（每天取更高分）</button>'
+   +'<button class="btn sm" id="doReplace">整体替换</button></div></div>';
+  $('#doMerge').onclick=()=>applyImport('merge');
+  $('#doReplace').onclick=()=>applyImport('replace');
+}
+async function applyImport(mode){
+  if(!PENDING) return;
+  const theme=DB.prefs.theme;
+  if(mode==='replace'){
+    if(!confirm('整体替换当前进度？当前数据会被覆盖。')) return;
+    DB={days:PENDING.days||{},wrong:PENDING.wrong||[],points:PENDING.points||{},
+        prefs:{theme:theme,lastNote:(PENDING.prefs||{}).lastNote}};
+  }else{
+    const out={days:Object.assign({},DB.days),wrong:[...DB.wrong],
+               points:Object.assign({},DB.points),prefs:{theme:theme,lastNote:DB.prefs.lastNote}};
+    Object.entries(PENDING.days||{}).forEach(([d,r])=>{
+      if(!r||!(+r.total>0)) return;
+      const cur=out.days[d];
+      if(!cur||!(+cur.total>0)||(+r.score/+r.total)>(cur.score/cur.total)) out.days[d]=r;
+    });
+    (PENDING.wrong||[]).forEach(w=>{
+      if(!w||!BANK[w.qi]) return;
+      const ex=out.wrong.find(x=>x.qi===w.qi);
+      if(ex) ex.due=Math.min(ex.due,+w.due||ex.due);
+      else out.wrong.push(w);
+    });
+    Object.entries(PENDING.points||{}).forEach(([p,n])=>{
+      out.points[p]=Math.max(out.points[p]||0,Math.floor(+n||0));
+    });
+    DB=out;
+  }
+  sanitizeDB();
+  PENDING=null; RUN=null;
+  await save();
+  updateWrongPill(); renderProgressBody(); router();
+  toast(mode==='replace'?'已替换为导入的进度':'已合并导入的进度','good');
+}
+
+$('#progBtn').onclick=openProgress;
+$('#progClose').onclick=()=>{ $('#progModal').hidden=true; };
+$('#progModal').onclick=ev=>{ if(ev.target.id==='progModal') $('#progModal').hidden=true; };
+$('#importFile').onchange=ev=>{
+  const f=ev.target.files[0];
+  if(f) f.text().then(stageImport);
+  ev.target.value='';
+};
+
+/* ============ 键盘 ============ */
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){
+    if(!$('#progModal').hidden){ $('#progModal').hidden=true; return; }
+    if(RUN&&$('.quiz')) go(RUN.kind==='day'?'#/':'#/practice');
+    return;
+  }
+  if(!RUN||!$('.quiz')) return;
+  if(ev.metaKey||ev.ctrlKey||ev.altKey) return;
+  const inInput=ev.target.tagName==='INPUT'||ev.target.tagName==='TEXTAREA';
+
+  if(RUN.answered){
+    if((ev.key==='Enter'||ev.key===' ')&&!inInput){ ev.preventDefault(); nextQ(); }
+    return;
+  }
+  if(RUN.i>=RUN.list.length) return;
+  const q=BANK[RUN.list[RUN.i].qi];
+  if(inInput) return;                       // 填空题的 Enter 由输入框自己处理
+  if(ev.key==='Enter'&&q.t==='ms'){ ev.preventDefault(); $('#submit').click(); return; }
+  if(q.t==='fill') return;
+  let idx=-1;
+  if(/^[1-9]$/.test(ev.key)) idx=+ev.key-1;
+  else if(/^[a-h]$/i.test(ev.key)) idx=LTR.indexOf(ev.key.toUpperCase());
+  if(idx<0||idx>=q.o.length) return;
+  ev.preventDefault();
+  if(q.t==='ms') toggleMs(idx); else grade(idx);
+});
+
+/* ============ 启动 ============ */
+(async()=>{
+  await load();
+  applyTheme();
+  trackTopbarHeight();
+  updateWrongPill();
+  router();
+})();
+</script>
+</body>
+</html>

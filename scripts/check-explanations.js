@@ -2,10 +2,10 @@
 const fs = require('fs');
 const read = (path) => fs.readFileSync(path, 'utf8');
 
-const QUESTIONS = new Function(read('assets/data/questions.js') + ';return QUESTIONS')();
+const QUESTIONS = new Function(read('cca-f/assets/data/questions.js') + ';return QUESTIONS')();
 const CONTENT_EN = { questions: {} };
-new Function('CONTENT_EN', read('assets/data/content.en.q1.js'))(CONTENT_EN);
-new Function('CONTENT_EN', read('assets/data/content.en.q2.js'))(CONTENT_EN);
+new Function('CONTENT_EN', read('cca-f/assets/data/content.en.q1.js'))(CONTENT_EN);
+new Function('CONTENT_EN', read('cca-f/assets/data/content.en.q2.js'))(CONTENT_EN);
 
 let bad = 0;
 const fail = (message) => {

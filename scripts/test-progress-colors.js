@@ -2,7 +2,7 @@
 const assert = require('assert');
 const fs = require('fs');
 
-const css = fs.readFileSync('assets/styles.css', 'utf8');
+const css = fs.readFileSync('cca-f/assets/styles.css', 'utf8');
 const root = css.match(/:root\s*{([\s\S]*?)\n}/)?.[1] || '';
 const dark = css.match(/\[data-theme="dark"\]\s*{([\s\S]*?)\n}/)?.[1] || '';
 const value = (block, name) => block.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1].trim();

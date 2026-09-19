@@ -1,0 +1,9 @@
+{
+  "trailingSlash": true,
+  "rewrites": [
+    {
+      "source": "/assets/:path*",
+      "destination": "/cca-f/assets/:path*"
+    }
+  ]
+}

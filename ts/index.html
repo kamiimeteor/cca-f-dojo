@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TypeScript 21天 · 每日测试</title>
+<style>
+  :root{
+    --bg:#14171F; --panel:#1B2029; --panel2:#20293A; --border:#2A3242;
+    --text:#D8DEE9; --dim:#7A869C; --faint:#4A5568;
+    --kw:#82AAFF; --str:#9ECE6A; --err:#F7768E; --warn:#E0AF68; --ok:#73DACA;
+    --mono:ui-monospace,'SF Mono','JetBrains Mono','Cascadia Code',Menlo,Consolas,monospace;
+    --sans:var(--mono),-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.7;min-height:100vh}
+  button{font-family:inherit;font-size:inherit;cursor:pointer;color:inherit;background:none;border:none}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--kw);outline-offset:2px;border-radius:4px}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+
+  /* header */
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0 20px;flex-wrap:wrap}
+  .logo{font-family:var(--mono);font-size:17px;font-weight:600;letter-spacing:-.02em}
+  .logo .kw{color:var(--kw)} .logo .str{color:var(--str)}
+  .statline{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .statline b{color:var(--ok);font-weight:600}
+
+  /* union day picker */
+  .union{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 18px 14px;margin-bottom:16px}
+  .union .decl{font-family:var(--mono);font-size:13px;color:var(--dim);margin-bottom:12px}
+  .union .decl .kw{color:var(--kw)}
+  .weekband{font-family:var(--mono);font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 8px}
+  .weekband:first-of-type{margin-top:0}
+  .days{display:flex;flex-wrap:wrap;gap:8px}
+  .day{font-family:var(--mono);min-width:52px;padding:8px 6px;border:1px solid var(--border);border-radius:8px;
+       background:var(--bg);text-align:center;transition:border-color .15s,transform .1s;position:relative}
+  .day:hover{border-color:var(--kw);transform:translateY(-1px)}
+  .day .n{font-size:15px;font-weight:600;color:var(--kw)}
+  .day .pipe{color:var(--faint);font-weight:400}
+  .day .sc{display:block;font-size:10px;margin-top:2px;color:var(--faint)}
+  .day.done .sc{color:var(--str)}
+  .day.done{border-color:rgba(158,206,106,.4)}
+  .day.perfect .sc{color:var(--ok)}
+  .day.hasWrong .sc{color:var(--warn)}
+
+  /* wrong book entry */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:13px;padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--panel);transition:border-color .15s}
+  .btn:hover{border-color:var(--kw)}
+  .btn.warn{border-color:rgba(247,118,142,.35)} .btn.warn:hover{border-color:var(--err)}
+  .btn.primary{background:var(--kw);color:#0D1117;font-weight:600;border-color:var(--kw)}
+  .btn.primary:hover{opacity:.9}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+
+  /* editor card (question) */
+  .qcard{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+  .qhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--panel2);font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .dots{display:flex;gap:5px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);opacity:.55}
+  .qhead .fname{margin-left:4px}
+  .qhead .prog{margin-left:auto;color:var(--faint)}
+  .qbody{padding:18px 18px 20px}
+  .ptag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--warn);border:1px solid rgba(224,175,104,.35);border-radius:99px;padding:1px 10px;margin-bottom:12px}
+  .qtext{font-size:15px;margin-bottom:14px}
+  .qtext code{font-family:var(--mono);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:13px;color:var(--str)}
+
+  /* code block with line numbers */
+  .code{font-family:var(--mono);font-size:13px;line-height:1.75;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 0;margin-bottom:16px;overflow-x:auto}
+  .cl{display:flex;white-space:pre}
+  .ln{width:38px;flex:none;text-align:right;padding-right:14px;color:var(--faint);user-select:none}
+  .cl .c{padding-right:16px}
+  .tk{color:var(--kw)} .ts{color:var(--str)} .tc{color:var(--dim);font-style:italic} .tt{color:var(--ok)}
+
+  .opts{display:flex;flex-direction:column;gap:9px}
+  .opt{text-align:left;font-size:14px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);display:flex;gap:10px;align-items:flex-start;transition:border-color .12s}
+  .opt:hover{border-color:var(--kw)}
+  .opt .key{font-family:var(--mono);color:var(--kw);flex:none;font-size:13px;padding-top:1px}
+  .opt.right{border-color:var(--str);background:rgba(158,206,106,.07)}
+  .opt.wrongpick{border-color:var(--err);background:rgba(247,118,142,.07)}
+  .opt.lock{cursor:default}
+  .opt.lock:hover{border-color:var(--border)}
+  .opt.lock.right:hover{border-color:var(--str)} .opt.lock.wrongpick:hover{border-color:var(--err)}
+
+  .fillrow{display:flex;gap:10px;flex-wrap:wrap}
+  .fill{flex:1;min-width:200px;font-family:var(--mono);font-size:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text)}
+  .fill::placeholder{color:var(--faint)}
+
+  /* tsc output */
+  .tsc{font-family:var(--mono);font-size:13px;border-radius:8px;padding:13px 16px;margin-top:16px;border:1px solid;line-height:1.8}
+  .tsc.ok{border-color:rgba(115,218,202,.4);background:rgba(115,218,202,.06);color:var(--ok)}
+  .tsc.bad{border-color:rgba(247,118,142,.4);background:rgba(247,118,142,.06)}
+  .tsc.bad .ehead{color:var(--err)}
+  .tsc .exp{color:var(--text);font-family:var(--sans);font-size:14px;margin-top:6px}
+  .tsc .ans{color:var(--str)}
+
+  .navrow{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}
+  .hint{font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+  /* result */
+  .result{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:26px 22px;text-align:center}
+  .result .big{font-family:var(--mono);font-size:38px;font-weight:700;letter-spacing:-.02em}
+  .result .big .sep{color:var(--faint)} 
+  .result .verdict{font-family:var(--mono);font-size:13px;margin:8px 0 18px}
+  .result .verdict.ok{color:var(--ok)} .result .verdict.bad{color:var(--warn)}
+
+  /* wrong book */
+  .group h3{font-family:var(--mono);font-size:13px;color:var(--warn);margin:22px 0 10px;font-weight:600}
+  .witem{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:10px;font-size:14px}
+  .witem .wq{margin-bottom:8px}
+  .witem .meta{font-family:var(--mono);font-size:12px;line-height:2}
+  .witem .meta .lbl{color:var(--faint)}
+  .witem .ua{color:var(--err)} .witem .ca{color:var(--str)}
+  .witem .we{color:var(--dim);font-size:13px;margin-top:6px;border-top:1px dashed var(--border);padding-top:8px}
+  .witem .dtag{font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .empty{color:var(--dim);font-family:var(--mono);text-align:center;padding:50px 0;font-size:13px}
+  .alertbox{border:1px solid;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-family:var(--mono);line-height:1.9}
+  .alertbox.due{border-color:rgba(115,218,202,.4);color:var(--ok);background:rgba(115,218,202,.05)}
+  .alertbox.hot{border-color:rgba(247,118,142,.45);background:rgba(247,118,142,.06);color:var(--text)}
+  .alertbox.hot b{color:var(--err)}
+  .hotp{display:inline-block;margin:4px 8px 0 0;color:var(--err);border:1px solid rgba(247,118,142,.35);border-radius:99px;padding:1px 10px;font-size:12px}
+  .ptag.rev{color:var(--ok);border-color:rgba(115,218,202,.35);margin-left:6px}
+  .group h3.hoth{color:var(--err)}
+  .matline{border:1px solid var(--border);border-left:3px solid var(--warn);border-radius:8px;padding:11px 14px;margin-bottom:12px;font-size:13px;background:var(--panel);line-height:1.9}
+  .matline .steps{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .hubrow{display:flex;gap:12px;flex-wrap:wrap}
+  .hubcard{flex:1;min-width:240px;text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s}
+  .hubcard:hover{border-color:var(--kw)}
+  .hubcard.mute{opacity:.6;cursor:default}
+  .hubcard.mute:hover{border-color:var(--border)}
+  .hubcard .hn{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--kw)}
+  .hubcard .hs{font-family:var(--mono);font-size:13px;color:var(--dim)}
+  .hubcard .hs.ok{color:var(--str)} .hubcard .hs.warn{color:var(--warn)}
+  .hubcard .hd{font-size:12px;color:var(--dim)}
+  .editor{width:100%;min-height:180px;font-family:var(--mono);font-size:13px;line-height:1.75;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);resize:vertical;tab-size:2}
+  .editor:focus-visible{outline:2px solid var(--kw);outline-offset:0}
+  .backrow{margin-bottom:16px}
+  .crumb{font-family:var(--mono);font-size:13px;color:var(--dim)}
+  .crumb:hover{color:var(--kw)}
+  h2.vt{font-family:var(--mono);font-size:16px;margin-bottom:14px}
+  h2.vt .kw{color:var(--kw)} h2.vt .str{color:var(--str)}
+  .subnote{font-size:13px;color:var(--dim);margin-bottom:16px}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media(max-width:480px){ .day{min-width:46px} .wrap{padding:14px 12px 60px} }
+</style>
+</head>
+<body>
+<!-- TEMP: 第 2 步抽共享顶栏时替换掉 -->
+<a href="../index.html" style="display:block;width:max-content;padding:4px 12px;font:12px/20px system-ui,sans-serif;color:inherit;text-decoration:underline;">← signal0</a>
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="kw">type</span> Quiz = <span class="str">"TS · 21天冲刺"</span></div>
+    <div class="statline" id="topstat"></div>
+  </header>
+  <main id="app" aria-live="polite"></main>
+</div>
+
+<script>
+/* ============ 题库 ============
+   t: mc=选择 tf=对错 fill=填空
+   a: mc/tf=正确选项下标, fill=可接受答案数组
+   p: 知识点  e: 解析  c: 代码行数组(可选) */
+const BANK = [
+// ---------- Day 1 类型是契约 ----------
+{d:1,t:'mc',p:'类型是契约',q:'对 TypeScript 类型标注最准确的理解是？',o:['给人看的注释，方便阅读','编译期强制执行的契约，违反就报错','运行时的数据校验','一种性能优化手段'],a:1,e:'类型不是"意思"，是"约束"。编译器不理解语义，只检查契约是否被遵守。'},
+{d:1,t:'tf',p:'类型擦除',q:'TS 的类型检查发生在编译期；编译成 JS 后，类型信息在运行时已不存在。',a:0,e:'这叫"类型擦除"。所以类型能拦住编译期错误，但不能在运行时替你校验数据。'},
+{d:1,t:'mc',p:'字面量联合',c:["type Message = {","  role: 'user' | 'assistant'","}"],q:'如果给 <code>role</code> 赋值 <code>\'system\'</code>，会发生什么？',o:['运行时抛出异常','编译器直接报错，代码无法通过','自动把 system 加入联合','role 退化为 any'],a:1,e:'契约里只允许两个值，第三个值直接被编译器拒绝——与"系统权限"等语义毫无关系。'},
+{d:1,t:'fill',p:'类型推断',c:["let x = 5","x = 'hi'  // ❌ 报错"],q:'第二行报错，因为 <code>x</code> 在声明时已被自动推断为 ______ 类型。',a:['number','数字'],e:'没写类型标注时，TS 会根据初始值推断。这就是"悬停查看类型"能看到信息的原因。'},
+
+// ---------- Day 2 基础类型 ----------
+{d:2,t:'mc',p:'any 是失败信号',q:'哪个类型意味着"放弃类型检查"，在代码审查中应视为警报？',o:['unknown','void','any','undefined'],a:2,e:'any 关掉一切检查。AI 生成代码里出现 any，通常是它"没想清楚"的信号。'},
+{d:2,t:'fill',p:'数组类型',q:'字符串数组可以写成 <code>string[]</code>，也可以写成 ______<code>&lt;string&gt;</code>。',a:['array'],e:'Array<string> 与 string[] 完全等价，后者更常用。'},
+{d:2,t:'tf',p:'基础类型',c:["const n: number = '42'"],q:'这行代码能通过编译。',a:1,e:'不能。\'42\' 是字符串，契约要求 number。TS 不会帮你自动转换。'},
+{d:2,t:'mc',p:'基础类型',q:'<code>boolean[]</code> 表示什么？',o:['一个布尔值','布尔值组成的数组','可能是布尔或数组','布尔类型的别名'],a:1,e:'[] 修饰的是"数组的元素类型"。'},
+
+// ---------- Day 3 对象 + 可选 ----------
+{d:3,t:'mc',p:'可选字段 ?',c:["type Message = {","  content: string","  toolCalls?: ToolCall[]","}"],q:'<code>toolCalls</code> 后面的 <code>?</code> 表示什么？',o:['这个字段已废弃','这个字段是可选的，可以不存在','这个字段可以是任意类型','这是一个疑问标记注释'],a:1,e:'用设计语言说：content 是必填字段，toolCalls 是选填字段。'},
+{d:3,t:'tf',p:'可选字段 ?',q:'可选字段 <code>x?: string</code> 的实际类型等价于 <code>string | undefined</code>。',a:0,e:'所以读取可选字段前往往要先判空——这会引出第 6 天的"类型收窄"。'},
+{d:3,t:'fill',p:'type vs interface',q:'按本计划的约定，定义对象类型先统一用 ______ 关键字（暂不纠结 interface）。',a:['type'],e:'两者大部分场景可互换。先用 type 建立肌肉记忆，避免陷入无意义争论。'},
+{d:3,t:'mc',p:'对象契约',q:'访问对象类型上没有声明过的属性，结果是？',o:['返回 undefined，不报错','编译器报错：属性不存在','自动创建该属性','变成 any'],a:1,e:'报错原文通常是 "Property \'x\' does not exist on type \'Y\'"。第 8 天会专门练读它。'},
+
+// ---------- Day 4 Union ----------
+{d:4,t:'mc',p:'union 是收窄',q:'联合类型 <code>\'a\' | \'b\'</code> 的本质是？',o:['支持更多可能性，更灵活','把取值收窄到列出的几种，其余全部禁止','运行时的枚举对象','两个类型的合并'],a:1,e:'union 读作"或"，但作用是收窄边界——这是第 1 轮测试里你答偏的核心概念。'},
+{d:4,t:'fill',p:'字面量联合',q:'请求状态只能是 idle / loading / error / success 之一：<br><code>type Status = </code>______',a:["'idle' | 'loading' | 'error' | 'success'","'idle'|'loading'|'error'|'success'",'idle | loading | error | success','idle|loading|error|success'],e:'字面量联合是设计系统里表达"状态机"和"variants"的基本工具。'},
+{d:4,t:'tf',p:'union 语义',q:'<code>string | number</code> 表示一个值同时既是 string 又是 number。',a:1,e:'错。| 是"或"（其一），"且"（合并）用 & —— 第 16 天会遇到。'},
+{d:4,t:'mc',p:'union × 设计系统',q:'<code>\'sm\' | \'md\' | \'lg\'</code> 在设计系统语境下最接近什么概念？',o:['断点 breakpoints','组件的 size variants 枚举','字号 token','媒体查询'],a:1,e:'variant 的允许值写进类型，传错值直接编译报错——设计规范变成了强制执行的契约。'},
+
+// ---------- Day 5 函数与返回值 ----------
+{d:5,t:'mc',p:'诚实的返回类型',c:["function getLast(msgs: Message[]): Message {","  return msgs[msgs.length - 1]","}"],q:'这段代码能编译，但隐患是？',o:['性能太差','空数组时实际返回 undefined，返回类型在撒谎','msgs 可能是 null','缺少 async'],a:1,e:'调用方以为一定拿到 Message，运行时却可能收到 undefined 然后崩溃。这是 AI 生成代码的高频错误。'},
+{d:5,t:'fill',p:'诚实的返回类型',q:'上题的修复：把返回类型改成 <code>Message | </code>______。',a:['undefined'],e:'类型诚实了，调用方就会被迫先判空——错误在编译期被拦截。'},
+{d:5,t:'tf',p:'索引访问的盲区',q:'既然返回类型撒谎了，TS 一定会报错阻止上面那段代码编译。',a:1,e:'错——它恰恰能编译。默认配置下数组索引访问被认为总是返回元素类型，这正是需要人来审查的盲区。'},
+{d:5,t:'mc',p:'void',q:'<code>(next: T) =&gt; void</code> 中的 <code>void</code> 表示？',o:['返回 null','不返回有意义的值','返回任意值','函数是异步的'],a:1,e:'setter、事件处理器大多是 void：只产生副作用，不产出返回值。'},
+
+// ---------- Day 6 Narrowing ----------
+{d:6,t:'mc',p:'类型收窄',c:["function f(m: Message | undefined) {","  if (m === undefined) return","  m.content  // ✅ 不报错","}"],q:'为什么第 3 行访问 <code>.content</code> 不报错？',o:['TS 忽略 if 之后的代码','if 分支排除了 undefined，m 被收窄为 Message','content 是可选属性','运气好'],a:1,e:'TS 会顺着控制流推理："能走到这里，说明 m 不可能是 undefined 了"。这叫 narrowing。'},
+{d:6,t:'fill',p:'typeof 收窄',q:'判断运行时基础类型用 ______ 操作符，例如 <code>if (______ x === \'string\')</code>。',a:['typeof'],e:'typeof 收窄适用于 string/number/boolean 等基础类型的分流。'},
+{d:6,t:'tf',p:'类型收窄',q:'收窄只影响该控制流分支内的类型判断，不会改变变量声明时的类型。',a:0,e:'离开分支后类型"弹回"原状。收窄是编译器的局部推理，不是重新赋类型。'},
+{d:6,t:'mc',p:'类型收窄',q:'拿到 <code>Message | undefined</code>，想安全访问 <code>.content</code>，最直接的做法是？',o:['用 as Message 强转','先 if 判空收窄，再访问','改成 any','用 try/catch 包住'],a:1,e:'as 强转是掩盖问题，判空收窄才是让类型系统替你工作。'},
+
+// ---------- Day 7 第一周复盘 ----------
+{d:7,t:'mc',p:'字面量联合',q:'<code>\'user\' | \'assistant\'</code> 这种写法的正式名称是？',o:['枚举 enum','字面量联合类型','字符串模板','交叉类型'],a:1,e:'基准测试 Q1 的标准答案。字面量（具体值）+ 联合（|）= 只允许列出的值。'},
+{d:7,t:'fill',p:'可选字段 ?',q:'把一个字段标记为"选填"，在字段名后加符号 ______。',a:['?','？'],e:'第 1 轮测试你不认识它，现在应该已经是本能了。'},
+{d:7,t:'mc',p:'诚实的返回类型',q:'基准 Q2：<code>getLastMessage</code> 的正确修复是？',o:['返回类型改为 Message | undefined','给 msgs 加 !','返回类型改为 any','加 try/catch'],a:0,e:'验收标准之一：不查资料能完整解释 Q2 的隐患与修复。'},
+{d:7,t:'tf',p:'类型是契约',q:'类型是写给编译器的约束，而不是写给人看的注释。',a:0,e:'第一周的核心心智转换。做到这一步，才有资格进第二周。'},
+
+// ---------- Day 8 读懂报错 ----------
+{d:8,t:'mc',p:'读懂报错',q:'报错 <code>Type \'string\' is not assignable to type \'number\'</code> 的意思是？',o:['string 类型有 bug','这里期望 number，你却给了 string','需要手动转换类型','number 未定义'],a:1,e:'报错句式固定：not assignable = "塞不进去"。后半句是期望，前半句是实际。'},
+{d:8,t:'mc',p:'读懂报错',q:'一条很长的 TS 报错，先读哪里最高效？',o:['第一行','中间','最后一行，再往前追','随便'],a:2,e:'TS 报错像剥洋葱，最后一行通常是最具体的病灶，往前是层层包装。'},
+{d:8,t:'fill',p:'读懂报错',q:'<code>Property \'x\' does not exist on type \'Y\'</code>：你访问了 Y 上______的属性。',a:['不存在','未声明','没有声明','没有','没声明'],e:'常见原因：拼写错误，或该属性本来就该是可选/在别的类型上。'},
+{d:8,t:'tf',p:'读懂报错',q:'<code>Object is possibly \'undefined\'</code> 是在提示你需要先做类型收窄。',a:0,e:'看到这条就条件反射：加判空。它是 TS 在救你，不是在烦你。'},
+
+// ---------- Day 9 泛型入门 ----------
+{d:9,t:'mc',p:'泛型',q:'<code>&lt;T&gt;</code> 是什么？',o:['HTML 标签','类型参数：一个等调用时才填入的类型占位符','元组','特殊注释'],a:1,e:'泛型让一个函数/类型服务于多种类型，而不牺牲检查。'},
+{d:9,t:'mc',p:'泛型 × 设计类比',q:'对设计师来说，泛型最贴切的类比是？',o:['图层蒙版','Figma 组件的 variant property：容器固定，内容可配置','自动布局','约束 constraints'],a:1,e:'你定义容器，不写死装什么，使用者调用时决定——和组件属性面板一个道理。'},
+{d:9,t:'tf',p:'泛型',q:'泛型的具体类型在"调用时"才确定，可以由 TS 从参数自动推断。',a:0,e:'所以 useLocalState(0) 不用手写 <number>——TS 看到 0 就推断出来了。'},
+{d:9,t:'fill',p:'泛型',q:'<code>Array&lt;T&gt;</code>、<code>Promise&lt;T&gt;</code> 尖括号里的 T 称为______参数。',a:['类型','type'],e:'读法："装着 T 的数组"、"最终会兑现一个 T 的承诺"。'},
+
+// ---------- Day 10 泛型实战 ----------
+{d:10,t:'mc',p:'泛型推断',c:["function useLocalState<T>(initial: T):","  [T, (next: T) => void]","","useLocalState(0)"],q:'调用 <code>useLocalState(0)</code> 时，T 被推断为？',o:['any','number','0','T 保持未知'],a:1,e:'参数 0 是 number，于是整个签名里所有 T 都替换成 number。'},
+{d:10,t:'mc',p:'泛型推断',q:'接上题，返回的第二个元素的类型是？',o:['number','(next: number) => void','void','undefined'],a:1,e:'一个接受 number、不返回值的函数——这就是 setter 的类型。基准 Q3 到此攻克。'},
+{d:10,t:'fill',p:'泛型',q:'<code>useState&lt;string&gt;(\'\')</code> 中，显式传入的类型参数是 ______。',a:['string'],e:'初始值 \'\' 本可推断，但当初始值是 null 或空数组时，手动指定就有必要了。'},
+{d:10,t:'tf',p:'泛型',q:'<code>Promise&lt;Message[]&gt;</code> 可以读作"一个最终会给你一组 Message 的承诺"。',a:0,e:'把泛型翻译成人话，是读懂复杂类型签名的关键技能。'},
+
+// ---------- Day 11 类型推断 ----------
+{d:11,t:'mc',p:'类型推断',q:'什么时候<b>不需要</b>手写类型标注？',o:['永远都要写','TS 能从初始值或上下文推断出来时','只有 any 时','函数参数上'],a:1,e:'原则：能推断就别手写。冗余标注是噪音，还会在重构时变成维护负担。'},
+{d:11,t:'tf',p:'let vs const 推断',q:'<code>let s = \'hi\'</code> 推断为 <code>string</code>；<code>const s = \'hi\'</code> 推断为字面量类型 <code>\'hi\'</code>。',a:0,e:'const 不会再变，所以 TS 敢推断到"最窄"。这个差异在 variants 场景经常遇到。'},
+{d:11,t:'fill',p:'as const',q:'让对象字面量整体变成只读、且推断到最窄字面量类型的断言写法：<code>as </code>______。',a:['const'],e:'设计 token 表（颜色、间距）经常用 as const 锁死，防止被意外修改。'},
+{d:11,t:'mc',p:'类型推断',q:'到处手写本可推断的类型，主要坏处是？',o:['运行更慢','视觉噪音 + 重构时要改两处，容易失真','会关闭类型检查','占用内存'],a:1,e:'类型标注该出现在"边界"上：函数签名、导出的 API、复杂对象。内部实现交给推断。'},
+
+// ---------- Day 12 工具类型 ----------
+{d:12,t:'mc',p:'工具类型',q:'把一个类型的所有字段变成可选，用？',o:['Pick<T>','Partial<T>','Omit<T>','Record<T>'],a:1,e:'Partial 常用于"更新"场景：PATCH 请求体里每个字段都可传可不传。'},
+{d:12,t:'mc',p:'工具类型',q:'从 Message 里去掉 id 字段，得到"新建消息"的类型，用？',o:['Partial<Message>','Pick<Message, \'id\'>','Omit<Message, \'id\'>','Record<Message, \'id\'>'],a:2,e:'Omit = 排除。新建时 id 还没生成，所以要从类型里去掉它。'},
+{d:12,t:'fill',p:'工具类型',q:'只挑选部分字段组成新类型的工具类型是 ______<code>&lt;T, K&gt;</code>。',a:['pick'],e:'Pick 挑选，Omit 排除，一对镜像。'},
+{d:12,t:'mc',p:'工具类型',q:'<code>Record&lt;string, number&gt;</code> 描述的是？',o:['一个数字数组','键是 string、值是 number 的映射对象','一条数据库记录','元组'],a:1,e:'比如 { retries: 3, timeout: 5000 } 这类配置字典。四个工具类型到此集齐。'},
+
+// ---------- Day 13 真实代码攻坚 ----------
+{d:13,t:'mc',p:'审查直觉',q:'在真实代码里看到 <code>any</code>，正确反应是？',o:['说明作者水平高','警惕：这里放弃了检查，追问能否换成具体类型','跳过不管','改成 unknown 就完事'],a:1,e:'每个 any 都是契约上的一个洞。审查 AI 代码时，any 是第一优先搜索词。'},
+{d:13,t:'mc',p:'读复杂类型',q:'遇到一眼看不懂的复杂类型，第一步应该？',o:['直接问 AI 重写','悬停查看推断结果，把泛型逐层拆开翻译成人话','删掉类型标注','放弃'],a:1,e:'Day 13 的攻坚方法：逐行读 + 列疑问清单 + 追问"为什么"。'},
+{d:13,t:'tf',p:'学习方法',q:'问 AI「为什么这里要这样写类型」比「帮我写类型」更能建立判断力。',a:0,e:'前者在训练你的审查能力，后者在加深依赖。这是整个计划的方法论核心。'},
+{d:13,t:'mc',p:'读签名',c:["type Fn = (msgs: Message[]) =>","  Promise<Message | undefined>"],q:'这个函数签名用人话说是？',o:['同步返回一条消息','接收消息数组，异步返回一条消息或什么都没有','返回消息数组','抛出异常'],a:1,e:'拆解：参数 Message[] → Promise（异步）→ 里面是 Message 或 undefined（可能找不到）。'},
+
+// ---------- Day 14 第二周复盘 ----------
+{d:14,t:'mc',p:'泛型',q:'用一句话向另一个设计师解释泛型，最准确的是？',o:['让类型更宽松的开关','类型层面的 variant property：定义时留空，使用时填入','高级语法糖，可以不学','把类型变成 any 的方法'],a:1,e:'验收标准：能独立解释泛型。'},
+{d:14,t:'fill',p:'读懂报错',q:'长报错的阅读顺序：从______一行开始往前读。',a:['最后','最后一','最末'],e:'第二周验收标准之二：能独立读懂一条真实报错。'},
+{d:14,t:'mc',p:'工具类型',q:'<code>Omit&lt;Message, \'id\'&gt;</code> 得到的类型是？',o:['只有 id 的对象','Message 去掉 id 后剩余字段组成的类型','全部字段可选','空对象'],a:1,e:'如果这题犹豫了，回去重做 Day 12。'},
+{d:14,t:'tf',p:'类型推断',q:'默认让 TS 推断，只在函数签名和对外 API 等边界处手写类型。',a:0,e:'这条原则会直接影响你审查 AI 代码时的判断：多余标注也是要指出的问题。'},
+
+// ---------- Day 15 React 组件类型 ----------
+{d:15,t:'mc',p:'Props 类型',c:["type Props = { title: string }","","function Card({ title }: Props) {","  return <h2>{title}</h2>","}"],q:'Props 的类型标注写在哪里？',o:['组件返回值上','组件函数的参数上','文件顶部注释里','JSX 标签上'],a:1,e:'组件 = 函数，props = 参数。类型自然标在参数上。'},
+{d:15,t:'fill',p:'children 类型',q:'内容插槽 children 最常用的类型是 <code>React.</code>______。',a:['reactnode'],e:'ReactNode 覆盖了字符串、元素、数组、null 等一切可渲染的东西——比 JSX.Element 宽容。'},
+{d:15,t:'mc',p:'事件类型',q:'button 的 onClick 处理函数，参数事件对象的类型是？',o:['Event','React.MouseEvent<HTMLButtonElement>','ClickEvent','any'],a:1,e:'记不住全名没关系，重点是知道"事件有专门的类型"，写 e: any 才是问题。'},
+{d:15,t:'tf',p:'Props 即 API',q:'Props 的类型定义，本质上就是这个组件对外公开的 API 文档。',a:0,e:'第 18 天"类型即设计文档"的伏笔：设计师写 props 类型 = 写组件规格书。'},
+
+// ---------- Day 16 ComponentProps ----------
+{d:16,t:'mc',p:'ComponentProps',q:'<code>React.ComponentProps&lt;\'button\'&gt;</code> 做的事情是？',o:['创建一个 button 组件','把原生 &lt;button&gt; 的全部属性类型一次性提取出来','只提取 onClick','渲染按钮'],a:1,e:'onClick、disabled、type、aria-*……几百个原生属性打包拿到。基准 Q4 前半题。'},
+{d:16,t:'mc',p:'ComponentProps × 可访问性',q:'设计系统的 Button 为什么要继承原生属性？',o:['为了代码更长','防止丢失 disabled、aria-label 等原生能力，避免可访问性崩塌','为了好看','React 强制要求'],a:1,e:'设计师最常犯的错：漂亮的 Button 却传不进 aria-label。类型层面直接杜绝。'},
+{d:16,t:'fill',p:'交叉类型 &',q:'把"原生属性"和"自定义 variants"合并成一个类型，用符号 ______。',a:['&'],e:'& 是交叉（且，合并），| 是联合（或，收窄）。一字之差，方向相反。'},
+{d:16,t:'tf',p:'ComponentProps',q:'自定义 Button 若不继承原生属性，使用者将无法传入 aria-label 等属性。',a:0,e:'因为 props 契约里没有它，传了就编译报错。这就是 Q4 是"设计系统标准做法"的原因。'},
+
+// ---------- Day 17 Variant 类型设计 ----------
+{d:17,t:'mc',p:'variant 类型',c:["type ButtonProps =","  React.ComponentProps<'button'> & {","    variant?: 'primary' | 'ghost'","    size?: 'sm' | 'md' | 'lg'","  }"],q:'<code>variant?: \'primary\' | \'ghost\'</code> 在类型层面实现了什么？',o:['样式切换动画','枚举允许的变体：传错值直接编译报错，规范被强制执行','运行时校验','主题切换'],a:1,e:'设计规范从"文档里的建议"升级成"编译器强制的契约"。这是 Day 17 的高光。'},
+{d:17,t:'mc',p:'cva',q:'<code>cva</code>（class-variance-authority）这个库解决什么问题？',o:['状态管理','管理 className 与 variants 的映射关系，类型安全地生成样式类','路由','请求缓存'],a:1,e:'shadcn/ui 的 Button 就是 cva 的教科书用法——variants 定义一处，类型自动对齐。'},
+{d:17,t:'fill',p:'shadcn 模式',q:'shadcn/ui 的分发模式：不装 npm 黑盒依赖，而是把组件代码______进你的项目。',a:['复制','copy','拷贝'],e:'代码进了你的仓库，你就拥有完全的修改权——这对设计系统定制至关重要。'},
+{d:17,t:'tf',p:'variant 类型',q:'类型定义好后，向 Button 传入 <code>size="xl"</code>（未定义的值）会在编译期报错。',a:0,e:'不用等 QA、不用等 code review，写的瞬间就被拦住。'},
+
+// ---------- Day 18 类型即文档 ----------
+{d:18,t:'mc',p:'类型即文档',q:'一份好的组件类型定义，最接近设计交付物里的什么？',o:['情绪板','组件 API 规格书：必填/选填、允许值、回调签名一目了然','高保真视觉稿','用户旅程图'],a:1,e:'工程师看类型就知道怎么用组件——类型是活的、编译器保证不过期的文档。'},
+{d:18,t:'tf',p:'类型即文档',q:'必填/选填、取值范围、事件回调的形状，都可以在类型里表达。',a:0,e:'?、字面量联合、函数类型——你这三周学的东西拼起来就是完整的 API 规格语言。'},
+{d:18,t:'fill',p:'类型即文档',q:'<code>size?: \'sm\' | \'md\' | \'lg\'</code> 表达了：size 是______的，且只能取三个值之一。',a:['可选','选填','optional'],e:'一行类型 = 规格书里两条规则。信息密度是文档的数倍。'},
+{d:18,t:'mc',p:'设计师优势',q:'设计师写组件类型定义，相比工程师的独特优势是？',o:['打字更快','更懂组件该暴露哪些 variants、哪些该藏起来——API 设计本来就是设计问题','更懂算法','没有优势'],a:1,e:'Q4 那道题的本质：穿着 TS 外衣的组件 API 设计题。这是你的主场。'},
+
+// ---------- Day 19 AI 代码审查 ----------
+{d:19,t:'mc',p:'AI 审查清单',q:'审查 AI 生成的代码，类型层面第一个搜索的关键词是？',o:['function','any','const','return'],a:1,e:'审查三连：① 有没有 any？② 返回类型诚实吗？③ Props 丢原生属性了吗？'},
+{d:19,t:'mc',p:'AI 审查清单',q:'"返回类型诚实吗"具体指？',o:['函数名和返回值一致','声明的返回类型覆盖了所有实际可能的返回值（包括 undefined 分支）','有没有写注释','是否用了 async'],a:1,e:'Day 5 的 getLastMessage 就是不诚实的典型。AI 极常犯这个错。'},
+{d:19,t:'tf',p:'AI 审查清单',q:'AI 生成的 useEffect 大多数是必要的，可以直接信任。',a:1,e:'错。相当多是多余的。第二阶段 React 会精读 You Might Not Need an Effect。'},
+{d:19,t:'fill',p:'AI 审查清单',q:'Props 审查要点：有没有丢掉______属性（如 disabled、aria-*）。',a:['原生','native','html'],e:'漏了它，可访问性静默崩塌——编译不报错，用户受伤害。'},
+
+// ---------- Day 20 综合实战 ----------
+{d:20,t:'mc',p:'主导类型设计',q:'Day 20 的练习"类型全部自己写，AI 只写实现"在训练什么？',o:['打字速度','由你定义契约、AI 填充实现——设计师主导 API，这正是 Product DE 的工作方式','背语法','脱离 AI'],a:1,e:'类型是接口设计，实现是体力活。分工颠倒过来，你就从 vibe coding 毕业了。'},
+{d:20,t:'fill',p:'交叉类型 &',q:'<code>ComponentProps&lt;\'button\'&gt; ______ { variant?: \'primary\' | \'ghost\' }</code><br>填入连接两部分的符号。',a:['&'],e:'原生能力 & 自定义 variants，完整的设计系统 Button 类型。'},
+{d:20,t:'mc',p:'Omit 实战',q:'当自定义 prop 与某个原生属性同名冲突时，标准做法是？',o:['改用 any','先用 Omit 从原生属性里排除同名项，再 & 合并自定义定义','放弃自定义','换个组件'],a:1,e:'Omit + & 的组合拳：先腾位置，再放自己的定义。shadcn 源码里常见。'},
+{d:20,t:'tf',p:'行业标准',q:'"一小时内把 Figma frame 变成能跑的 React 原型（AI 辅助）"是前沿公司的隐性标准线。',a:0,e:'这就是这 21 天的终点意义：让你站到标准线之上，而不是之下。'},
+
+// ---------- Day 21 最终验收（基准四题） ----------
+{d:21,t:'mc',p:'基准 Q1',c:["type Message = {","  id: string","  role: 'user' | 'assistant'","  content: string","  toolCalls?: ToolCall[]","}"],q:'关于这个类型，哪个说法<b>完全正确</b>？',o:['role 是任意字符串；? 表示废弃；system 是管理权限','role 只能取两个字面量之一；toolCalls 可选；赋 \'system\' 编译报错','role 有两个默认值；? 是空值检查；system 会自动扩展','以上都不对'],a:1,e:'第 1 轮你得 0.5 分的题。现在应该能用"字面量联合 / 可选字段 / 契约"三个词完整讲清。'},
+{d:21,t:'mc',p:'基准 Q2',q:'<code>getLastMessage(messages: Message[]): Message</code> 的隐患与修复？',o:['无隐患','空数组返回 undefined，类型撒谎；改为 Message | undefined','会抛异常；加 try/catch','性能差；加缓存'],a:1,e:'验收线：说得出"类型撒谎"这个判断，并知道修复会倒逼调用方判空。'},
+{d:21,t:'mc',p:'基准 Q3',q:'<code>useLocalState&lt;T&gt;(initial: T): [T, (next: T) =&gt; void]</code>，调用 <code>useLocalState(0)</code> 返回？',o:['[any, any]','[number, (next: number) => void]','[0, void]','编译报错'],a:1,e:'泛型推断：0 → T=number → 替换签名。useState 每天在用的就是它。'},
+{d:21,t:'mc',p:'基准 Q4',q:'<code>React.ComponentProps&lt;\'button\'&gt; &amp; { variant?: ... }</code> 是设计系统标准做法，因为？',o:['代码更短','提取全部原生属性并与自定义 variants 合并，保住 disabled/aria-* 等能力，可访问性不崩','React 官方强制','只是习惯'],a:1,e:'四题全对 + 能用设计语言解释 = 通过验收，正式进入 React 阶段。🎉'},
+/* ---------- 扩充题：学习日每天 +4 ---------- */
+{d:1,t:'mc',p:'any vs unknown',q:'<code>any</code> 和 <code>unknown</code> 的关键区别是？',o:['没有区别','any 放弃检查可任意操作；unknown 必须先收窄才能使用','unknown 更宽松','any 只用于数字'],a:1,e:'unknown 是"安全版 any"：承认不知道，但强迫你先验明正身。'},
+{d:1,t:'tf',p:'类型推断',q:'<code>const x = \'hi\'</code> 没写标注，所以 x 没有类型。',a:1,e:'错。TS 会自动推断——没有标注 ≠ 没有类型。'},
+{d:1,t:'fill',p:'any 是失败信号',q:'完全放弃类型检查的类型写作 ______。',a:['any'],e:'看到它就该警惕——它是类型系统上的一个洞。'},
+{d:1,t:'mc',p:'隐式 any',q:'严格模式下，函数参数不写任何标注会怎样？',o:['自动推断为 string','报"隐式 any"错误（noImplicitAny）','正常通过','变成 unknown'],a:1,e:'官方题 TT-01 的报错就是它：参数没有可推断来源时必须手写标注。'},
+{d:2,t:'mc',p:'基础类型',q:'<code>undefined</code> 和 <code>null</code> 在 TS 里是？',o:['两个报错关键词','各自都是独立的类型','同一个类型','运算符'],a:1,e:'严格模式下它们不能随意赋给其他类型——这是空值安全的基石。'},
+{d:2,t:'fill',p:'数组类型',q:'<code>number[][]</code> 是一个数组，它的元素类型是 ______。',a:['number[]','array<number>'],e:'二维数组 = "数字数组"的数组。[] 可以层层嵌套。'},
+{d:2,t:'tf',p:'数组类型',q:'<code>const arr: string[] = []</code> 是合法的。',a:0,e:'空数组满足任何数组类型——里面还没有违约的元素。'},
+{d:2,t:'mc',p:'元组',q:'<code>[string, number]</code> 与 <code>string[]</code> 的区别是？',o:['没有区别','前者是元组：长度固定、每个位置类型固定','前者性能更好','后者不能为空'],a:1,e:'useLocalState 返回的 [T, setter] 就是元组——位置即语义。'},
+{d:3,t:'mc',p:'可选字段 ?',q:'读取可选字段 <code>x?: string</code> 时，拿到的值的类型是？',o:['string','string | undefined','any','null'],a:1,e:'可选 = 可能不存在，所以读出来要先考虑 undefined。'},
+{d:3,t:'tf',p:'对象契约',q:'对象字面量直接赋值时，多写一个类型里没有的属性会报错。',a:0,e:'对。这叫"多余属性检查"——契约外的字段直接拒收。官方题 TT-05 填字段时你会遇到。'},
+{d:3,t:'fill',p:'readonly',q:'禁止字段被修改的修饰符是 ______（写在字段名前）。',a:['readonly'],e:'readonly id: string —— 设计 token、配置对象常用它锁死。'},
+{d:3,t:'mc',p:'type 别名',q:'<code>type</code> 别名可以描述哪些类型？',o:['只有对象','只有联合','对象、联合、函数等几乎任意类型','只有基础类型'],a:2,e:'type 是"给任何类型起名字"的通用工具，不限于对象。'},
+{d:4,t:'mc',p:'union 使用',q:'<code>let x: string | number</code>，直接调用 <code>x.toUpperCase()</code> 会？',o:['正常运行','报错：number 上没有这个方法，需先收窄','自动转换','返回 undefined'],a:1,e:'union 类型只能用"所有成员共有"的能力——想用独有能力，先收窄。这是 Day 6 的预告。'},
+{d:4,t:'fill',p:'union 语法',q:'联合类型的成员之间用符号 ______ 分隔。',a:['|','｜'],e:'| 读作"或"。& 读作"且"，Day 16 见。'},
+{d:4,t:'tf',p:'字面量类型',q:'字面量类型 <code>\'sm\'</code> 是 <code>string</code> 的子类型。',a:0,e:'对。\'sm\' 能赋给 string，反过来不行——收窄的方向性。'},
+{d:4,t:'mc',p:'union 是收窄',q:'<code>type Switch = \'on\' | \'off\'</code>，把一个普通 <code>string</code> 变量赋给它会？',o:['正常','报错：string 太宽，可能是任意值','自动截断','变成 on'],a:1,e:'宽类型不能塞进窄类型——编译器无法保证那个 string 恰好是 on/off。'},
+{d:5,t:'mc',p:'void',q:'返回类型 <code>void</code> 和 <code>undefined</code> 的区别是？',o:['完全相同','void 表示"不关心返回值"；undefined 要求真的返回 undefined','void 更严格','undefined 不能用于函数'],a:1,e:'事件回调标 void：允许你返回任何东西但没人会用它。'},
+{d:5,t:'fill',p:'函数类型',q:'一个接受 number、什么都不返回的函数类型：<code>(n: number) =&gt; </code>______。',a:['void'],e:'(参数) => 返回值 —— 函数类型表达式，Props 里的回调就长这样。'},
+{d:5,t:'tf',p:'默认参数',q:'参数写了默认值（如 <code>last = \'\'</code>）时，它自动成为可选参数。',a:0,e:'对。有默认值 = 调用方可以不传。'},
+{d:5,t:'mc',p:'剩余参数',q:'<code>...args: number[]</code> 表示？',o:['一个数组参数','接受任意多个 number 参数','可选参数','元组'],a:1,e:'console.log(...args: unknown[]) 就是这个模式。'},
+{d:6,t:'mc',p:'in 收窄',q:'对象联合 <code>A | B</code>，想按"有没有某字段"分流，用？',o:['typeof','in 操作符（\'x\' in obj）','数组方法','强转'],a:1,e:'typeof 管基础类型，in 管对象成员——收窄工具箱的第二件。'},
+{d:6,t:'fill',p:'类型收窄',q:'<code>if (x === null) return</code> 之后 x 不再包含 null——这个机制叫类型 ______。',a:['收窄','narrowing','缩小'],e:'比较、typeof、in、instanceof 都能触发它。'},
+{d:6,t:'tf',p:'类型收窄',q:'收窄对 else 分支同样生效：if 里排除了 undefined，else 里就只剩 undefined。',a:0,e:'编译器对每条控制流分支分别推理。'},
+{d:6,t:'mc',p:'非空断言 !',q:'<code>m!.content</code> 中 <code>!</code> 的含义与风险是？',o:['取反','向编译器保证"绝不为空"，跳过检查——判断错了运行时就崩','性能优化','标记已弃用'],a:1,e:'! 是"闭嘴式"解法。审查 AI 代码时，! 和 any 一样值得警惕。'},
+{d:8,t:'mc',p:'读懂报错',q:'报错编号（如 TS2322、TS2345）有什么用？',o:['没用','可直接搜索，快速定位这类错误的通用解法','表示严重程度','是行号'],a:1,e:'"TS2345" 搜出来的结果比贴整段报错精准得多。'},
+{d:8,t:'fill',p:'读懂报错',q:'<code>Expected 2 arguments, but got 1</code>：调用时少传了 ______。',a:['参数','1个参数','一个参数'],e:'arguments 相关报错都在说"实参与形参不匹配"。'},
+{d:8,t:'tf',p:'读懂报错',q:'报错指向的行不一定是根因所在——真正的问题可能在类型定义处。',a:0,e:'报错是"违约现场"，合同本身可能才是问题——所以要会顺着类型定义回溯。'},
+{d:8,t:'mc',p:'读懂报错',q:'<code>Object is possibly \'undefined\'</code> 的首选修复是？',o:['加 any','判空收窄（if 或 ?.）','删掉那行','用 try/catch'],a:1,e:'编译器在救你。用 ! 强行闭嘴是下策。'},
+{d:9,t:'mc',p:'泛型约束',q:'<code>&lt;T extends { id: string }&gt;</code> 的意思是？',o:['T 必须恰好是这个对象','T 至少要有 id: string 字段','T 是字符串','T 可选'],a:1,e:'extends 在泛型里是"约束"：不限定具体类型，但设了门槛。'},
+{d:9,t:'fill',p:'泛型',q:'<code>Set&lt;number&gt;</code> 的 <code>add</code> 方法只接受 ______ 类型的参数。',a:['number','数字'],e:'容器的类型参数决定了所有方法的口径——官方题 TT-10 的原理。'},
+{d:9,t:'tf',p:'泛型',q:'一个函数可以有多个类型参数，例如 <code>&lt;K, V&gt;</code>。',a:0,e:'Map<K, V>、Record<K, T> 都是双参数泛型。'},
+{d:9,t:'mc',p:'泛型 vs any',q:'为什么用泛型而不是 any？',o:['泛型更快','泛型保留类型关系（进什么出什么）；any 丢失一切信息','any 已废弃','没有区别'],a:1,e:'first<T>(arr: T[]): T 记得"进出一致"；换成 any 就全断了。'},
+{d:10,t:'mc',p:'Promise 泛型',q:'<code>Promise&lt;void&gt;</code> 表示？',o:['失败的 Promise','异步操作会完成，但不产出值','返回 undefined 的同步函数','空数组'],a:1,e:'"事情会办完，但没有交付物"——保存、删除类操作的典型签名。'},
+{d:10,t:'fill',p:'Promise 泛型',q:'<code>Promise&lt;User[]&gt;</code> 兑现的是一个 ______ 数组。',a:['user'],e:'泛型嵌泛型：承诺里装着数组，数组里装着 User。'},
+{d:10,t:'tf',p:'await',q:'<code>await</code> 一个 <code>Promise&lt;string&gt;</code>，得到的值类型是 string。',a:0,e:'await 拆掉一层 Promise 包装——官方题 TT-18 全靠这条规则。'},
+{d:10,t:'mc',p:'泛型推断',q:'调用泛型函数时通常不用写 <code>&lt;类型&gt;</code>，因为？',o:['写了会报错','TS 能从参数自动推断类型参数','泛型是可选语法','编译器会忽略'],a:1,e:'useLocalState(0) 不用写 <number>——推断是默认，显式指定是例外。'},
+{d:11,t:'mc',p:'类型推断',q:'返回值类型通常可以推断，什么时候仍值得手写？',o:['永远不用','对外导出的 API、复杂函数——把契约钉死给调用方看','只有报错时','随机'],a:1,e:'边界处手写、内部靠推断——Day 11 的核心原则。'},
+{d:11,t:'fill',p:'类型断言',q:'类型断言的关键字是 ______（如 <code>data ______ User</code>）。',a:['as'],e:'as 是"我比编译器懂"的声明——用错了后果自负，审查时要盯。'},
+{d:11,t:'tf',p:'类型断言',q:'<code>as</code> 断言会在运行时转换值的类型。',a:1,e:'错。断言只影响编译期判断，运行时什么都不做——类型擦除的又一体现。'},
+{d:11,t:'mc',p:'let vs const 推断',q:'<code>let s = \'sm\'</code> 和 <code>const s = \'sm\'</code> 的推断结果分别是？',o:['都是 string','string 和字面量 \'sm\'','都是 \'sm\'','any 和 string'],a:1,e:'let 会变所以推宽，const 不变所以推到最窄。'},
+{d:12,t:'mc',p:'工具类型',q:'<code>Required&lt;T&gt;</code> 的作用是？',o:['全部变可选','全部变必填（去掉所有 ?）','删除字段','变只读'],a:1,e:'Partial 的镜像。四大工具类型之外最常见的一个。'},
+{d:12,t:'fill',p:'工具类型',q:'<code>Pick&lt;User, \'id\' | \'name\'&gt;</code> 得到的类型有 ______ 个字段。',a:['2','两','两个','2个'],e:'Pick 的第二个参数是字段名的 union，挑几个留几个。'},
+{d:12,t:'tf',p:'工具类型',q:'<code>Omit</code> 的第二个参数可以是多个字段的 union，如 <code>Omit&lt;T, \'a\' | \'b\'&gt;</code>。',a:0,e:'一次排除多个字段——派生"表单类型"时常用。'},
+{d:12,t:'mc',p:'Record',q:'<code>Record&lt;\'a\' | \'b\', number&gt;</code> 要求对象？',o:['至少有 a','恰好有 a 和 b 两个键，值都是 number','任意键','是数组'],a:1,e:'键是 union 时，Record 会强制"一个都不能少、一个都不能多"——官方题 TT-11 与修题 e171 的机制。'},
+{d:15,t:'mc',p:'Props 解构',q:'<code>function Card({ title }: Props)</code> 这种写法在做什么？',o:['创建对象','参数解构 + 类型标注：直接取出 props 里的 title','定义泛型','报错写法'],a:1,e:'解构的类型标注写在整个解构模式后面——React 组件最常见的开头。'},
+{d:15,t:'fill',p:'JSX 类型',q:'组件返回的 JSX 元素类型常写作 <code>JSX.</code>______（通常靠推断，不必手写）。',a:['element'],e:'知道它叫什么即可——日常让 TS 自己推断。'},
+{d:15,t:'tf',p:'Props 即 API',q:'Props 应视为只读——组件内部不应该修改传入的 props。',a:0,e:'单向数据流：props 向下、事件向上。类型上也常配 Readonly。'},
+{d:15,t:'mc',p:'默认值',q:'给可选 prop 提供默认值的惯用写法是？',o:['size!: string','解构时 <code>{ size = \'md\' }</code>','用 any','在类型里写 = \'md\''],a:1,e:'类型里用 ? 声明可选，解构里给默认值——两处配合。'},
+{d:16,t:'mc',p:'交叉冲突',q:'<code>&amp;</code> 合并时两边有同名但类型不同的字段，结果是？',o:['取第一个','该字段变成 never（不可能类型），赋值必报错','取第二个','自动 union'],a:1,e:'这就是为什么冲突时要先 Omit 再 &——修题 e203 的原理。'},
+{d:16,t:'fill',p:'ComponentProps',q:'<code>React.ComponentProps&lt;\'input\'&gt;</code> 提取的是原生 ______ 元素的全部属性类型。',a:['input','input元素','<input>'],e:'换个标签名就提取谁——button、input、a 通吃。'},
+{d:16,t:'tf',p:'extends vs &',q:'interface 的 <code>extends</code> 和 type 的 <code>&amp;</code> 都能实现类型复用。',a:0,e:'两条路同一目的。官方题 TT-14（extends）和 TT-15（&）正好一边一个。'},
+{d:16,t:'mc',p:'可访问性',q:'设计系统 Button 若不透传原生属性，最先受伤的是？',o:['性能','可访问性：aria-*、disabled 传不进去','样式','路由'],a:1,e:'类型契约缺口 → 使用者无法传入 → 屏幕阅读器用户遭殃。链条要能讲出来。'},
+{d:17,t:'mc',p:'cva',q:'cva 配置里 <code>defaultVariants</code> 的作用是？',o:['删除 variants','不传 variant 时使用的默认档位','性能缓存','主题切换'],a:1,e:'与"可选 variant + 默认值"是同一设计：API 友好，契约严格。'},
+{d:17,t:'fill',p:'cva',q:'<code>VariantProps&lt;typeof button&gt;</code> 从 cva 配置中提取 ______ 的类型。',a:['variants','variant','变体'],e:'样式定义一处，Props 类型自动派生——不用手写两遍。'},
+{d:17,t:'tf',p:'variant 同步',q:'用 <code>Record&lt;Variant, string&gt;</code> 管理样式映射后，给 Variant 新增一个值会强制你补全映射。',a:0,e:'加 variant 忘改样式表？编译器不允许。这就是"设计规范可执行化"。'},
+{d:17,t:'mc',p:'className 合并',q:'shadcn 风格代码里 <code>cn()</code>（clsx + tailwind-merge）解决什么问题？',o:['网络请求','条件拼接 className 并去重冲突的 tailwind 类','状态管理','路由'],a:1,e:'variant 类 + 外部传入的 className 合并时，后者能正确覆盖前者。'},
+];
+
+const TOPICS = {1:'契约心智',2:'基础类型',3:'对象与可选',4:'Union',5:'函数返回',6:'收窄',7:'周复盘 ✓',8:'读报错',9:'泛型入门',10:'泛型实战',11:'推断',12:'工具类型',13:'攻坚',14:'周复盘 ✓',15:'React Props',16:'ComponentProps',17:'Variants',18:'类型即文档',19:'AI 审查',20:'综合',21:'最终验收 ✓'};
+const DAYMAT = {1:'阮一峰《简介》+《any 类型》前半',2:'阮一峰《基本类型》',3:'阮一峰《对象类型》（含可选属性）',4:'阮一峰教程 · 联合类型相关小节',5:'阮一峰《函数》（参数与返回值）',6:'阮一峰教程 · 类型缩小相关内容',7:'复盘日 · 无新材料，重做 Q1/Q2',8:'无章节 · 自己制造的报错就是教材',9:'阮一峰《泛型》上半',10:'阮一峰《泛型》下半',11:'阮一峰《类型推断》+ const 断言',12:'阮一峰《工具类型》只看 Partial/Pick/Omit/Record',13:'攻坚日 · CodePilot 真实代码',14:'复盘日 · 无新材料，重做 Q3',15:'React 中文文档 TypeScript 章节',16:'React 文档 + shadcn Button 源码',17:'cva 文档 + shadcn Button 源码',18:'无新材料 · 动手写类型规格',19:'AI 代码审查练习日',20:'综合实战 · 类型自己写',21:'最终验收 · 基准四题'};
+
+/* ============ 修题练习（原创题，"修好报错让编译器闭嘴"模式） ============ */
+const EX = [
+{d:1,id:'e11',title:'修正类型标注',brief:'这段代码有一处类型撒谎。修正标注，让编译器满意。',
+code:"let count: string = 42",
+req:[/count\s*:\s*number/],hint:'42 是什么类型？标注要说真话。',
+sol:"let count: number = 42",exp:'标注是契约：值是 number，就得写 number。'},
+{d:1,id:'e12',title:'遵守 union 契约',brief:'Role 只允许两个值。修好赋值。',
+code:"type Role = 'user' | 'assistant'\nconst r: Role = 'system'",
+req:[/const r:\s*Role\s*=\s*'(user|assistant)'/],hint:'契约里没有 system，换成允许的值。',
+sol:"type Role = 'user' | 'assistant'\nconst r: Role = 'user'",exp:'字面量联合外的值一律被拒——这与语义无关，纯粹是契约。'},
+{d:2,id:'e21',title:'数组的元素类型',brief:'tags 装的是字符串。修正数组类型。',
+code:"const tags: number[] = ['ai', 'design']",
+req:[/tags\s*:\s*string\[\]/],hint:'[] 前面写的是"元素"的类型。',
+sol:"const tags: string[] = ['ai', 'design']",exp:'string[] = 字符串数组。也可写 Array<string>。'},
+{d:2,id:'e22',title:'消灭 any',brief:'any 关闭了检查。给参数一个诚实的类型。',
+code:"function double(n: any) {\n  return n * 2\n}\ndouble('oops')",
+req:[/n\s*:\s*number/],ban:[/any/],hint:'能做乘法的是什么类型？改完后最后一行会报错——把它也修好或删掉。',
+sol:"function double(n: number) {\n  return n * 2\n}\ndouble(2)",exp:'去掉 any 后，编译器立刻抓住了 double(\'oops\') 这个隐患——这就是 any 的代价。'},
+{d:3,id:'e31',title:'补上可选字段',brief:'Card 想支持副标题但不强制。扩展类型定义。',
+code:"type Card = { title: string }\nconst c: Card = { title: 'BIFM', subtitle: 'agent booking' }",
+req:[/subtitle\?\s*:\s*string/],hint:'选填字段用哪个符号？',
+sol:"type Card = { title: string; subtitle?: string }\nconst c: Card = { title: 'BIFM', subtitle: 'agent booking' }",exp:'? 让 subtitle 成为选填——传了要是 string，不传也合法。'},
+{d:3,id:'e32',title:'补齐必填字段',brief:'User 的契约要求两个字段。修好对象。',
+code:"type User = { id: string; name: string }\nconst u: User = { id: '1' }",
+req:[/name\s*:\s*'/],hint:'契约里 name 没有 ?，就是必填。',
+sol:"type User = { id: string; name: string }\nconst u: User = { id: '1', name: 'Kami' }",exp:'必填字段缺失 = 违约。编译器替未来的使用者把关。'},
+{d:4,id:'e41',title:'收窄 Status',brief:'把 Status 从 string 收窄为四个状态，并修好赋值。',
+code:"// 把 Status 收窄为 'idle' | 'loading' | 'error' | 'success'\ntype Status = string\nconst s: Status = 'downloading'",
+req:[/type Status = 'idle'\s*\|\s*'loading'\s*\|\s*'error'\s*\|\s*'success'/,/const s:\s*Status\s*=\s*'(idle|loading|error|success)'/],hint:'string 是无边界的；用 | 列出全部允许值。',
+sol:"type Status = 'idle' | 'loading' | 'error' | 'success'\nconst s: Status = 'loading'",exp:'union 是收窄：从"任意字符串"缩到"只有四个"。状态机从此不可能出现第五种状态。'},
+{d:4,id:'e42',title:'variant 传错值',brief:'Size 只有三档。修好调用。',
+code:"type Size = 'sm' | 'md' | 'lg'\nfunction setSize(s: Size) {}\nsetSize('xl')",
+req:[/setSize\('(sm|md|lg)'\)/],hint:'xl 不在契约里。',
+sol:"type Size = 'sm' | 'md' | 'lg'\nfunction setSize(s: Size) {}\nsetSize('md')",exp:'设计系统的 variants 写进类型后，传错值在编译期就被拦下。'},
+{d:5,id:'e51',title:'诚实的返回类型',brief:'空数组时函数实际返回 undefined。让返回类型说真话。',
+code:"type Msg = { text: string }\nfunction last(list: Msg[]): Msg {\n  if (list.length === 0) return undefined\n  return list[list.length - 1]\n}",
+req:[/:\s*Msg\s*\|\s*undefined/],hint:'基准 Q2 的现场版。返回类型少了谁？',
+sol:"type Msg = { text: string }\nfunction last(list: Msg[]): Msg | undefined {\n  if (list.length === 0) return undefined\n  return list[list.length - 1]\n}",exp:'类型诚实后，调用方会被迫先判空——错误在编译期被拦截。'},
+{d:5,id:'e52',title:'标注返回类型',brief:'给函数补上返回类型标注。',
+code:"function greet(name: string) {\n  return 'hi ' + name\n}",
+req:[/greet\(name: string\)\s*:\s*string/],hint:'返回的是拼接后的字符串。',
+sol:"function greet(name: string): string {\n  return 'hi ' + name\n}",exp:'对外 API 的返回类型值得手写——它是给调用方看的契约。'},
+{d:6,id:'e61',title:'判空收窄',brief:'m 可能是 undefined，直接访问会崩。加收窄让编译器放行。',
+code:"type Msg = { text: string }\nfunction len(m: Msg | undefined) {\n  return m.text.length\n}",
+req:[/if\s*\(|m\?\./],hint:'先排除 undefined 的可能，TS 会顺着控制流放行。',
+sol:"type Msg = { text: string }\nfunction len(m: Msg | undefined) {\n  if (m === undefined) return 0\n  return m.text.length\n}",exp:'if 判空后，后续代码里 m 被收窄为 Msg——报错自然消失。'},
+{d:6,id:'e62',title:'typeof 分流',brief:'v 可能是字符串或数字，toFixed 只有数字有。用 typeof 分流。',
+code:"function fmt(v: string | number) {\n  return v.toFixed(2)\n}",
+req:[/typeof v === 'number'/],hint:"if (typeof v === 'number') { ... } 之后分别处理。",
+sol:"function fmt(v: string | number) {\n  if (typeof v === 'number') return v.toFixed(2)\n  return v\n}",exp:'typeof 收窄：分支内 v 是 number，分支外自动只剩 string。'},
+{d:9,id:'e91',title:'填对类型参数',brief:'数组装的是数字。修正泛型参数。',
+code:"const nums: Array<string> = [1, 2, 3]",
+req:[/Array<number>/],hint:'尖括号里填"装什么"。',
+sol:"const nums: Array<number> = [1, 2, 3]",exp:'Array<T> 的 T 就是元素类型——泛型是类型层面的插槽。'},
+{d:9,id:'e92',title:'读懂泛型推断',brief:'first 返回数组第一个元素（可能没有）。修好标注。',
+code:"function first<T>(arr: T[]): T | undefined {\n  return arr[0]\n}\nconst f: number = first(['a', 'b'])",
+req:[/:\s*string\s*\|\s*undefined/],hint:'传入 string[]，T 被推断成什么？返回类型跟着是什么？',
+sol:"function first<T>(arr: T[]): T | undefined {\n  return arr[0]\n}\nconst f: string | undefined = first(['a', 'b'])",exp:'T=string → 返回 string | undefined。泛型在调用时才落地。'},
+{d:10,id:'e101',title:'Promise 的类型参数',brief:'fetchName 兑现的是字符串。修正标注。',
+code:"declare function fetchName(): Promise<string>\nconst p: Promise<number> = fetchName()",
+req:[/const p:\s*Promise<string>/],hint:'Promise<T> 读作"最终给你一个 T 的承诺"。',
+sol:"declare function fetchName(): Promise<string>\nconst p: Promise<string> = fetchName()",exp:'泛型嵌进容器类型：承诺的内容也在契约里。'},
+{d:10,id:'e102',title:'setter 的参数类型',brief:'基准 Q3 现场版：T 已被推断为 number。修好 setter 调用。',
+code:"declare function useLocalState<T>(initial: T): [T, (next: T) => void]\nconst [n, setN] = useLocalState(0)\nsetN('ten')",
+req:[/setN\(\s*-?\d/],hint:'initial 是 0 → T 是 number → setN 只收 number。',
+sol:"declare function useLocalState<T>(initial: T): [T, (next: T) => void]\nconst [n, setN] = useLocalState(0)\nsetN(10)",exp:'这就是 useState 的类型机制——你每天在用，现在你能读懂它了。'},
+{d:11,id:'e111',title:'删掉错误标注，交给推断',brief:'标注既错误又多余。删掉它，让 TS 自己推断。',
+code:"const name: number = 'Kami'",
+req:[/const name = 'Kami'/],hint:'能推断就别手写。',
+sol:"const name = 'Kami'",exp:'TS 从初始值推断出 string——冗余标注只会制造噪音和出错机会。'},
+{d:11,id:'e112',title:'as const 锁定字面量',brief:'加 as const 让 sizes 变成只读字面量元组，再修好赋值。',
+code:"const sizes = ['sm', 'md', 'lg']\ntype Size = typeof sizes[number]\nconst s: Size = 'xl'",
+req:[/as const/,/const s:\s*Size\s*=\s*'(sm|md|lg)'/],hint:'as const 之前 Size 只是 string；之后才是三个字面量的联合。',
+sol:"const sizes = ['sm', 'md', 'lg'] as const\ntype Size = typeof sizes[number]\nconst s: Size = 'md'",exp:'as const + typeof [number]：从数据直接派生类型——设计 token 表的标准玩法。'},
+{d:12,id:'e121',title:'用 Omit 派生新类型',brief:'新建消息时还没有 id。用 Omit 定义 NewMessage。',
+code:"type Message = { id: string; text: string }\ntype NewMessage = Message\nconst m: NewMessage = { text: 'hi' }",
+req:[/Omit<Message,\s*'id'>/],hint:'Omit = 排除某些字段。',
+sol:"type Message = { id: string; text: string }\ntype NewMessage = Omit<Message, 'id'>\nconst m: NewMessage = { text: 'hi' }",exp:'从主类型派生而不是复制粘贴——改 Message 时 NewMessage 自动跟上。'},
+{d:12,id:'e122',title:'用 Partial 表达补丁',brief:'update 只想传一部分设置。修改参数类型。',
+code:"type Settings = { theme: string; lang: string }\nfunction update(patch: Settings) {}\nupdate({ theme: 'dark' })",
+req:[/Partial<Settings>/],hint:'Partial = 全部字段变可选。',
+sol:"type Settings = { theme: string; lang: string }\nfunction update(patch: Partial<Settings>) {}\nupdate({ theme: 'dark' })",exp:'PATCH 语义的标准表达：每个字段都可传可不传。'},
+{d:15,id:'e151',title:'Props 契约',brief:'Card 的 Props 要求两个字段。修好调用。',
+code:"type Props = { title: string; count: number }\nfunction Card(props: Props) {\n  return props.title\n}\nCard({ title: 'hello' })",
+req:[/count\s*:\s*-?\d/],hint:'Props 类型 = 组件的 API：count 是必填的。',
+sol:"type Props = { title: string; count: number }\nfunction Card(props: Props) {\n  return props.title\n}\nCard({ title: 'hello', count: 3 })",exp:'调用组件 = 履行 Props 契约。漏传必填项，编译器直接拦。'},
+{d:15,id:'e152',title:'回调 Prop 的签名',brief:'onSelect 的参数是 string 类型的 id。修好实现。',
+code:"type Props = { onSelect: (id: string) => void }\ndeclare function List(p: Props): void\nList({ onSelect: (id: number) => {} })",
+req:[/id\s*:\s*string/],hint:'回调的参数类型要与契约一致。',
+sol:"type Props = { onSelect: (id: string) => void }\ndeclare function List(p: Props): void\nList({ onSelect: (id: string) => {} })",exp:'事件回调的形状也是 Props 契约的一部分——这就是 onClick 类型检查的原理。'},
+{d:16,id:'e161',title:'用 & 合并类型',brief:'把原生属性和自定义 variants 合并成 ButtonProps。',
+code:"type Native = { disabled?: boolean; onClick?: () => void }\ntype Extra = { variant?: 'primary' | 'ghost' }\ntype ButtonProps = Native\nconst b: ButtonProps = { disabled: true, variant: 'ghost' }",
+req:[/Native\s*&\s*Extra|Extra\s*&\s*Native/],hint:'& 是交叉：同时满足两边。',
+sol:"type Native = { disabled?: boolean; onClick?: () => void }\ntype Extra = { variant?: 'primary' | 'ghost' }\ntype ButtonProps = Native & Extra\nconst b: ButtonProps = { disabled: true, variant: 'ghost' }",exp:'ComponentProps<\'button\'> & {...} 的微缩模型——基准 Q4 的核心机制。'},
+{d:16,id:'e162',title:'别弄丢原生能力',brief:'使用者想传 disabled，但类型里没有。扩展类型（不许删调用处的属性）。',
+code:"type ButtonProps = { variant: 'primary' | 'ghost' }\nconst props: ButtonProps = { variant: 'primary', disabled: true }",
+req:[/disabled\?\s*:\s*boolean/],hint:'在 ButtonProps 里补上可选的 disabled。',
+sol:"type ButtonProps = { variant: 'primary' | 'ghost'; disabled?: boolean }\nconst props: ButtonProps = { variant: 'primary', disabled: true }",exp:'自定义组件丢掉原生属性 = 可访问性静默崩塌。真实项目里用 ComponentProps 一次继承全部。'},
+{d:17,id:'e171',title:'用 Record 锁住 variant 表',brief:'styles 的键必须与 Variant 一一对应。加类型，并删掉不该存在的项。',
+code:"type Variant = 'primary' | 'ghost'\nconst styles = {\n  primary: 'bg-blue',\n  ghost: 'bg-transparent',\n  fancy: 'bg-pink',\n}",
+req:[/Record<Variant,\s*string>/],ban:[/fancy/],hint:'Record<Variant, string> 会同时抓"多了的键"和"漏了的键"。',
+sol:"type Variant = 'primary' | 'ghost'\nconst styles: Record<Variant, string> = {\n  primary: 'bg-blue',\n  ghost: 'bg-transparent',\n}",exp:'这就是 cva 的类型学原理：variant 表与类型一一对应，加减 variant 都逃不过编译器。'},
+{d:17,id:'e172',title:'让 variant 可选',brief:'Button 应该允许不传 size（走默认值）。修改类型。',
+code:"type Props = { size: 'sm' | 'md' | 'lg' }\ndeclare function Button(p: Props): void\nButton({})",
+req:[/size\?\s*:/],hint:'有默认值的 variant 应该是选填。',
+sol:"type Props = { size?: 'sm' | 'md' | 'lg' }\ndeclare function Button(p: Props): void\nButton({})",exp:'? 表达"有默认值"：API 更友好，契约依然严格。'},
+/* ---- Total TypeScript 官方题（Matt Pocock · GPL-3.0）已适配为浏览器内检查 ---- */
+{d:2,src:'tt',id:'t01',title:'TT-01 给参数标注类型',brief:'参数隐式 any 触发了报错。给 a、b 标注类型。',
+code:"export const addTwoNumbers = (a, b) => {\n  return a + b;\n};\n\nit(\"Should add the two numbers together\", () => {\n  expect(addTwoNumbers(2, 4)).toEqual(6);\n  expect(addTwoNumbers(10, 10)).toEqual(20);\n});",
+req:[/a\s*:\s*number/,/b\s*:\s*number/],hint:'测试里传的是数字。',
+sol:"export const addTwoNumbers = (a: number, b: number) => {\n  return a + b;\n};\n\nit(\"Should add the two numbers together\", () => {\n  expect(addTwoNumbers(2, 4)).toEqual(6);\n  expect(addTwoNumbers(10, 10)).toEqual(20);\n});",exp:'noImplicitAny：不标注的参数是隐式 any，严格模式直接报错。'},
+{d:3,src:'tt',id:'t02',title:'TT-02 对象参数的类型',brief:'params 是隐式 any。给它一个对象类型。',
+code:"export const addTwoNumbers = (params) => {\n  return params.first + params.second;\n};\n\nit(\"Should add the two numbers together\", () => {\n  expect(addTwoNumbers({ first: 2, second: 4 })).toEqual(6);\n  expect(addTwoNumbers({ first: 10, second: 20 })).toEqual(30);\n});",
+req:[/first\s*:\s*number/,/second\s*:\s*number/],hint:'params: { first: ...; second: ... }，也可以抽成 type。',
+sol:"export const addTwoNumbers = (params: { first: number; second: number }) => {\n  return params.first + params.second;\n};\n\nit(\"Should add the two numbers together\", () => {\n  expect(addTwoNumbers({ first: 2, second: 4 })).toEqual(6);\n  expect(addTwoNumbers({ first: 10, second: 20 })).toEqual(30);\n});",exp:'对象参数的形状就是它的契约。抽成 type 别名在真实项目里更常见。'},
+{d:3,src:'tt',id:'t03',title:'TT-03 可选属性',brief:'第一个测试只传了 first。让 last 成为可选。',
+code:"export const getName = (params: { first: string; last: string }) => {\n  if (params.last) {\n    return `${params.first} ${params.last}`;\n  }\n  return params.first;\n};\n\nit(\"Should work with just the first name\", () => {\n  expect(getName({ first: \"Matt\" })).toEqual(\"Matt\");\n});\n\nit(\"Should work with the first and last name\", () => {\n  expect(getName({ first: \"Matt\", last: \"Pocock\" })).toEqual(\"Matt Pocock\");\n});",
+req:[/last\?\s*:\s*string/],hint:'函数体里已经在 if (params.last) 判空了——类型也该如实表达。',
+sol:"export const getName = (params: { first: string; last?: string }) => {\n  if (params.last) {\n    return `${params.first} ${params.last}`;\n  }\n  return params.first;\n};\n\nit(\"Should work with just the first name\", () => {\n  expect(getName({ first: \"Matt\" })).toEqual(\"Matt\");\n});\n\nit(\"Should work with the first and last name\", () => {\n  expect(getName({ first: \"Matt\", last: \"Pocock\" })).toEqual(\"Matt Pocock\");\n});",exp:'实现已经把 last 当可选处理了，类型却写成必填——契约与实现不一致就是 bug 的温床。'},
+{d:5,src:'tt',id:'t04',title:'TT-04 可选参数',brief:'和上题同理，但这次是位置参数。让 last 可选。',
+code:"export const getName = (first: string, last: string) => {\n  if (last) {\n    return `${first} ${last}`;\n  }\n  return first;\n};\n\nit(\"Should work with just the first name\", () => {\n  expect(getName(\"Matt\")).toEqual(\"Matt\");\n});\n\nit(\"Should work with the first and last name\", () => {\n  expect(getName(\"Matt\", \"Pocock\")).toEqual(\"Matt Pocock\");\n});",
+req:[/last\?\s*:\s*string/],hint:'位置参数也能用 ?。',
+sol:"export const getName = (first: string, last?: string) => {\n  if (last) {\n    return `${first} ${last}`;\n  }\n  return first;\n};\n\nit(\"Should work with just the first name\", () => {\n  expect(getName(\"Matt\")).toEqual(\"Matt\");\n});\n\nit(\"Should work with the first and last name\", () => {\n  expect(getName(\"Matt\", \"Pocock\"))\n    .toEqual(\"Matt Pocock\");\n});",exp:'可选参数必须放在必选参数之后——顺序也是契约的一部分。'},
+{d:2,src:'tt',id:'t05',title:'TT-05 给变量标注类型',brief:'如何让 defaultUser 在声明那一行就被约束为 User？补上标注并填齐字段。',
+code:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  isAdmin: boolean;\n}\n\nconst defaultUser = {};\n\nconst getUserId = (user: User) => {\n  return user.id;\n};\n\nit(\"Should get the user id\", () => {\n  expect(getUserId(defaultUser)).toEqual(1);\n});",
+req:[/defaultUser\s*:\s*User/],hint:'const defaultUser: User = { ... } —— 标注后编译器会告诉你缺哪些字段。',
+sol:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  isAdmin: boolean;\n}\n\nconst defaultUser: User = {\n  id: 1,\n  firstName: \"Matt\",\n  lastName: \"Pocock\",\n  isAdmin: true,\n};\n\nconst getUserId = (user: User) => {\n  return user.id;\n};\n\nit(\"Should get the user id\", () => {\n  expect(getUserId(defaultUser)).toEqual(1);\n});",exp:'在声明处标注，错误就近暴露；不标注则错误漂移到远处的使用点，难排查。'},
+{d:4,src:'tt',id:'t06',title:'TT-06 用 union 锁定 role',brief:'把 role 收窄为三个允许值（@ts-expect-error 那行会替你验证）。',
+code:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  /**\n   * role 只允许 'admin' | 'user' | 'super-admin'\n   */\n  role: string;\n}\n\nexport const defaultUser: User = {\n  id: 1,\n  firstName: \"Matt\",\n  lastName: \"Pocock\",\n  // @ts-expect-error\n  role: \"I_SHOULD_NOT_BE_ALLOWED\",\n};",
+req:[/["']admin["']\s*\|\s*["']user["']\s*\|\s*["']super-admin["']/],hint:'role 还是 string 时，@ts-expect-error 会因为"底下没有错误"而自己报错。',
+sol:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  role: \"admin\" | \"user\" | \"super-admin\";\n}\n\nexport const defaultUser: User = {\n  id: 1,\n  firstName: \"Matt\",\n  lastName: \"Pocock\",\n  // @ts-expect-error\n  role: \"I_SHOULD_NOT_BE_ALLOWED\",\n};",exp:'@ts-expect-error 是"此处应当报错"的断言——union 收窄成功后它才成立。'},
+{d:2,src:'tt',id:'t07',title:'TT-07 数组类型',brief:'posts 是多篇文章。修正它的类型。',
+code:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  role: \"admin\" | \"user\" | \"super-admin\";\n  posts: Post;\n}\n\ninterface Post {\n  id: number;\n  title: string;\n}\n\nexport const defaultUser: User = {\n  id: 1,\n  firstName: \"Matt\",\n  lastName: \"Pocock\",\n  role: \"admin\",\n  posts: [\n    { id: 1, title: \"How I eat so much cheese\" },\n    { id: 2, title: \"Why I don't eat more vegetables\" },\n  ],\n};",
+req:[/Post\[\]|Array<Post>/],hint:'Post[] 或 Array<Post> 都行。',
+sol:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  role: \"admin\" | \"user\" | \"super-admin\";\n  posts: Post[];\n}\n\ninterface Post {\n  id: number;\n  title: string;\n}\n\nexport const defaultUser: User = {\n  id: 1,\n  firstName: \"Matt\",\n  lastName: \"Pocock\",\n  role: \"admin\",\n  posts: [\n    { id: 1, title: \"How I eat so much cheese\" },\n    { id: 2, title: \"Why I don't eat more vegetables\" },\n  ],\n};",exp:'两种数组写法完全等价；团队里统一一种即可。'},
+{d:5,src:'tt',id:'t08',title:'TT-08 返回类型标注',brief:'如何保证 makeUser 永远返回一个合法的 User？标注返回类型并补全对象。',
+code:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  role: \"admin\" | \"user\" | \"super-admin\";\n  posts: Array<Post>;\n}\n\ninterface Post {\n  id: number;\n  title: string;\n}\n\nconst makeUser = () => {\n  return {};\n};\n\nit(\"Should return a valid user\", () => {\n  const user = makeUser();\n  expect(user.id).toBeTypeOf(\"number\");\n});",
+req:[/\)\s*:\s*User\s*=>/],hint:'const makeUser = (): User => { ... }，然后按编译器提示补齐字段。',
+sol:"interface User {\n  id: number;\n  firstName: string;\n  lastName: string;\n  role: \"admin\" | \"user\" | \"super-admin\";\n  posts: Array<Post>;\n}\n\ninterface Post {\n  id: number;\n  title: string;\n}\n\nconst makeUser = (): User => {\n  return {\n    id: 1,\n    firstName: \"Matt\",\n    lastName: \"Pocock\",\n    role: \"admin\",\n    posts: [{ id: 1, title: \"My first post\" }],\n  };\n};\n\nit(\"Should return a valid user\", () => {\n  const user = makeUser();\n  expect(user.id).toBeTypeOf(\"number\");\n});",exp:'返回类型标注 = 对所有调用方的承诺，编译器负责监督你兑现。'},
+{d:10,src:'tt',id:'t09',title:'TT-09 async 函数的返回类型',brief:'async 函数的返回类型必须是 Promise<T>。修正标注。',
+code:"interface LukeSkywalker {\n  name: string;\n  height: string;\n  mass: string;\n}\n\nexport const fetchLukeSkywalker = async (): LukeSkywalker => {\n  const data = await fetch(\"https://swapi.py4e.com/api/people/1\").then(\n    (res) => {\n      return res.json();\n    }\n  );\n\n  return data;\n};",
+req:[/Promise<LukeSkywalker>/],hint:'async 自动把返回值包进 Promise，标注也要如实。',
+sol:"interface LukeSkywalker {\n  name: string;\n  height: string;\n  mass: string;\n}\n\nexport const fetchLukeSkywalker = async (): Promise<LukeSkywalker> => {\n  const data = await fetch(\"https://swapi.py4e.com/api/people/1\").then(\n    (res) => {\n      return res.json();\n    }\n  );\n\n  return data;\n};",exp:'async 函数返回的永远是 Promise——这正是 Day 10 学的"泛型嵌进容器类型"。'},
+{d:9,src:'tt',id:'t10',title:'TT-10 Set 的类型参数',brief:'让这个 Set 只接受字符串（两处类型断言会替你验证）。',
+code:"const guitarists = new Set();\n\nguitarists.add(\"Jimi Hendrix\");\nguitarists.add(\"Eric Clapton\");\n\nit(\"Should give a type error when you try to pass a non-string\", () => {\n  // @ts-expect-error\n  guitarists.add(2);\n});\n\nit(\"Should be typed as an array of strings\", () => {\n  const guitaristsAsArray = Array.from(guitarists);\n  type tests = [Expect<Equal<typeof guitaristsAsArray, string[]>>];\n});",
+req:[/new Set<string>\(\)/],hint:'new Set<string>() —— 泛型参数决定它装什么。',
+sol:"const guitarists = new Set<string>();\n\nguitarists.add(\"Jimi Hendrix\");\nguitarists.add(\"Eric Clapton\");\n\nit(\"Should give a type error when you try to pass a non-string\", () => {\n  // @ts-expect-error\n  guitarists.add(2);\n});\n\nit(\"Should be typed as an array of strings\", () => {\n  const guitaristsAsArray = Array.from(guitarists);\n  type tests = [Expect<Equal<typeof guitaristsAsArray, string[]>>];\n});",exp:'Set<T>、Map<K,V>、Promise<T>——容器类型全靠泛型参数声明"装什么"。'},
+{d:12,src:'tt',id:'t11',title:'TT-11 用 Record 给缓存定型',brief:'cache 是"字符串键 → 字符串值"的映射。给它一个精确类型。',
+code:"const createCache = () => {\n  const cache = {};\n\n  const add = (id: string, value: string) => {\n    cache[id] = value;\n  };\n\n  const remove = (id: string) => {\n    delete cache[id];\n  };\n\n  return { cache, add, remove };\n};",
+req:[/Record<string,\s*string>/],hint:'Record<键类型, 值类型>。',
+sol:"const createCache = () => {\n  const cache: Record<string, string> = {};\n\n  const add = (id: string, value: string) => {\n    cache[id] = value;\n  };\n\n  const remove = (id: string) => {\n    delete cache[id];\n  };\n\n  return { cache, add, remove };\n};",exp:'空对象 {} 默认没有任何键——Record 声明了"允许任意 string 键"这个意图。'},
+{d:6,src:'tt',id:'t12',title:'TT-12 typeof 收窄实战',brief:'amount 可能是数字，也可能是 { amount: number }。实现函数：两种情况都返回数字。',
+code:"const coerceAmount = (amount: number | { amount: number }) => {};\n\nit(\"Should return the amount when passed an object\", () => {\n  expect(coerceAmount({ amount: 20 })).toEqual(20);\n});\n\nit(\"Should return the amount when passed a number\", () => {\n  expect(coerceAmount(20)).toEqual(20);\n});",
+req:[/typeof\s+amount\s*===\s*["']number["']/,/amount\.amount/],hint:"if (typeof amount === 'number') 之后，两个分支里 amount 分别是什么？",
+sol:"const coerceAmount = (amount: number | { amount: number }) => {\n  if (typeof amount === \"number\") {\n    return amount;\n  }\n  return amount.amount;\n};\n\nit(\"Should return the amount when passed an object\", () => {\n  expect(coerceAmount({ amount: 20 })).toEqual(20);\n});\n\nit(\"Should return the amount when passed a number\", () => {\n  expect(coerceAmount(20)).toEqual(20);\n});",exp:'分支内 amount 是 number，分支外自动只剩对象——收窄让联合类型可以安全使用。'},
+{d:8,src:'tt',id:'t13',title:'TT-13 catch 里的 unknown',brief:'catch 到的 e 是 unknown，不能直接访问 .message。用 instanceof 收窄。',
+code:"const tryCatchDemo = (state: \"fail\" | \"succeed\") => {\n  try {\n    if (state === \"fail\") {\n      throw new Error(\"Failure!\");\n    }\n  } catch (e) {\n    return e.message;\n  }\n};",
+req:[/instanceof\s+Error/],hint:'if (e instanceof Error) { ... } —— 这也是一种收窄。',
+sol:"const tryCatchDemo = (state: \"fail\" | \"succeed\") => {\n  try {\n    if (state === \"fail\") {\n      throw new Error(\"Failure!\");\n    }\n  } catch (e) {\n    if (e instanceof Error) {\n      return e.message;\n    }\n  }\n};",exp:'JS 里 throw 可以扔任何东西，所以 catch 到的必须先验明正身——这条报错你以后天天见。'},
+{d:16,src:'tt',id:'t14',title:'TT-14 用 extends 消除重复',brief:'三个 interface 都有 id。抽一个 Base 用 extends 复用（底部类型断言验证结构不变）。',
+code:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\ninterface Post {\n  id: string;\n  title: string;\n  body: string;\n}\n\ninterface Comment {\n  id: string;\n  comment: string;\n}\n\ntype tests = [\n  Expect<Equal<User, { id: string; firstName: string; lastName: string }>>,\n  Expect<Equal<Post, { id: string; title: string; body: string }>>,\n  Expect<Equal<Comment, { id: string; comment: string }>>,\n];",
+req:[/interface\s+Base\s*\{/,/extends\s+Base/],hint:'interface Base { id: string }，然后 interface User extends Base { ... }。',
+sol:"interface Base {\n  id: string;\n}\n\ninterface User extends Base {\n  firstName: string;\n  lastName: string;\n}\n\ninterface Post extends Base {\n  title: string;\n  body: string;\n}\n\ninterface Comment extends Base {\n  comment: string;\n}\n\ntype tests = [\n  Expect<Equal<User, { id: string; firstName: string; lastName: string }>>,\n  Expect<Equal<Post, { id: string; title: string; body: string }>>,\n  Expect<Equal<Comment, { id: string; comment: string }>>,\n];",exp:'extends 是 interface 的继承——与 & 交叉是同一目的的两条路，设计系统里都常见。'},
+{d:16,src:'tt',id:'t15',title:'TT-15 交叉类型标注返回值',brief:'返回值同时是 User 和 { posts: Post[] }。用 & 修正返回类型。',
+code:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\ninterface Post {\n  id: string;\n  title: string;\n  body: string;\n}\n\nexport const getDefaultUserAndPosts = (): unknown => {\n  return {\n    id: \"1\",\n    firstName: \"Matt\",\n    lastName: \"Pocock\",\n    posts: [\n      { id: \"1\", title: \"How I eat so much cheese\", body: \"It's pretty edam difficult\" },\n    ],\n  };\n};\n\nconst userAndPosts = getDefaultUserAndPosts();\n\nconsole.log(userAndPosts.posts[0]);",
+req:[/User\s*&\s*\{\s*posts\s*:\s*Post\[\]\s*\}/],hint:'(): User & { posts: Post[] }。',
+sol:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\ninterface Post {\n  id: string;\n  title: string;\n  body: string;\n}\n\nexport const getDefaultUserAndPosts = (): User & { posts: Post[] } => {\n  return {\n    id: \"1\",\n    firstName: \"Matt\",\n    lastName: \"Pocock\",\n    posts: [\n      { id: \"1\", title: \"How I eat so much cheese\", body: \"It's pretty edam difficult\" },\n    ],\n  };\n};\n\nconst userAndPosts = getDefaultUserAndPosts();\n\nconsole.log(userAndPosts.posts[0]);",exp:'& 现场合并出一个匿名类型——基准 Q4 的 ComponentProps & {...} 就是它的工业级用法。'},
+{d:12,src:'tt',id:'t16',title:'TT-16 Pick / Omit',brief:'从 User 派生一个只含 firstName 和 lastName 的类型（类型断言会验证）。',
+code:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\ntype MyType = unknown;\n\ntype tests = [Expect<Equal<MyType, { firstName: string; lastName: string }>>];",
+req:[/(Pick<User,|Omit<User,)/],hint:'Pick 挑选或 Omit 排除，两条路都通。',
+sol:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\ntype MyType = Omit<User, \"id\">;\n\ntype tests = [Expect<Equal<MyType, { firstName: string; lastName: string }>>];",exp:'同一结果两种表达：Pick<User, \"firstName\" | \"lastName\"> 或 Omit<User, \"id\">。选语义更贴近意图的那个。'},
+{d:15,src:'tt',id:'t17',title:'TT-17 回调函数的类型',brief:'onFocusChange 是 unknown，不能调用。给它一个函数类型（类型断言会验证参数是 boolean）。',
+code:"const addListener = (onFocusChange: unknown) => {\n  window.addEventListener(\"focus\", () => {\n    onFocusChange(true);\n  });\n\n  window.addEventListener(\"blur\", () => {\n    onFocusChange(false);\n  });\n};\n\naddListener((isFocused) => {\n  console.log({ isFocused });\n\n  type tests = [Expect<Equal<typeof isFocused, boolean>>];\n});",
+req:[/\(\s*\w+\s*:\s*boolean\s*\)\s*=>\s*void/],hint:'(isFocused: boolean) => void。',
+sol:"const addListener = (onFocusChange: (isFocused: boolean) => void) => {\n  window.addEventListener(\"focus\", () => {\n    onFocusChange(true);\n  });\n\n  window.addEventListener(\"blur\", () => {\n    onFocusChange(false);\n  });\n};\n\naddListener((isFocused) => {\n  console.log({ isFocused });\n\n  type tests = [Expect<Equal<typeof isFocused, boolean>>];\n});",exp:'回调类型定义在 API 侧，使用侧的参数类型就能被自动推断——React 事件处理器同理。'},
+{d:10,src:'tt',id:'t18',title:'TT-18 async 函数作为参数',brief:'createUser 和 getUser 都是 unknown。给它们标注 async 函数类型。',
+code:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\nconst createThenGetUser = async (\n  createUser: unknown,\n  getUser: unknown,\n): Promise<User> => {\n  const userId: string = await createUser();\n\n  const user = await getUser(userId);\n\n  return user;\n};",
+req:[/\(\s*\)\s*=>\s*Promise<string>/,/Promise<User>/],hint:'createUser: () => Promise<string>；getUser: (id: string) => Promise<User>。',
+sol:"interface User {\n  id: string;\n  firstName: string;\n  lastName: string;\n}\n\nconst createThenGetUser = async (\n  createUser: () => Promise<string>,\n  getUser: (id: string) => Promise<User>,\n): Promise<User> => {\n  const userId: string = await createUser();\n\n  const user = await getUser(userId);\n\n  return user;\n};",exp:'函数类型 + Promise 泛型的组合——本教程的毕业题，读懂它你就能读懂大部分真实 API 的签名。'},
+];
+
+/* 精简版 lib.d.ts —— 覆盖全部练习所需 */
+const LIB=`interface Object {}
+interface Function {}
+interface CallableFunction {}
+interface NewableFunction {}
+interface IArguments {}
+interface Boolean {}
+interface Symbol {}
+interface RegExp {}
+interface Number { toFixed(digits?: number): string }
+interface String { length: number; toUpperCase(): string }
+interface Array<T> { length: number; [n: number]: T; push(...items: T[]): number; pop(): T | undefined; map<U>(fn: (v: T, i: number) => U): U[]; filter(fn: (v: T) => unknown): T[]; find(fn: (v: T) => unknown): T | undefined }
+interface ReadonlyArray<T> { readonly length: number; readonly [n: number]: T }
+interface ArrayConstructor { from<T>(iterable: Set<T>): T[]; isArray(arg: any): arg is any[] }
+declare var Array: ArrayConstructor
+interface Error { name: string; message: string; stack?: string }
+declare var Error: { new (message?: string): Error; (message?: string): Error }
+interface Set<T> { add(value: T): this; has(value: T): boolean; delete(value: T): boolean; readonly size: number }
+declare var Set: { new <T = unknown>(values?: ReadonlyArray<T>): Set<T> }
+interface PromiseLike<T> { then<T1 = T, T2 = never>(onfulfilled?: ((value: T) => T1 | PromiseLike<T1>) | null, onrejected?: ((reason: any) => T2 | PromiseLike<T2>) | null): PromiseLike<T1 | T2> }
+interface Promise<T> { then<T1 = T, T2 = never>(onfulfilled?: ((value: T) => T1 | PromiseLike<T1>) | null, onrejected?: ((reason: any) => T2 | PromiseLike<T2>) | null): Promise<T1 | T2>; catch<T2 = never>(onrejected?: ((reason: any) => T2 | PromiseLike<T2>) | null): Promise<T | T2> }
+declare var Promise: { new <T>(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void): Promise<T>; resolve<T>(value: T): Promise<T> }
+type PromiseConstructorLike = new <T>(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) => PromiseLike<T>
+declare function fetch(url: string): Promise<{ json(): Promise<any> }>
+declare var window: { addEventListener(type: string, listener: () => void): void }
+declare function it(name: string, fn: () => any): void
+declare const expect: any
+interface TemplateStringsArray extends ReadonlyArray<string> {}
+type Partial<T> = { [P in keyof T]?: T[P] }
+type Required<T> = { [P in keyof T]-?: T[P] }
+type Readonly<T> = { readonly [P in keyof T]: T[P] }
+type Pick<T, K extends keyof T> = { [P in K]: T[P] }
+type Record<K extends keyof any, T> = { [P in K]: T }
+type Exclude<T, U> = T extends U ? never : T
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+type Expect<T extends true> = T
+type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends (<T>() => T extends Y ? 1 : 2) ? true : false
+type NotEqual<X, Y> = true extends Equal<X, Y> ? false : true
+declare var console: { log(...args: unknown[]): void }`;
+
+let TSC=null, tsLoading=null;
+function loadTS(){
+  if(TSC) return Promise.resolve(true);
+  if(window.ts){ TSC=window.ts; return Promise.resolve(true); }
+  if(!tsLoading){
+    tsLoading=new Promise(res=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js';
+      s.onload=()=>{ TSC=window.ts||null; res(!!TSC); };
+      s.onerror=()=>res(false);
+      document.head.appendChild(s);
+    });
+  }
+  return tsLoading;
+}
+function typeCheck(code){
+  const ts=TSC;
+  const files={'main.ts':code,'lib.d.ts':LIB};
+  const host={
+    getScriptFileNames:()=>['main.ts'],
+    getScriptVersion:()=>'1',
+    getScriptSnapshot:f=>files[f]!==undefined?ts.ScriptSnapshot.fromString(files[f]):undefined,
+    getCurrentDirectory:()=>'',
+    getCompilationSettings:()=>({strict:true,noEmit:true,skipLibCheck:true,target:ts.ScriptTarget.ES5}),
+    getDefaultLibFileName:()=>'lib.d.ts',
+    fileExists:f=>files[f]!==undefined,
+    readFile:f=>files[f]
+  };
+  const svc=ts.createLanguageService(host,ts.createDocumentRegistry());
+  const diags=svc.getSyntacticDiagnostics('main.ts').concat(svc.getSemanticDiagnostics('main.ts'));
+  return diags.map(dg=>{
+    let line=0;
+    try{ line=dg.file.getLineAndCharacterOfPosition(dg.start).line+1; }catch(e){}
+    return {line,msg:ts.flattenDiagnosticMessageText(dg.messageText,'\n')};
+  });
+}
+
+/* ============ 存储 ============ */
+const KEY='tsquiz:v1';
+let DB={days:{},wrong:[],points:{},ex:{}};
+/* 双通道存储：Claude 预览环境用 window.storage；本地浏览器打开用 localStorage。
+   键名固定为 tsquiz:v1 —— 以后替换 html 文件不影响已有数据 */
+async function load(){
+  let raw=null;
+  try{ const r=await window.storage.get(KEY); if(r&&r.value) raw=r.value; }catch(e){}
+  if(!raw){ try{ raw=localStorage.getItem(KEY); }catch(e){} }
+  if(raw){ try{ DB=JSON.parse(raw); }catch(e){} }
+  DB.days=DB.days||{};
+  DB.wrong=DB.wrong||[];
+  DB.points=DB.points||{};
+  DB.ex=DB.ex||{};
+  DB.wrong.forEach(w=>{ if(!w.due) w.due=(w.ts||Date.now())+864e5; });
+}
+const pointDay=p=>{const q=BANK.find(x=>x.p===p);return q?q.d:'?';};
+async function save(){
+  const s=JSON.stringify(DB);
+  try{ await window.storage.set(KEY,s); }catch(e){}
+  try{ localStorage.setItem(KEY,s); }catch(e){}
+}
+const qid=q=>q.d*100+BANK.filter(x=>x.d===q.d).indexOf(q);
+const byId=id=>BANK.filter(x=>x.d===Math.floor(id/100))[id%100];
+
+/* ============ 工具 ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function hl(line){ // 极简语法着色
+  let s=esc(line);
+  s=s.replace(/('[^']*')/g,'<span class="ts">$1</span>');
+  s=s.replace(/\b(type|function|return|if|const|let|=&gt;)\b/g,'<span class="tk">$1</span>');
+  s=s.replace(/(\/\/.*)$/,'<span class="tc">$1</span>');
+  return s;
+}
+function codeBlock(lines){
+  return '<div class="code">'+lines.map((l,i)=>`<div class="cl"><span class="ln">${i+1}</span><span class="c">${hl(l)}</span></div>`).join('')+'</div>';
+}
+function norm(s){ return s.trim().toLowerCase().replace(/\s+/g,'').replace(/[""'']/g,"'"); }
+
+/* ============ 视图状态 ============ */
+let view={name:'home'};
+let session=null; // {qs, idx, answers:[], mode:'day'|'retry', day}
+
+function topstat(){
+  const done=Object.keys(DB.days).length;
+  $('#topstat').innerHTML=`已完成 <b>${done}</b>/21 天 · 错题 <b style="color:var(--warn)">${DB.wrong.length}</b>`;
+}
+
+/* ============ Home ============ */
+function renderHome(){
+  const weeks=[[1,7,'Week 1 · 类型是契约'],[8,14,'Week 2 · 泛型与报错'],[15,21,'Week 3 · React × 设计系统']];
+  let html='<div class="union"><div class="decl"><span class="kw">type</span> Day = <span style="color:var(--dim)">// 点击进入当日测试（每天 4 题）</span></div>';
+  for(const [s,e,label] of weeks){
+    html+=`<div class="weekband">${label}</div><div class="days">`;
+    for(let d=s;d<=e;d++){
+      const rec=DB.days[d];
+      const cls=rec?(rec.s===rec.t?'day done perfect':'day done hasWrong'):'day';
+      const sc=rec?`${rec.s}/${rec.t}`:'·';
+      html+=`<button class="${cls}" data-day="${d}" title="Day ${d} · ${TOPICS[d]}"><span class="n">${d}</span>${d<e?'<span class="pipe"> |</span>':''}<span class="sc">${sc}</span></button>`;
+    }
+    html+='</div>';
+  }
+  html+='</div>';
+  const now=Date.now();
+  const due=DB.wrong.filter(w=>(w.due||0)<=now).length;
+  if(due) html+=`<div class="alertbox due">↻ <b>${due}</b> 道错题已到复现时间 — 会自动混入你开始的下一次日测</div>`;
+  const hot=Object.entries(DB.points).filter(([,n])=>n>=2);
+  if(hot.length) html+=`<div class="alertbox hot"><b>⚠ 知识点预警</b> · 累计错 ≥2 次，刷题无效，建议回源头重学：<br>${hot.map(([p,n])=>`<span class="hotp"># ${p} ×${n} → 回 Day ${pointDay(p)}</span>`).join('')}</div>`;
+  html+=`<div class="toolbar">
+    <button class="btn warn" id="gowrong">错题集（${DB.wrong.length}）</button>
+    ${DB.wrong.length?'<button class="btn" id="goretry">重练错题</button>':''}
+    <button class="btn" id="bkexp">备份进度</button>
+    <button class="btn" id="bkimp">恢复备份</button>
+  </div>
+  <p class="subnote"><b>每日四步</b>：① 读阮一峰对应章节（wangdoc.com/typescript）→ ② Playground 手抄+故意改错 → ③ <b>修题练习（已内置本站）</b> → ④ 当日测验。点某一天进入当日中心即可完成 ③④。学习日每天 8 题，另混入 <b>2 道往日温故抽查</b>（♻）对抗遗忘；答错自动进错题集，<b>1 天后自动混入日测</b>（↻），练对即移出。Day 7 / 14 / 21 是验收日。</p>`;
+  $('#app').innerHTML=html;
+  document.querySelectorAll('.day').forEach(b=>b.onclick=()=>{view={name:'hub',day:+b.dataset.day};render();});
+  $('#gowrong').onclick=()=>{view={name:'wrong'};render();};
+  const r=$('#goretry'); if(r) r.onclick=startRetry;
+  $('#bkexp').onclick=()=>{
+    const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='ts-quiz-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  $('#bkimp').onclick=()=>{
+    const inp=document.createElement('input');
+    inp.type='file'; inp.accept='.json,application/json';
+    inp.onchange=async()=>{
+      const f=inp.files&&inp.files[0]; if(!f) return;
+      try{
+        const d=JSON.parse(await f.text());
+        if(!d||typeof d!=='object'||!d.days) throw new Error('不是有效的备份文件');
+        DB=d; DB.days=DB.days||{}; DB.wrong=DB.wrong||[]; DB.points=DB.points||{}; DB.ex=DB.ex||{};
+        await save(); render();
+      }catch(e){ alert('恢复失败：'+e.message); }
+    };
+    inp.click();
+  };
+  topstat();
+}
+
+/* ============ Quiz ============ */
+function startDay(d){
+  const core=BANK.filter(q=>q.d===d);
+  const coreIds=new Set(core.map(qid));
+  const now=Date.now();
+  const review=DB.wrong.filter(w=>(w.due||0)<=now&&!coreIds.has(w.id)).map(w=>byId(w.id)).filter(Boolean);
+  const revIds=new Set(review.map(qid));
+  // 温故抽查：从已学过的往日随机抽 2 题（含答对过的），对抗遗忘
+  const pool=BANK.filter(q=>q.d<d&&!revIds.has(qid(q)));
+  const recap=[];
+  while(recap.length<2&&pool.length){ recap.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+  session={qs:core.concat(review).concat(recap),idx:0,answers:[],mode:'day',day:d,reviewIds:revIds,recapIds:new Set(recap.map(qid))};
+  view={name:'quiz'}; render();
+}
+function startRetry(){
+  const qs=DB.wrong.map(w=>byId(w.id)).filter(Boolean);
+  if(!qs.length) return;
+  session={qs,idx:0,answers:[],mode:'retry'};
+  view={name:'quiz'}; render();
+}
+
+function renderQuiz(){
+  const {qs,idx,mode}=session;
+  if(idx>=qs.length) return renderResult();
+  const q=qs[idx];
+  const fname=mode==='retry'?'retry.ts':`day-${String(q.d).padStart(2,'0')}.ts`;
+  const isRev=session.reviewIds&&session.reviewIds.has(qid(q));
+  const isRecap=session.recapIds&&session.recapIds.has(qid(q));
+  const tag=`<span class="ptag"># ${q.p}</span>`
+    +(isRev?`<span class="ptag rev">↻ 错题复现 · Day ${q.d}</span>`:'')
+    +(isRecap?`<span class="ptag" style="color:var(--warn);border-color:rgba(224,175,104,.35);margin-left:6px">♻ 温故抽查 · Day ${q.d}</span>`:'');
+  let body=tag+`<div class="qtext">${q.q}</div>`;
+  if(q.c) body=tag+codeBlock(q.c)+`<div class="qtext">${q.q}</div>`;
+
+  if(q.t==='fill'){
+    body+=`<div class="fillrow"><input class="fill" id="fillin" placeholder="输入答案…" autocomplete="off" spellcheck="false"><button class="btn primary" id="submit">检查</button></div>`;
+  }else{
+    const opts=q.t==='tf'?['对','错']:q.o;
+    body+='<div class="opts">'+opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="key">${String.fromCharCode(65+i)}</span><span>${o}</span></button>`).join('')+'</div>';
+  }
+  body+='<div id="fb"></div><div class="navrow"><span class="hint">'+(mode==='retry'?'错题重练 · 答对将移出错题集':`Day ${q.d} · ${TOPICS[q.d]}`)+`</span><span class="hint">${idx+1} / ${qs.length}</span></div>`;
+
+  $('#app').innerHTML=`<div class="backrow"><button class="crumb" id="back">← 退出本轮</button></div>
+    <div class="qcard"><div class="qhead"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span><span class="fname">${fname}</span><span class="prog">tsc --watch</span></div>
+    <div class="qbody">${body}</div></div>`;
+  $('#back').onclick=()=>{view={name:'home'};render();};
+
+  if(q.t==='fill'){
+    const go=()=>answer(norm($('#fillin').value)?$('#fillin').value:null);
+    $('#submit').onclick=go;
+    $('#fillin').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+    $('#fillin').focus();
+  }else{
+    document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+  }
+}
+
+async function answer(ua){
+  if(ua===null) return;
+  const {qs,idx}=session; const q=qs[idx];
+  let ok, uaDisplay, caDisplay;
+  if(q.t==='fill'){
+    ok=q.a.some(a=>norm(a)===norm(ua));
+    uaDisplay=ua; caDisplay=q.a[0];
+  }else{
+    const opts=q.t==='tf'?['对','错']:q.o;
+    ok=ua===q.a; uaDisplay=opts[ua]; caDisplay=opts[q.a];
+    document.querySelectorAll('.opt').forEach((b,i)=>{
+      b.classList.add('lock'); b.disabled=true;
+      if(i===q.a)b.classList.add('right');
+      if(i===ua&&!ok)b.classList.add('wrongpick');
+    });
+  }
+  const id=qid(q);
+  const isRev=session.reviewIds&&session.reviewIds.has(id);
+  const isRecap=session.recapIds&&session.recapIds.has(id);
+  const excluded=isRev||isRecap||session.mode==='retry';
+  session.answers.push({q,ok,ua:uaDisplay,review:excluded});
+  if(ok){
+    if(isRev||session.mode==='retry'){ DB.wrong=DB.wrong.filter(w=>w.id!==id); await save(); }
+  }else{
+    const due=Date.now()+864e5;
+    const ex=DB.wrong.find(w=>w.id===id);
+    if(ex){ ex.ua=String(uaDisplay); ex.ts=Date.now(); ex.due=due; }
+    else DB.wrong.push({id,ua:String(uaDisplay),ts:Date.now(),due});
+    DB.points[q.p]=(DB.points[q.p]||0)+1;
+    await save();
+  }
+  const fb=$('#fb');
+  fb.innerHTML=ok
+    ?`<div class="tsc ok">✓ compiled successfully — 0 errors<div class="exp">${q.e}</div></div>`
+    :`<div class="tsc bad"><span class="ehead">error TS0001: 答案不匹配</span><br><span class="hint">期望：</span><span class="ans">${esc(caDisplay)}</span> <span class="hint">· 实际：</span>${esc(String(uaDisplay))}<div class="exp"><b style="color:var(--warn)"># ${q.p}</b> — ${q.e}</div></div>`;
+  fb.innerHTML+=`<div class="navrow"><span></span><button class="btn primary" id="next">${idx+1>=qs.length?'查看结果':'下一题 →'}</button></div>`;
+  if(q.t==='fill'){ $('#fillin').disabled=true; $('#submit').disabled=true; }
+  $('#next').onclick=()=>{session.idx++;renderQuiz();};
+  $('#next').focus();
+}
+
+async function renderResult(){
+  const {qs,answers,mode,day}=session;
+  const core=answers.filter(a=>!a.review), rev=answers.filter(a=>a.review);
+  const score=core.length?core.filter(a=>a.ok).length:answers.filter(a=>a.ok).length;
+  const total=core.length||qs.length;
+  if(mode==='day'&&core.length){ DB.days[day]={s:score,t:core.length,ts:Date.now()}; await save(); }
+  const wrongN=answers.filter(a=>!a.ok).length;
+  const perfect=wrongN===0;
+  const verdict=perfect
+    ?'✓ 0 errors · 全部通过'
+    :`⚠ ${wrongN} 处未通过 · 已录入错题集，1 天后自动混入日测`;
+  const revLine=rev.length?`<div class="hint" style="margin-bottom:14px">↻♻ 复现/温故：${rev.filter(a=>a.ok).length}/${rev.length} 答对</div>`:'';
+  let list='';
+  answers.filter(a=>!a.ok).forEach(a=>{
+    list+=`<div class="witem" style="text-align:left"><div class="wq">${a.q.q}</div><div class="meta"><span class="lbl">知识点：</span><span style="color:var(--warn)">${a.q.p}</span></div><div class="we">${a.q.e}</div></div>`;
+  });
+  $('#app').innerHTML=`<div class="result">
+      <div class="big">${score}<span class="sep"> / </span>${total}</div>
+      <div class="verdict ${perfect?'ok':'bad'}">${verdict}</div>${revLine}
+      <div class="toolbar" style="justify-content:center">
+        <button class="btn primary" id="home">返回日历</button>
+        ${!perfect&&mode==='day'?`<button class="btn" id="redo">重做本日</button>`:''}
+        ${DB.wrong.length?`<button class="btn warn" id="gw">错题集（${DB.wrong.length}）</button>`:''}
+      </div></div>${list}`;
+  $('#home').onclick=()=>{view={name:'home'};render();};
+  const rd=$('#redo'); if(rd) rd.onclick=()=>startDay(day);
+  const gw=$('#gw'); if(gw) gw.onclick=()=>{view={name:'wrong'};render();};
+  topstat();
+}
+
+/* ============ 当日中心 Hub ============ */
+function renderHub(){
+  const d=view.day;
+  const exs=EX.filter(e=>e.d===d);
+  const exDone=exs.filter(e=>DB.ex[e.id]).length;
+  const rec=DB.days[d];
+  const now=Date.now();
+  const due=DB.wrong.filter(w=>(w.due||0)<=now).length;
+  $('#app').innerHTML=`<div class="backrow"><button class="crumb" id="back">← 返回日历</button></div>
+    <h2 class="vt"><span class="kw">Day</span> ${d} <span class="str">· ${TOPICS[d]}</span></h2>
+    <div class="matline">📖 <b>今日主教材：</b>${DAYMAT[d]||''}<br><span class="steps">① 读教材 → ② Playground 手抄+故意改错 → ③ 修题练习 → ④ 当日测验</span></div>
+    <div class="hubrow">
+      ${exs.length
+        ?`<button class="hubcard" id="goex"><span class="hn">③ 修题练习</span><span class="hs ${exDone===exs.length?'ok':''}">${exDone}/${exs.length} ${exDone===exs.length?'✓':''}</span><span class="hd">改代码 → 真实 tsc 检查 → 0 errors 过关</span></button>`
+        :`<div class="hubcard mute"><span class="hn">③ 修题练习</span><span class="hs">本日无练习</span><span class="hd">按当日任务执行（复盘 / 攻坚 / 实战）</span></div>`}
+      <button class="hubcard" id="goquiz"><span class="hn">④ 当日测验</span><span class="hs ${rec?(rec.s===rec.t?'ok':'warn'):''}">${rec?`${rec.s}/${rec.t}`:'未完成'}</span><span class="hd">${BANK.filter(q=>q.d===d).length} 题${d>1?' + 2 道温故抽查':''}${due?` + ${due} 道到期错题`:''}</span></button>
+    </div>`;
+  $('#back').onclick=()=>{view={name:'home'};render();};
+  const ge=$('#goex'); if(ge) ge.onclick=()=>{view={name:'ex',day:d,i:0};render();};
+  $('#goquiz').onclick=()=>startDay(d);
+  topstat();
+}
+
+/* ============ 修题练习 ============ */
+const EDITS={};
+function renderEx(){
+  const d=view.day, list=EX.filter(e=>e.d===d), i=view.i||0, ex=list[i];
+  if(!ex){ view={name:'hub',day:d}; return render(); }
+  const done=!!DB.ex[ex.id];
+  const cur=EDITS[ex.id]!==undefined?EDITS[ex.id]:ex.code;
+  $('#app').innerHTML=`<div class="backrow"><button class="crumb" id="back">← Day ${d} 中心</button></div>
+    <div class="qcard"><div class="qhead"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span><span class="fname">day-${String(d).padStart(2,'0')}.ex${i+1}.ts</span><span class="prog">${done?'✓ passed':'tsc --watch'}</span></div>
+    <div class="qbody">
+      <span class="ptag"># ${ex.title}${done?' ✓':''}</span>${ex.src==='tt'?`<span class="ptag" style="color:var(--kw);border-color:rgba(130,170,255,.35);margin-left:6px">Total TypeScript 官方题</span>`:''}
+      <div class="qtext">${ex.brief}</div>
+      ${ex.src==='tt'?`<div class="hint" style="margin-bottom:10px">题源：Total TypeScript Beginner's Tutorial · Matt Pocock · GPL-3.0（已适配为浏览器内检查）</div>`:''}
+      <textarea class="editor" id="ed" spellcheck="false">${esc(cur)}</textarea>
+      <div class="toolbar" style="margin:12px 0 0">
+        <button class="btn primary" id="check">检查（真实 tsc）</button>
+        <button class="btn" id="reset">重置代码</button>
+        <button class="btn" id="reveal">看解答</button>
+      </div>
+      <div id="exout"></div>
+      <div class="navrow">
+        <button class="btn" id="prev" ${i===0?'disabled':''}>← 上一题</button>
+        <span class="hint">${i+1} / ${list.length}</span>
+        <button class="btn" id="nx" ${i>=list.length-1?'disabled':''}>下一题 →</button>
+      </div>
+    </div></div>`;
+  const ed=$('#ed');
+  const fit=()=>{ ed.style.height='auto'; ed.style.height=Math.min(ed.scrollHeight+6,640)+'px'; };
+  fit();
+  ed.addEventListener('keydown',e=>{ if(e.key==='Tab'){ e.preventDefault(); const s=ed.selectionStart; ed.value=ed.value.slice(0,s)+'  '+ed.value.slice(ed.selectionEnd); ed.selectionStart=ed.selectionEnd=s+2; }});
+  ed.addEventListener('input',()=>{ EDITS[ex.id]=ed.value; fit(); });
+  $('#back').onclick=()=>{view={name:'hub',day:d};render();};
+  $('#prev').onclick=()=>{view.i=i-1;render();};
+  $('#nx').onclick=()=>{view.i=i+1;render();};
+  $('#reset').onclick=()=>{ delete EDITS[ex.id]; render(); };
+  $('#reveal').onclick=()=>{
+    $('#exout').innerHTML=`<div class="tsc ok" style="color:var(--text)"><b style="color:var(--warn)">参考解答</b>${codeBlock(ex.sol.split('\n'))}<div class="exp">${ex.exp}<br><span class="hint">建议：看懂后点「重置代码」，凭记忆自己敲一遍再检查。</span></div></div>`;
+  };
+  $('#check').onclick=async()=>{
+    const code=ed.value;
+    $('#exout').innerHTML=`<div class="tsc ok" style="color:var(--dim)">// 编译器加载中…</div>`;
+    const hasTS=await loadTS();
+    let diags=[], compilerNote='';
+    if(hasTS){ try{ diags=typeCheck(code); }catch(e){ compilerNote='（编译器异常，降级为模式检查）'; } }
+    else compilerNote='（编译器未能加载，降级为模式检查）';
+    const reqOk=(ex.req||[]).every(r=>r.test(code));
+    const banOk=!(ex.ban||[]).some(r=>r.test(code));
+    const pass=diags.length===0&&reqOk&&banOk;
+    const okHtml=`<div class="tsc ok">✓ compiled successfully — 0 errors ${compilerNote}<div class="exp">${ex.exp}</div></div>`;
+    if(pass){
+      if(!DB.ex[ex.id]){ DB.ex[ex.id]=true; await save(); render(); }
+      $('#exout').innerHTML=okHtml;
+    }else{
+      let lines='';
+      diags.slice(0,5).forEach(dg=>{ lines+=`<span class="ehead">main.ts:${dg.line}</span> — ${esc(dg.msg)}<br>`; });
+      if(!diags.length&&(!reqOk||!banOk)) lines=`<span class="ehead">检查未通过</span> — 编译通过了，但还没满足本题要求。<br>`;
+      $('#exout').innerHTML=`<div class="tsc bad">${lines}<div class="exp"><b style="color:var(--warn)">提示</b> — ${ex.hint}</div></div>`;
+    }
+  };
+}
+
+/* ============ 错题集 ============ */
+function renderWrong(){
+  let html=`<div class="backrow"><button class="crumb" id="back">← 返回日历</button></div>
+  <h2 class="vt"><span class="kw">const</span> 错题集 = <span class="str">[${DB.wrong.length}]</span></h2>`;
+  if(!DB.wrong.length){
+    html+='<div class="empty">// 空空如也 — 保持住 ✓</div>';
+  }else{
+    html+=`<div class="toolbar"><button class="btn primary" id="retry">重练全部错题（练对自动移出）</button><button class="btn warn" id="clear">清空错题集</button></div>`;
+    const groups={};
+    DB.wrong.forEach(w=>{const q=byId(w.id); if(!q)return; (groups[q.p]=groups[q.p]||[]).push({w,q});});
+    for(const [p,items] of Object.entries(groups)){
+      const isHot=(DB.points[p]||0)>=2;
+      html+=`<div class="group"><h3 class="${isHot?'hoth':''}"># ${p}（${items.length}）${isHot?` · 累计错 ${DB.points[p]} 次 — 建议回 Day ${pointDay(p)} 重学`:''}</h3>`;
+      items.forEach(({w,q})=>{
+        const ca=q.t==='fill'?q.a[0]:(q.t==='tf'?['对','错'][q.a]:q.o[q.a]);
+        html+=`<div class="witem"><div class="wq">${q.q}</div>
+          ${q.c?codeBlock(q.c):''}
+          <div class="meta"><span class="lbl">你的答案：</span><span class="ua">${esc(w.ua)}</span><br><span class="lbl">正确答案：</span><span class="ca">${esc(String(ca))}</span> <span class="dtag">· Day ${q.d}</span></div>
+          <div class="we">${q.e}</div></div>`;
+      });
+      html+='</div>';
+    }
+  }
+  $('#app').innerHTML=html;
+  $('#back').onclick=()=>{view={name:'home'};render();};
+  const r=$('#retry'); if(r) r.onclick=startRetry;
+  const c=$('#clear'); if(c) c.onclick=async()=>{ if(confirm('确定清空全部错题和知识点计数？')){ DB.wrong=[]; DB.points={}; await save(); render(); } };
+  topstat();
+}
+
+/* ============ Router ============ */
+function render(){
+  if(view.name==='home')renderHome();
+  else if(view.name==='hub')renderHub();
+  else if(view.name==='ex')renderEx();
+  else if(view.name==='quiz')renderQuiz();
+  else if(view.name==='wrong')renderWrong();
+}
+(async()=>{ await load(); render(); })();
+</script>
+</body>
+</html>

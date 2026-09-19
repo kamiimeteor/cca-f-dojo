@@ -18,3 +18,6 @@ supabase/.temp/
 
 # Codex 协作用的临时提示词文件，不入库
 .codex-*
+
+# Codex 用 playwright 做浏览器验证时落的页面快照，属于工具产物
+.playwright-cli/

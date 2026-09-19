@@ -8,13 +8,13 @@ const letter = (index) => String.fromCharCode(65 + index);
 
 const zhContext = {};
 vm.createContext(zhContext);
-vm.runInContext(`${read('assets/data/questions.js')}\nglobalThis.__QUESTIONS__ = QUESTIONS;`, zhContext);
+vm.runInContext(`${read('cca-f/assets/data/questions.js')}\nglobalThis.__QUESTIONS__ = QUESTIONS;`, zhContext);
 const questions = zhContext.__QUESTIONS__;
 
 const enContext = { CONTENT_EN: { questions: {} } };
 vm.createContext(enContext);
-vm.runInContext(read('assets/data/content.en.q1.js'), enContext);
-vm.runInContext(read('assets/data/content.en.q2.js'), enContext);
+vm.runInContext(read('cca-f/assets/data/content.en.q1.js'), enContext);
+vm.runInContext(read('cca-f/assets/data/content.en.q2.js'), enContext);
 const english = enContext.CONTENT_EN.questions;
 
 assert.equal(questions.length, 168, '中文题库应有 168 题');
@@ -51,8 +51,8 @@ function checkContent(items, language) {
 checkContent(questions, 'zh');
 checkContent(questions, 'en');
 
-const app = read('assets/app.js');
-const css = read('assets/styles.css');
+const app = read('cca-f/assets/app.js');
+const css = read('cca-f/assets/styles.css');
 
 assert.match(app, /function optionExplanations\(q\)/, 'app.js 应统一生成逐项解析数组');
 assert.match(app, /answerBreakdownHtml\(q, pickSet, ansSet, correct\)/, '判分流程应统一处理答对/答错的逐项解析');

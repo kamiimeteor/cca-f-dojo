@@ -8,7 +8,7 @@
 
 **中文** · [English](README.en.md)
 
-[![在线试用](https://img.shields.io/badge/▶_在线试用-signal0.net-c8553d?style=for-the-badge)](https://signal0.net)
+[![在线试用](https://img.shields.io/badge/▶_在线试用-signal0.net-c8553d?style=for-the-badge)](https://signal0.net/cca-f/)
 
 [![License](https://img.shields.io/badge/License-MIT-3f7d58)](LICENSE)
 ![题库](https://img.shields.io/badge/题库-168_题-6b5b95)
@@ -69,7 +69,7 @@ GitHub 上 CCA-F 相关仓库有 190+，但它们基本落在两类里，中间�
 
 ## 启动
 
-在线直接用：**<https://signal0.net>**
+在线直接用：**<https://signal0.net/cca-f/>**
 
 想本地跑（完全离线）：
 
@@ -78,7 +78,7 @@ git clone https://github.com/kamiimeteor/cca-f-dojo.git
 cd cca-f-dojo && python3 -m http.server 4321
 ```
 
-然后打开 <http://localhost:4321>。零依赖、不需要构建、不需要 Node。
+然后打开 <http://localhost:4321/cca-f/>。零依赖、不需要构建、不需要 Node。
 
 ## 功能
 
@@ -138,7 +138,7 @@ cd cca-f-dojo && python3 -m http.server 4321
 
 最大偏差在 D5（多 2.9 个百分点），D1 已补齐到 −0.8 个百分点。
 **这不影响模考的保真度** —— 模考按官方权重算每个 Domain 出几题
-（`assets/app.js` 的 `buildExam`），60 题固定切成 16/11/12/12/9，
+（`cca-f/assets/app.js` 的 `buildExam`），60 题固定切成 16/11/12/12/9，
 与题库里各 Domain 存了多少题无关。
 
 「Task Statement」是官方考点数（30），「小节」是笔记实际编号数（33）——
@@ -156,9 +156,9 @@ cd cca-f-dojo && python3 -m http.server 4321
 在数据库层强制而非依赖前端，未登录角色对数据表零权限。
 不想让数据离开设备就别登录 —— 全部功能不登录都能用，这也是默认状态。
 登录后可在「管理进度 → 删除账号」永久删除账号及云端进度，即时生效、不可恢复。
-详见[隐私政策](https://signal0.net/#/privacy)与 `supabase/schema.sql`。
+详见[隐私政策](https://signal0.net/cca-f/#/privacy)与 `supabase/schema.sql`。
 
-> ⚠️ **Fork 之后请先改 `assets/data/config.js`。** 仓库里那两个值指向的是本站的 Supabase 项目，
+> ⚠️ **Fork 之后请先改 `cca-f/assets/data/config.js`。** 仓库里那两个值指向的是本站的 Supabase 项目，
 > 直接部署的话，你的用户会把邮箱和进度注册进**本站的**数据库而不是你的。
 > 换成你自己项目的值，或者两个都留空 —— 留空时整块云同步自动隐藏，站点退化为纯本地模式。
 
@@ -177,26 +177,30 @@ cd cca-f-dojo && python3 -m http.server 4321
 ## 文件结构
 
 ```
-index.html                    页面骨架
-assets/styles.css             样式（含深色模式）
-assets/app.js                 路由 + 刷题/考试/错题/进阶训练引擎 + 存档
-assets/data/notes.js          笔记结构化数据（EXAM_META / NOTES / SECTION_INDEX）
-assets/data/questions.js      题库（SCENARIOS / QUESTIONS）
-assets/data/i18n.js           界面文案 zh/en
-assets/data/content.en.js     英文内容层：domains + 37 节笔记
-assets/data/content.en.q1.js  英文题库 D1+D2
-assets/data/content.en.q2.js  英文题库 D3+D4+D5
-assets/data/privacy.js        隐私政策正文 zh/en
-assets/data/config.js         Supabase 连接配置（publishable key，可公开）
-assets/sync.js                云同步：懒加载 SDK + 登录 + 合并推拉
-supabase/schema.sql           建表 + RLS 策略 + 显式授权
-supabase/functions/           Edge Function（账号删除）
-source/                       参考底本（已 gitignore，不随仓库分发）
+vercel.json                         尾斜杠规范化 + /assets/* 过渡期兼容改写，保护跨越部署的旧标签页
+index.html                          signal0 入口首页
+cca-f/index.html                    CCA-F 应用页面骨架
+ts/                                 TypeScript 21 天测验（index.html）
+react/                              React 21 天测验（index.html）
+cca-f/assets/styles.css             样式（含深色模式）
+cca-f/assets/app.js                 路由 + 刷题/考试/错题/进阶训练引擎 + 存档
+cca-f/assets/data/notes.js          笔记结构化数据（EXAM_META / NOTES / SECTION_INDEX）
+cca-f/assets/data/questions.js      题库（SCENARIOS / QUESTIONS）
+cca-f/assets/data/i18n.js           界面文案 zh/en
+cca-f/assets/data/content.en.js     英文内容层：domains + 37 节笔记
+cca-f/assets/data/content.en.q1.js  英文题库 D1+D2
+cca-f/assets/data/content.en.q2.js  英文题库 D3+D4+D5
+cca-f/assets/data/privacy.js        隐私政策正文 zh/en
+cca-f/assets/data/config.js         Supabase 连接配置（publishable key，可公开）
+cca-f/assets/sync.js                云同步：懒加载 SDK + 登录 + 合并推拉
+supabase/schema.sql                 建表 + RLS 策略 + 显式授权
+supabase/functions/                 Edge Function（账号删除）
+source/                             参考底本（已 gitignore，不随仓库分发）
 ```
 
 ## 扩题
 
-在 `assets/data/questions.js` 的 `QUESTIONS` 数组里追加：
+在 `cca-f/assets/data/questions.js` 的 `QUESTIONS` 数组里追加：
 
 ```js
 { id:'q164', d:'d1', s:'1.1', sc:'cs', diff:2,
@@ -229,7 +233,7 @@ source/                       参考底本（已 gitignore，不随仓库分发�
 中英各一份，内容要能回答「这个选项是什么 / 什么场景下才对 / 为什么本题不成立」。
 写不出适用场景的（纯反模式）就说清它错在哪一类，**不要为了凑三段式编造官方说法**。
 
-一切以 `assets/data/notes.js` 的笔记原文为准。笔记里没有的机制、字段名、官方规则，
+一切以 `cca-f/assets/data/notes.js` 的笔记原文为准。笔记里没有的机制、字段名、官方规则，
 宁可不写 —— 准确性优先于完整性。
 
 ### 校验
@@ -258,7 +262,7 @@ for f in scripts/*.js; do node "$f" || break; done
   「校验」，它把 `{}`、`[]`、`"hello"` 一律变成空存档；少了 `looksLikeArchive()`
   这道闸，用户导入一个坏文件再点「替换」就会清空本地进度，且没有二次确认、不可撤销
 
-这些脚本从 `assets/app.js` 源码里抠出目标函数放进沙箱跑 —— app.js 是浏览器脚本、
+这些脚本从 `cca-f/assets/app.js` 源码里抠出目标函数放进沙箱跑 —— app.js 是浏览器脚本、
 没有模块导出，直接 `require` 会因为访问 DOM 而崩。所以**改了被测函数的名字或签名，
 测试会直接报「找不到」而不是静默通过**。
 

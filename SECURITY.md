@@ -16,7 +16,7 @@
 
 邮件里能带上这些的话会快很多：
 
-- 受影响的地址（`https://signal0.net/#/...`）或文件路径
+- 受影响的地址（`https://signal0.net/cca-f/#/...`）或文件路径
 - 复现步骤，越具体越好
 - 你认为的影响面 —— 尤其是**是否涉及其他用户的数据**
 
@@ -39,7 +39,7 @@
 
 ### 这些是有意为之，不是漏洞
 
-**`assets/data/config.js` 里的那把 key 是公开的，这是设计如此。**
+**`cca-f/assets/data/config.js` 里的那把 key 是公开的，这是设计如此。**
 它是 Supabase 的 publishable key（旧称 anon key），本来就会出现在每一个浏览器的网络请求里，
 官方明确说明可安全用于前端。安全边界不在这把 key，而在数据库：
 
@@ -69,7 +69,7 @@ in the commit or release note.
 
 Including these makes it much faster:
 
-- The affected URL (`https://signal0.net/#/...`) or file path
+- The affected URL (`https://signal0.net/cca-f/#/...`) or file path
 - Steps to reproduce, as concrete as you can make them
 - Your view of the impact — above all, **whether any other user's data is involved**
 
@@ -95,7 +95,7 @@ Including these makes it much faster:
 
 ### Working as intended, not a vulnerability
 
-**The key in `assets/data/config.js` is public by design.**
+**The key in `cca-f/assets/data/config.js` is public by design.**
 It is a Supabase publishable key (formerly the anon key). It appears in every browser's network
 requests by definition, and Supabase documents it as safe for front-end use. The security boundary
 is not that key — it is the database:

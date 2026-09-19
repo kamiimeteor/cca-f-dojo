@@ -8,7 +8,7 @@ Practice · missed-question queue · official-spec mock exam · jump straight to
 
 [中文](README.md) · **English**
 
-[![Try it live](https://img.shields.io/badge/▶_Try_it_live-signal0.net-c8553d?style=for-the-badge)](https://signal0.net)
+[![Try it live](https://img.shields.io/badge/▶_Try_it_live-signal0.net-c8553d?style=for-the-badge)](https://signal0.net/cca-f/)
 
 [![License](https://img.shields.io/badge/License-MIT-3f7d58)](LICENSE)
 ![Questions](https://img.shields.io/badge/questions-168-6b5b95)
@@ -74,7 +74,7 @@ only — the real exam uses equated scaled scoring; this app approximates it lin
 
 ## Run it
 
-Online: **<https://signal0.net>**
+Online: **<https://signal0.net/cca-f/>**
 
 Locally (fully offline):
 
@@ -83,7 +83,7 @@ git clone https://github.com/kamiimeteor/cca-f-dojo.git
 cd cca-f-dojo && python3 -m http.server 4321
 ```
 
-Then open <http://localhost:4321>. No dependencies, no build step, no Node.
+Then open <http://localhost:4321/cca-f/>. No dependencies, no build step, no Node.
 
 ## Features
 
@@ -140,7 +140,7 @@ sits within 3 percentage points of its official weight:
 
 The largest gap is now D5 (2.9 points over); D1 has been topped up to 0.8 points under.
 **This does not affect mock-exam fidelity** — the mock exam derives per-domain item counts from
-the official weights (`buildExam` in `assets/app.js`), splitting 60 items into a fixed
+the official weights (`buildExam` in `cca-f/assets/app.js`), splitting 60 items into a fixed
 16/11/12/12/9 regardless of how many items each domain holds in the bank.
 
 "Task statements" is the official count (30); "note sections" is how the notes are numbered (33) —
@@ -163,9 +163,9 @@ unauthenticated role has zero privileges on the table.
 Would you rather nothing left your device? Then do not sign in — every feature works without an
 account, and that is the default. If you do sign in, "Manage progress → Delete my account" erases
 the account and all cloud progress immediately and irreversibly.
-See the [privacy policy](https://signal0.net/#/privacy) and `supabase/schema.sql`.
+See the [privacy policy](https://signal0.net/cca-f/#/privacy) and `supabase/schema.sql`.
 
-> ⚠️ **Change `assets/data/config.js` before you deploy a fork.** The two values in this repo point
+> ⚠️ **Change `cca-f/assets/data/config.js` before you deploy a fork.** The two values in this repo point
 > at *this* site's Supabase project, so a fork deployed as-is would register your users' emails and
 > progress into **our** database, not yours. Either swap in your own project's values, or leave both
 > empty — empty hides the whole cloud-sync block and leaves a purely local site.
@@ -186,26 +186,30 @@ are allow-listed, and every number is coerced, so a hand-edited JSON file cannot
 ## Layout
 
 ```
-index.html                    shell
-assets/styles.css             styles (incl. dark mode)
-assets/app.js                 router + practice/exam/missed/drill engines + persistence
-assets/data/notes.js          structured notes (EXAM_META / NOTES / SECTION_INDEX)
-assets/data/questions.js      question bank (SCENARIOS / QUESTIONS)
-assets/data/i18n.js           UI strings, zh/en
-assets/data/content.en.js     English content layer: domains + 37 note sections
-assets/data/content.en.q1.js  English questions, D1+D2
-assets/data/content.en.q2.js  English questions, D3+D4+D5
-assets/data/privacy.js        privacy policy text, zh/en
-assets/data/config.js         Supabase connection (publishable key — safe to publish)
-assets/sync.js                cloud sync: lazy-loaded SDK + sign-in + merge push/pull
-supabase/schema.sql           table + RLS policies + explicit grants
-supabase/functions/           Edge Function (account deletion)
-source/                       reference material (gitignored, not redistributed)
+vercel.json                         trailing slashes + temporary /assets/* compatibility rewrite for tabs kept open across deployment
+index.html                          signal0 hub
+cca-f/index.html                    CCA-F app shell
+ts/                                 TypeScript 21-day quiz (index.html)
+react/                              React 21-day quiz (index.html)
+cca-f/assets/styles.css             styles (incl. dark mode)
+cca-f/assets/app.js                 router + practice/exam/missed/drill engines + persistence
+cca-f/assets/data/notes.js          structured notes (EXAM_META / NOTES / SECTION_INDEX)
+cca-f/assets/data/questions.js      question bank (SCENARIOS / QUESTIONS)
+cca-f/assets/data/i18n.js           UI strings, zh/en
+cca-f/assets/data/content.en.js     English content layer: domains + 37 note sections
+cca-f/assets/data/content.en.q1.js  English questions, D1+D2
+cca-f/assets/data/content.en.q2.js  English questions, D3+D4+D5
+cca-f/assets/data/privacy.js        privacy policy text, zh/en
+cca-f/assets/data/config.js         Supabase connection (publishable key — safe to publish)
+cca-f/assets/sync.js                cloud sync: lazy-loaded SDK + sign-in + merge push/pull
+supabase/schema.sql                 table + RLS policies + explicit grants
+supabase/functions/                 Edge Function (account deletion)
+source/                             reference material (gitignored, not redistributed)
 ```
 
 ## Adding questions
 
-Append to the `QUESTIONS` array in `assets/data/questions.js`:
+Append to the `QUESTIONS` array in `cca-f/assets/data/questions.js`:
 
 ```js
 { id:'q164', d:'d1', s:'1.1', sc:'cs', diff:2,
