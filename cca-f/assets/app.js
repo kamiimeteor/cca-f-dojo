@@ -169,6 +169,13 @@ function save(pushOpts = {}) {
   return saved;
 }
 
+if (window.Signal0Chrome) {
+  window.Signal0Chrome.onThemeChange = theme => {
+    S.prefs.theme = theme;
+    save();
+  };
+}
+
 let saveErrorTimer = null;
 function showSaveError() {
   let el = $('#saveErrorToast');
@@ -1598,17 +1605,10 @@ function updateWrongPill() {
 }
 
 function applyTheme() {
-  document.documentElement.dataset.theme = S.prefs.theme;
-  $('#themeBtn').textContent = S.prefs.theme === 'dark' ? '☀' : '◐';
+  window.Signal0Chrome?.applyTheme?.();
 }
 
-$('#themeBtn').onclick = () => {
-  S.prefs.theme = S.prefs.theme === 'dark' ? 'light' : 'dark';
-  save(); applyTheme();
-};
-
-$('#langBtn').onclick = (e) => {
-  e.stopPropagation();
+$('#langBtn').onclick = () => {
   setLangMenu($('#langMenu').hidden);
 };
 
@@ -1628,7 +1628,9 @@ $$('.lang-opt').forEach((o) => {
 });
 
 // 点空白处或按 Esc 收起
-document.addEventListener('click', () => setLangMenu(false));
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.lang-wrap')) setLangMenu(false);
+});
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#langMenu').hidden) { setLangMenu(false); $('#langBtn').focus(); }
 });

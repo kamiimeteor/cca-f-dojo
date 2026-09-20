@@ -37,8 +37,15 @@ const CLOUD = {
 
 /** 本地登录标记：决定"这次打开要不要加载 SDK" */
 const CLOUD_FLAG = 'ccae.cloud';
-const hadSession = () => localStorage.getItem(CLOUD_FLAG) === '1';
-const setSessionFlag = (v) => v ? localStorage.setItem(CLOUD_FLAG, '1') : localStorage.removeItem(CLOUD_FLAG);
+const hadSession = () => {
+  try { return localStorage.getItem(CLOUD_FLAG) === '1'; } catch (_) { return false; }
+};
+const setSessionFlag = (v) => {
+  try {
+    if (v) localStorage.setItem(CLOUD_FLAG, '1');
+    else localStorage.removeItem(CLOUD_FLAG);
+  } catch (_) {}
+};
 
 /* supabase-js 自托管在仓库里，**不走 CDN**。原先用的是
  *   import('https://esm.sh/@supabase/supabase-js@2')

@@ -126,7 +126,8 @@ assert.match(css, /\.option-row\.correct \.option-status\s*\{[^}]*color:\s*var\(
 assert.match(css, /\.option-row\.picked-wrong \.option-status\s*\{[^}]*color:\s*var\(--ink\)/,
   '错选状态标签应使用高对比正文色');
 
-const cssBlock = (selector) => css.match(new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`))?.[1] || '';
+const tokens = fs.readFileSync('shared/theme.css', 'utf8');
+const cssBlock = (selector) => tokens.match(new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`))?.[1] || '';
 const cssValue = (block, name) => block.match(new RegExp(`--${name}:\\s*#([0-9a-f]{6})`, 'i'))?.[1];
 const rgb = (hex) => hex.match(/\w\w/g).map((part) => parseInt(part, 16));
 const luminance = (hex) => {

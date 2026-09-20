@@ -1,67 +1,17 @@
 /* ===== Claude Certified Architect 备考站 ===== */
 
 :root {
-  --coral: #c8553d;
-  --coral-soft: #e5836b;
-  --paper: #faf9f5;
-  --paper-2: #f2f0e9;
-  --paper-3: #e8e5da;
-  --ink: #23211e;
-  --ink-2: #57534c;
-  --ink-3: #8a847a;
-  --line: #ddd8ca;
-  --ok: #3f7d58;
-  --ok-bg: #e8f2ea;
-  --bad: #b3403a;
-  --bad-bg: #fbeceb;
-  --current: #6b5b95;
-  --warn: #9a6b12;
-  --warn-bg: #fdf3dd;
-  --info-bg: #eceef4;
-  --info: #4a5a7d;
-  --radius: 10px;
-  --shadow: 0 1px 2px rgba(35,33,30,.06), 0 6px 18px rgba(35,33,30,.05);
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Songti SC", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --accent: #c8553d;
+  --accent-soft: #e5836b;
+  --coral: var(--accent);
+  --coral-soft: var(--accent-soft);
 }
-
 [data-theme="dark"] {
-  --coral: #e08b73;
-  --coral-soft: #c8664a;
-  --paper: #1b1a18;
-  --paper-2: #232120;
-  --paper-3: #2c2a27;
-  --ink: #ece8e0;
-  --ink-2: #b3ada2;
-  --ink-3: #837d73;
-  --line: #3a3733;
-  --ok: #7ec49a;
-  --ok-bg: #1e2c24;
-  --bad: #e08b85;
-  --bad-bg: #2f201f;
-  --current: #b7a4e0;
-  --warn: #d9b45f;
-  --warn-bg: #2c2718;
-  --info-bg: #22252d;
-  --info: #9aa8c6;
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  --accent: #e08b73;
+  --accent-soft: #c8664a;
 }
-
-* { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
-
-body {
-  margin: 0;
-  font-family: var(--sans);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 15px;
-  line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
-}
 
 code, pre, kbd { font-family: var(--mono); }
 
@@ -73,23 +23,7 @@ code {
 }
 pre code { background: none; border: 0; padding: 0; }
 
-a { color: inherit; }
-
-/* ---------- topbar ---------- */
-.topbar {
-  position: sticky; top: 0; z-index: 50;
-  display: flex; align-items: center; gap: 20px;
-  padding: 0 22px; height: 60px;
-  background: color-mix(in srgb, var(--paper) 88%, transparent);
-  backdrop-filter: saturate(1.4) blur(12px);
-  border-bottom: 1px solid var(--line);
-}
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.brand-mark { color: var(--coral); font-size: 20px; line-height: 1; }
-.brand-text { display: flex; flex-direction: column; line-height: 1.25; }
-.brand-text b { font-family: var(--serif); font-size: 15px; letter-spacing: .01em; }
-.brand-text em { font-style: normal; font-size: 11px; color: var(--ink-3); letter-spacing: .06em; }
-
+/* ---------- 导航 ---------- */
 /* align-items 必须显式 center：默认的 stretch 会把导航链接拉满行高，
    而账号胶囊是固定 26px 拉不动，就会顶在上边和其他项错位。 */
 .nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
@@ -100,11 +34,6 @@ a { color: inherit; }
 }
 .nav a:hover { background: var(--paper-2); color: var(--ink); }
 .nav a.on { background: var(--ink); color: var(--paper); }
-
-/* 语言切换 / 进度入口 / 主题：非导航项，单独成组。
-   间距统一由 gap 管 —— 之前靠各控件自带 margin-left，主题按钮没有，
-   于是它和语言下拉贴成 0px。 */
-.topbar-tools { display: flex; align-items: center; flex: 0 0 auto; gap: 8px; }
 
 /* ---------- 窄屏顶栏：两行 ----------
    桌面端是「品牌 + 导航 + 工具」单行。窄屏放不下：五个中文导航项就要 460px，
@@ -160,14 +89,8 @@ a { color: inherit; }
 
 .pill {
   font-size: 11px; font-weight: 700; min-width: 18px; text-align: center;
-  padding: 1px 6px; border-radius: 20px; background: var(--coral); color: #fff;
+  padding: 1px 6px; border-radius: 20px; background: var(--accent-strong); color: var(--on-accent);
 }
-
-.icon-btn {
-  border: 1px solid var(--line); background: transparent; color: var(--ink-2);
-  width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 15px;
-}
-.icon-btn:hover { background: var(--paper-2); color: var(--ink); }
 
 /* ---------- layout ---------- */
 main { max-width: 1060px; margin: 0 auto; padding: 30px 22px 70px; }
@@ -200,7 +123,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
   cursor: pointer; text-decoration: none; transition: .13s;
 }
 .btn:hover { background: var(--paper-3); }
-.btn.primary { background: var(--coral); border-color: var(--coral); color: #fff; }
+.btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--on-accent); }
 .btn.primary:hover { filter: brightness(.94); }
 .btn.ghost { background: transparent; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
@@ -239,6 +162,8 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .dom-row .nm { font-size: 14px; }
 .dom-row .nm b { display: block; }
 .dom-row .nm span { color: var(--ink-3); font-size: 12px; }
+/* Domain badges must not inherit muted description ink. */
+.dom-row .nm .tag { color: #fff; }
 .dom-row .pc { text-align: right; font-variant-numeric: tabular-nums; font-size: 13.5px; color: var(--ink-2); }
 @media (max-width: 560px) { .dom-row { grid-template-columns: 1fr 80px; } .dom-row .meter { display: none; } }
 
@@ -268,13 +193,14 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
   text-decoration: none; font-size: 13.5px; color: var(--ink-2); line-height: 1.45;
 }
 .toc a:hover { background: var(--paper-2); color: var(--ink); }
-.toc a.on { background: var(--coral); color: #fff; }
+.toc a.on { background: var(--accent-strong); color: var(--on-accent); }
 .toc a .num { font-family: var(--mono); font-size: 11.5px; opacity: .75; flex: none; }
+.toc a.on .num { opacity: 1; }
 .toc a.done::after { content: "✓"; margin-left: auto; color: var(--ok); font-size: 12px; }
-.toc a.on.done::after { color: #fff; }
+.toc a.on.done::after { color: var(--on-accent); }
 /* 官方新增的加料小节标记 */
-.toc a .ext { color: var(--coral); font-size: 11px; margin-left: 3px; vertical-align: super; }
-.toc a.on .ext { color: #fff; }
+.toc a .ext { color: var(--accent-strong); font-size: 11px; margin-left: 3px; vertical-align: super; }
+.toc a.on .ext { color: var(--on-accent); }
 
 /* 窄屏目录堆到正文上方。必须放在上面这些 .toc 规则之后 ——
    同优先级下后写的赢，写在前面会被基础规则覆盖掉。 */
@@ -341,13 +267,14 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 
 .tag {
   display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
-  background: var(--coral); color: #fff; letter-spacing: .03em; vertical-align: middle;
+  background: var(--accent-strong); color: var(--on-accent); letter-spacing: .03em; vertical-align: middle;
 }
 .tag.q { background: var(--paper-3); color: var(--ink-2); }
+.tag.d1, .tag.d2, .tag.d3, .tag.d4, .tag.d5 { color: #fff; }
 .tag.d1 { background: #6b5b95; } .tag.d2 { background: #2e7d7b; }
 .tag.d3 { background: #a1662f; } .tag.d4 { background: #4a6fa5; }
-.tag.d5 { background: #7a5c7d; } .tag.ref { background: var(--ink-3); }
-.tag.multi { background: var(--warn); color: #fff; }
+.tag.d5 { background: #7a5c7d; } .tag.ref { background: var(--ink-3); color: var(--paper); }
+.tag.multi { background: var(--warn); color: var(--paper); }
 /* 英文缺失、回退中文的提示 */
 .tag.fb { background: transparent; color: var(--ink-3); border: 1px dashed var(--line); }
 
@@ -396,7 +323,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 /* 先答后看：分步标记与输入控件 */
 .stage-tag {
   display: inline-block; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--coral); border: 1px solid var(--coral); border-radius: 20px;
+  color: var(--accent-strong); border: 1px solid var(--accent-strong); border-radius: 20px;
   padding: 3px 11px; margin-bottom: 14px;
 }
 .fld-l { display: block; font-size: 13px; color: var(--ink-3); margin-bottom: 5px; }
@@ -412,7 +339,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
   font-family: var(--mono); font-size: 20px; letter-spacing: .34em;
   text-align: center; padding: 12px; max-width: 260px;
 }
-.code-input::placeholder { letter-spacing: .34em; color: var(--ink-3); opacity: .45; }
+.code-input::placeholder { letter-spacing: .34em; color: var(--ink-3); opacity: 1; }
 
 /* ---------- quiz ---------- */
 .quiz { max-width: 760px; }
@@ -433,11 +360,11 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
   display: grid; place-items: center; font-size: 12.5px; font-weight: 700; margin-top: 1px;
 }
 .opt.sel { border-color: var(--current); box-shadow: inset 0 0 0 1px var(--current); }
-.opt.sel .ltr { background: var(--current); color: #fff; }
+.opt.sel .ltr { background: var(--current); color: var(--paper); }
 .opt.right { border-color: var(--ok); background: var(--ok-bg); }
-.opt.right .ltr { background: var(--ok); color: #fff; }
+.opt.right .ltr { background: var(--ok); color: var(--paper); }
 .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
-.opt.wrong .ltr { background: var(--bad); color: #fff; }
+.opt.wrong .ltr { background: var(--bad); color: var(--paper); }
 .opt:disabled { cursor: default; }
 .opt .why { display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 5px; }
 
@@ -478,7 +405,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
 .option-row.picked-wrong .option-letter { color: var(--paper); background: var(--bad); }
 .option-status {
   display: inline-block; margin: 4px 0 0 29px; padding: 1px 6px; border-radius: 999px;
-  color: var(--ink-3); background: var(--paper-3); font-size: 10.5px; font-weight: 700;
+  color: var(--ink-2); background: var(--paper-3); font-size: 10.5px; font-weight: 700;
 }
 .option-row.correct .option-status {
   color: var(--ink); border: 1px solid var(--ok); background: color-mix(in srgb, var(--ok) 13%, var(--paper));

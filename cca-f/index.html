@@ -2,6 +2,8 @@
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
+<script src="../shared/chrome.js" data-app="cca-f"></script>
+<link rel="stylesheet" href="../shared/theme.css">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Certified Architect — 备考站</title>
 <link rel="stylesheet" href="assets/styles.css?v=47">
@@ -9,8 +11,6 @@
 </head>
 <body>
 
-<!-- TEMP: 第 2 步抽共享顶栏时替换掉 -->
-<a href="../index.html" style="display:block;width:max-content;padding:4px 12px;font:12px/20px system-ui,sans-serif;color:inherit;text-decoration:underline;">← signal0</a>
 
 <header class="topbar">
   <a class="brand" href="#/">
@@ -36,6 +36,15 @@
       <span class="cloud-ava" id="cloudAva"></span>
       <span class="cloud-mark" id="cloudMark"></span>
     </button>
+    <div class="appswitch-wrap">
+      <button class="appswitch-btn" id="appswitchBtn" type="button" aria-expanded="false" aria-controls="appswitchMenu">应用<span class="chev" aria-hidden="true">▾</span></button>
+      <div class="appswitch-menu" id="appswitchMenu" hidden>
+        <a class="appswitch-opt" href="/">signal0 首页</a>
+        <a class="appswitch-opt on" href="/cca-f/" aria-current="page">CCA-F 备考站</a>
+        <a class="appswitch-opt" href="/ts/">TypeScript 测验</a>
+        <a class="appswitch-opt" href="/react/">React 测验</a>
+      </div>
+    </div>
     <div class="lang-wrap">
       <button class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false">
         <span id="langCur">中文</span><span class="chev" aria-hidden="true">▾</span>

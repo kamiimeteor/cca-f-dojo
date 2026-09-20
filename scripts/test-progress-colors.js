@@ -3,15 +3,16 @@ const assert = require('assert');
 const fs = require('fs');
 
 const css = fs.readFileSync('cca-f/assets/styles.css', 'utf8');
-const root = css.match(/:root\s*{([\s\S]*?)\n}/)?.[1] || '';
-const dark = css.match(/\[data-theme="dark"\]\s*{([\s\S]*?)\n}/)?.[1] || '';
+const tokens = fs.readFileSync('shared/theme.css', 'utf8');
+const root = tokens.match(/:root\s*{([\s\S]*?)\n}/)?.[1] || '';
+const dark = tokens.match(/\[data-theme="dark"\]\s*{([\s\S]*?)\n}/)?.[1] || '';
 const value = (block, name) => block.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1].trim();
 
 for (const [theme, block] of [['light', root], ['dark', dark]]) {
   const current = value(block, 'current');
   assert(current, `${theme} 主题缺少 --current 颜色`);
   assert.notEqual(current, value(block, 'bad'), `${theme} 主题的当前题不能与错题同色`);
-  assert.notEqual(current, value(block, 'coral'), `${theme} 主题的当前题不能继续使用红色强调色`);
+  assert.notEqual(current, value(block, 'accent'), `${theme} 主题的当前题不能继续使用红色强调色`);
 }
 
 assert.match(

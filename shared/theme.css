@@ -1,0 +1,132 @@
+:root {
+  --accent: #c8553d; /* Decoration: borders, icons and focus rings. */
+  --accent-strong: #ad3f28; /* Text and filled controls. */
+  --on-accent: #ffffff;
+  --code-kw: #2457a7;
+  --code-str: #356329;
+  --code-type: #0f6b63;
+  --code-com: #62665e;
+  --code-bg: #f2f0e9;
+  --accent-soft: #e5836b;
+  --paper: #faf9f5;
+  --paper-2: #f2f0e9;
+  --paper-3: #e8e5da;
+  --ink: #23211e;
+  --ink-2: #57534c;
+  --ink-3: #6f695f;
+  --line: #ddd8ca;
+  --ok: #31684a;
+  --ok-bg: #e8f2ea;
+  --bad: #b3403a;
+  --bad-bg: #fbeceb;
+  --current: #6b5b95;
+  --warn: #865b0f;
+  --warn-bg: #fdf3dd;
+  --info-bg: #eceef4;
+  --info: #4a5a7d;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(35,33,30,.06), 0 6px 18px rgba(35,33,30,.05);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Songti SC", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+[data-theme="dark"] {
+  --accent: #e08b73;
+  --accent-strong: #e08b73;
+  --on-accent: #1b1a18;
+  --code-kw: #82AAFF;
+  --code-str: #9ECE6A;
+  --code-type: #73DACA;
+  --code-com: #a3a99b;
+  --code-bg: #302d28;
+  --accent-soft: #c8664a;
+  --paper: #1b1a18;
+  --paper-2: #232120;
+  --paper-3: #2c2a27;
+  --ink: #ece8e0;
+  --ink-2: #b3ada2;
+  --ink-3: #a39b8f;
+  --line: #3a3733;
+  --ok: #7ec49a;
+  --ok-bg: #1e2c24;
+  --bad: #e08b85;
+  --bad-bg: #2f201f;
+  --current: #b7a4e0;
+  --warn: #d9b45f;
+  --warn-bg: #2c2718;
+  --info-bg: #22252d;
+  --info: #9aa8c6;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 20px;
+  padding: 0 22px; height: 60px;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-mark { color: var(--accent); font-size: 20px; line-height: 1; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.brand-text b { font-family: var(--serif); font-size: 15px; letter-spacing: .01em; }
+.brand-text em { font-style: normal; font-size: 11px; color: var(--ink-3); letter-spacing: .06em; }
+
+/* 语言切换 / 进度入口 / 主题：非导航项，单独成组。
+   间距统一由 gap 管 —— 之前靠各控件自带 margin-left，主题按钮没有，
+   于是它和语言下拉贴成 0px。 */
+
+.topbar-tools { display: flex; align-items: center; flex: 0 0 auto; gap: 8px; }
+.icon-btn {
+  border: 1px solid var(--line); background: transparent; color: var(--ink-2);
+  width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 15px;
+}
+.icon-btn:hover { background: var(--paper-2); color: var(--ink); }
+
+.appswitch-wrap { position: relative; }
+.appswitch-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 11px; border-radius: 20px;
+  border: 1px solid var(--line); background: transparent; color: var(--ink-2);
+  font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
+}
+.appswitch-btn:hover { background: var(--paper-2); color: var(--ink); border-color: var(--accent); }
+.appswitch-btn .chev { font-size: 10px; opacity: .6; transition: transform .15s; }
+.appswitch-btn[aria-expanded="true"] { background: var(--paper-2); color: var(--ink); border-color: var(--accent); }
+.appswitch-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+.appswitch-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 60;
+  min-width: 132px; padding: 4px;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: var(--shadow);
+}
+.appswitch-menu[hidden] { display: none; }
+.appswitch-opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; padding: 7px 10px; border-radius: 7px;
+  color: var(--ink-2); text-decoration: none;
+  font-size: 13.5px; white-space: nowrap;
+}
+.appswitch-opt:hover { background: var(--paper-2); color: var(--ink); }
+.appswitch-opt.on { color: var(--ink); font-weight: 600; }
+.appswitch-opt.on::after { content: "✓"; color: var(--accent); font-size: 12px; }
