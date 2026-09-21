@@ -416,9 +416,20 @@ function readAuthCallback() {
   };
 }
 
-/** hash 里装的是回调残留（而不是 `#/route`）时为真 */
-const hashIsAuthJunk = () =>
-  AUTH_PARAMS.some((k) => new RegExp(`(^#|&)${k}=`).test(location.hash));
+/** hash 里装的是回调残留（而不是 `#/route`）时为真。
+ *
+ *  判定必须和上面的 readAuthCallback() 用同一套解析 —— 两边都走
+ *  URLSearchParams。之前这里用的是裸正则 `(^#|&)${k}=`，不解码百分号编码的
+ *  参数名，于是 `#%65rror=expired` 会被 readAuthCallback 识别成错误、弹出
+ *  「链接失效」提示，却清不掉 hash；残留的 hash 被路由当成未知路由，底下渲染
+ *  「页面不存在」，刷新还会重复触发。回归用例见 scripts/test-auth-hash.js。
+ *
+ *  `#/` 开头的一律当路由放过 —— 那是用户正在看的页面，误清会把人踢走。 */
+const hashIsAuthJunk = () => {
+  if (location.hash.startsWith('#/')) return false;
+  const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+  return AUTH_PARAMS.some((k) => h.has(k));
+};
 
 /** 把回调残留从地址栏抹掉：query 里逐个删，hash 是垃圾就整个丢掉 */
 function stripAuthParams() {
