@@ -49,6 +49,8 @@
       try { window.Signal0Chrome.onThemeChange?.(theme); } catch (_) {}
       applyTheme();
     };
+    const homeBack = document.querySelector('.home-back');
+    if (homeBack && location.protocol === 'file:') homeBack.href = new URL('index.html', siteRoot).href;
     const button = document.getElementById('appswitchBtn');
     const menu = document.getElementById('appswitchMenu');
     if (!button || !menu) return;

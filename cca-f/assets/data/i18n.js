@@ -13,6 +13,7 @@ const I18N = {
     foot_privacy: '默认不登录：数据只存在本机浏览器 localStorage，不上传。登录后才会同步到云端。',
     foot_export: '导出进度', foot_import: '导入进度', foot_reset: '清空进度',
     theme_toggle: '切换深浅色',
+    appswitch_label: '切换应用', home_back: '返回 signal0 首页',
 
     /* 总览 */
     home_h1: '备考总览',
@@ -293,6 +294,7 @@ const I18N = {
     foot_privacy: 'Signed out by default: data stays in your browser localStorage, nothing uploaded. Sign in to sync.',
     foot_export: 'Export', foot_import: 'Import', foot_reset: 'Reset all',
     theme_toggle: 'Toggle light / dark',
+    appswitch_label: 'Apps', home_back: 'Back to signal0 home',
 
     home_h1: 'Overview',
     home_sub: '{0} · Official {1} items / {2} min · Pass mark {3}/{4}',

@@ -83,7 +83,9 @@ pre code { background: none; border: 0; padding: 0; }
      盒子却只有 41px 宽（英文工具区要 268px，把品牌挤没了）。
      给了下限之后，放不下时 .topbar 会让工具区整体换行，而不是叠上去。 */
   .brand { min-width: 96px; }
-  .topbar-tools { margin-left: auto; }
+  /* 英文工具区（Manage progress / English）比中文宽约 90px，360px 宽的机器上一行放不下。
+     宁可折到第二行右对齐，也不许把整页撑出横向滚动。 */
+  .topbar-tools { margin-left: auto; max-width: 100%; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 }
 .nav a.on .pill { background: var(--paper); color: var(--ink); }
 
@@ -287,7 +289,7 @@ h3 { font-size: 15px; margin: 22px 0 8px; }
   font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
 }
 .lang-btn:hover { background: var(--paper-2); color: var(--ink); border-color: var(--coral); }
-.lang-btn .chev { font-size: 10px; opacity: .6; transition: transform .15s; }
+.lang-btn .chev { opacity: .75; transition: transform .15s; }
 .lang-btn[aria-expanded="true"] { background: var(--paper-2); color: var(--ink); border-color: var(--coral); }
 .lang-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
 

@@ -147,7 +147,7 @@
   @media(max-width:480px){ .day{min-width:46px} .wrap{padding:14px 12px 60px} }
   /* Small status text needs slightly stronger ink on the light status surfaces. */
   [data-theme="light"] :is(.statline b,.day.perfect .sc,.tsc.ok,.tsc .ans,.witem .ca,.alertbox.due,.ptag.rev,.hubcard .hs.ok,.result .verdict.ok){color:color-mix(in srgb, var(--ok) 88%, var(--ink))}
-  .topbar{justify-content:space-between}
+  .topbar-tools{margin-left:auto}
   .topbar .brand{min-width:0}
   .topbar .brand-text b{font-size:14px}
   @media(max-width:480px){.topbar{gap:8px;padding:0 12px}.brand-text em{letter-spacing:0}.topbar-tools{gap:6px}}
@@ -156,13 +156,14 @@
 <body>
 <!-- B 轮：共享顶栏替换 TEMP 返回链接；原测验 header 保留为页面内容。 -->
 <header class="topbar">
+  <a class="home-back" id="homeBack" href="/" aria-label="返回 signal0 首页" title="返回 signal0 首页"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7.5 3.5 3 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
   <a class="brand" href="../index.html">
     <span class="brand-mark">◆</span>
     <span class="brand-text"><b>TypeScript 测验</b><em>21 天 · 每日测试</em></span>
   </a>
   <div class="topbar-tools">
     <div class="appswitch-wrap">
-      <button class="appswitch-btn" id="appswitchBtn" type="button" aria-expanded="false" aria-controls="appswitchMenu">应用<span class="chev" aria-hidden="true">▾</span></button>
+      <button class="appswitch-btn" id="appswitchBtn" type="button" aria-expanded="false" aria-controls="appswitchMenu"><span id="appswitchLabel">切换应用</span><svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="appswitch-menu" id="appswitchMenu" hidden>
         <a class="appswitch-opt" href="/">signal0 首页</a>
         <a class="appswitch-opt" href="/cca-f/">CCA-F 备考站</a>

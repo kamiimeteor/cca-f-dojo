@@ -525,6 +525,9 @@ function paintChrome() {
   $('#feedbackLink').textContent = t('foot_feedback');
   if (typeof paintCloudBadge === 'function') paintCloudBadge();
   $('#themeBtn').title = t('theme_toggle');
+  $('#appswitchLabel').textContent = t('appswitch_label');
+  $('#homeBack').title = t('home_back');
+  $('#homeBack').setAttribute('aria-label', t('home_back'));
   // 按钮显示"当前"语言，下拉里勾出当前项
   $('#langCur').textContent = t('lang_name');
   $$('.lang-opt').forEach((o) => {
