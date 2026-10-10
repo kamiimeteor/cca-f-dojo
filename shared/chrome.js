@@ -19,7 +19,7 @@
   if (!theme) {
     // The hub retains CCA-F migration and also accepts the React archive.
     const keys = app === 'hub' ? ['ccae.v2', 'react-quiz-v1']
-      : app === 'cca-f' ? ['ccae.v2'] : app === 'react' ? ['react-quiz-v1'] : [];
+      : app === 'cca-f' ? ['ccae.v2'] : app === 'cca-p' ? ['ccap.v1'] : app === 'react' ? ['react-quiz-v1'] : [];
     for (const key of keys) {
       theme = readTheme(key);
       if (theme) break;

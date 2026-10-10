@@ -36,7 +36,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>signal0 · 开发者学习与测验</title>
-<meta name="description" content="signal0 学习入口：Claude Certified Architect Foundations 备考。选择一个主题，开始今天的练习。">
+<meta name="description" content="signal0 学习入口：Claude Certified Architect Foundations / Professional 备考。选择一个主题，开始今天的练习。">
 <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;text y='26' font-size='26' fill='%23c8553d'&gt;◆&lt;/text&gt;&lt;/svg&gt;">
 <style>
 :root { --coral: var(--accent); }
@@ -44,7 +44,7 @@ main { max-width: 1160px; margin: auto; padding: 76px 32px 80px; }
 .eyebrow { margin: 0 0 12px; color: var(--ink-2); font: 12px var(--mono); letter-spacing: .12em; }
 h1 { margin: 0; font: 500 clamp(32px, 5vw, 48px)/1.3 var(--serif); }
 .intro { margin: 18px 0 40px; color: var(--ink-2); }
-.apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.apps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; background: var(--paper-2); box-shadow: var(--shadow); }
 .card:hover { border-color: var(--coral); }
 .number { color: var(--ink-3); font: 12px var(--mono); }
@@ -82,15 +82,21 @@ footer { max-width: 1096px; margin: 0 auto; padding: 22px 0; border-top: 1px sol
       <p class="description">168 道情景题 · 官方规格模拟考 · 中英双语</p>
       <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">进入备考站 →</span></span>
     </a>
+    <a class="card" href="/cca-p/">
+      <span class="number">02 / CCA-P</span>
+      <h2>Claude Certified Architect · Professional</h2>
+      <p class="description">190 道情景题 · 官方规格模拟考 · 中英双语</p>
+      <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">进入备考站 →</span></span>
+    </a>
     <!-- 暂时隐藏：/ts/ 与 /react/ 代码保留、URL 仍可直达，只是不在首页露出入口。恢复时取消注释即可。
     <a class="card" href="/ts/">
-      <span class="number">02 / TYPESCRIPT</span>
+      <span class="number">03 / TYPESCRIPT</span>
       <h2>TypeScript · 21 天每日测试</h2>
       <p class="description">每天一组题，练习 TypeScript 类型与语法。</p>
       <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">开始每日测试 →</span></span>
     </a>
     <a class="card" href="/react/">
-      <span class="number">03 / REACT</span>
+      <span class="number">04 / REACT</span>
       <h2>React · 21 天每日测试</h2>
       <p class="description">每天一组题，练习 React 组件与交互。</p>
       <span class="card-bottom"><span class="status">可开始练习</span><span class="enter">开始每日测试 →</span></span>
@@ -100,7 +106,7 @@ footer { max-width: 1096px; margin: 0 auto; padding: 22px 0; border-top: 1px sol
 </main>
 <footer>signal0 · 开发者学习与测验</footer>
 <script>
-// 直接打开文件时，入口仍指向同目录下的三个应用。
+// 直接打开文件时，入口仍指向同目录下的各个应用。
 if (location.protocol === 'file:') {
   document.querySelector('.brand').href = 'index.html';
   document.querySelectorAll('.card').forEach(link => {
