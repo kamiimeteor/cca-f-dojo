@@ -160,3 +160,7 @@ select
 --   rls_enabled  = true
 --   anon_grants  = 0
 --   auth_privs   = 'DELETE, INSERT, SELECT, UPDATE'   ← 出现 TRUNCATE 就是权限没收干净
+
+-- ─────────────────────────────────────────────
+-- CCA-P（/cca-p/）的进度表 progress_ccap 见 migrations/2026-10-10-progress-ccap.sql，
+-- 结构与本表相同。全新项目请在本文件之后接着执行那一份。

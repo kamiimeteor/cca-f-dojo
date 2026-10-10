@@ -2105,6 +2105,9 @@ trackTopbarHeight();
 updateWrongPill();
 router();
 
-// sync.js 在本文件之后加载，延一拍再初始化。
+// sync.js 在本文件之后加载。不能用 setTimeout(0) 等它：sync.js 还没下载完时，
+// 解析器会让出事件循环，定时器先跑，cloudInit 尚未定义就被静默跳过 ——
+// 已登录的用户回访时会话不恢复、同步不启动，界面却没有任何异常。
+// DOMContentLoaded 保证在所有同步脚本执行完之后才触发。
 // cloudInit() 内部会判断：没登录过就直接返回，一个网络请求都不发。
-setTimeout(() => { if (typeof cloudInit === 'function') cloudInit(); }, 0);
+document.addEventListener('DOMContentLoaded', () => { if (typeof cloudInit === 'function') cloudInit(); });

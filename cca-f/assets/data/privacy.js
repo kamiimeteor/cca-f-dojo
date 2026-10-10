@@ -5,7 +5,7 @@
  *
  * 事实性内容必须与实现保持一致 —— 改了同步逻辑就要回来改这里。
  */
-const PRIVACY_UPDATED = '2026-07-30';
+const PRIVACY_UPDATED = '2026-10-10';
 const CONTACT_EMAIL = 'aicrazy@agent.qq.com';
 
 const PRIVACY = {
@@ -13,7 +13,7 @@ const PRIVACY = {
     { t: 'p', v: '**一句话版本：不登录就什么都不收集。** 登录只是为了把你的做题进度存起来，方便换设备继续 —— 除此之外没有任何用途。没有广告、没有分析脚本、没有第三方追踪、不卖数据。' },
 
     { t: 'h', v: '一、谁在处理你的数据' },
-    { t: 'p', v: `本站（cca-f-dojo，域名 signal0.net）由个人开发者运营，是一个免费开源的备考工具。就英国 GDPR 而言，运营者是**数据控制者**。` },
+    { t: 'p', v: `本站（cca-f-dojo，域名 signal0.net）由个人开发者运营，是一个免费开源的备考工具。同域名下的 CCA-P 备考站（signal0.net/cca-p/）由同一运营者提供，两站**共用同一套账号**。就英国 GDPR 而言，运营者是**数据控制者**。` },
     { t: 'p', v: `数据保护相关事宜联系：\`${CONTACT_EMAIL}\`` },
 
     { t: 'h', v: '二、不登录的情况' },
@@ -51,7 +51,7 @@ const PRIVACY = {
     { t: 'h', v: '六、保留多久' },
     { t: 'list', v: [
       '账号存续期间：进度持续保留，方便你随时继续',
-      '你删除账号：**立即永久删除**，包括所有云端进度，不可恢复',
+      '你删除账号：**立即永久删除**，包括 CCA-F 与 CCA-P 两站的全部云端进度，不可恢复',
       '长期不活跃：**连续 24 个月未登录**的账号及其数据将被清理',
       '本机数据：由你自己控制，可随时在「管理进度」里清空',
     ]},
@@ -78,7 +78,7 @@ const PRIVACY = {
     { t: 'list', v: [
       '`ccae.v2` —— 你的学习进度与界面偏好（不登录也有，纯本地）',
       '`ccae.auth` —— 登录后的会话令牌，用于保持登录状态',
-      '`ccae.cloud` —— 一个标记，仅表示「这台设备登录过」，用于决定要不要加载同步模块；不含任何个人数据',
+      '`ccae.cloud` —— 一个标记，仅表示「这台设备登录过」，用于决定要不要加载同步模块；不含任何个人数据。CCA-P 备考站使用同名会话与对应标记 `ccap.cloud`，因此在任一站登录，两站都会生效',
     ]},
     { t: 'p', v: '三者都属于**提供你主动要求的功能所必需**的存储，按 PECR 属于豁免情形，因此没有同意横幅。你随时可以在浏览器设置里清除。' },
 
@@ -94,7 +94,7 @@ const PRIVACY = {
     { t: 'p', v: '**The short version: if you do not sign in, nothing is collected.** Signing in exists only so your practice progress can follow you between devices. No ads, no analytics, no third-party tracking, nothing sold.' },
 
     { t: 'h', v: '1. Who processes your data' },
-    { t: 'p', v: 'This site (cca-f-dojo, at signal0.net) is a free, open-source study tool run by an individual developer. For the purposes of the UK GDPR, the operator is the **data controller**.' },
+    { t: 'p', v: 'This site (cca-f-dojo, at signal0.net) is a free, open-source study tool run by an individual developer. The CCA-P study site on the same domain (signal0.net/cca-p/) is run by the same operator, and the two **share one account system**. For the purposes of the UK GDPR, the operator is the **data controller**.' },
     { t: 'p', v: `Data protection contact: \`${CONTACT_EMAIL}\`` },
 
     { t: 'h', v: '2. If you do not sign in' },
@@ -132,7 +132,7 @@ const PRIVACY = {
     { t: 'h', v: '6. How long it is kept' },
     { t: 'list', v: [
       'While your account exists: progress is retained so you can pick up where you left off',
-      'If you delete your account: **erased immediately and permanently**, including all cloud progress',
+      'If you delete your account: **erased immediately and permanently**, including all cloud progress on both CCA-F and CCA-P',
       'Dormancy: accounts with **no sign-in for 24 consecutive months** are cleared along with their data',
       'Local data: entirely under your control — clear it any time from "Manage progress"',
     ]},
@@ -159,7 +159,7 @@ const PRIVACY = {
     { t: 'list', v: [
       '`ccae.v2` — your study progress and UI preferences (present even without an account; purely local)',
       '`ccae.auth` — your session token after signing in, so you stay signed in',
-      '`ccae.cloud` — a flag recording only that this device has signed in before, used to decide whether to load the sync module; it holds no personal data',
+      '`ccae.cloud` — a flag recording only that this device has signed in before, used to decide whether to load the sync module; it holds no personal data. The CCA-P site uses the same session plus its own flag `ccap.cloud`, so signing in on either site signs you in on both',
     ]},
     { t: 'p', v: 'All three are **strictly necessary to provide a service you explicitly requested**, which is exempt under PECR — hence no consent banner. You can clear them from your browser settings at any time.' },
 

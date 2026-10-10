@@ -36,14 +36,18 @@ const CLOUD = {
 };
 
 /** 本地登录标记：决定"这次打开要不要加载 SDK" */
-const CLOUD_FLAG = 'ccae.cloud';
+/* 与 CCA-P（/cca-p/）共用会话 ccae.auth，登录标记互认：在 CCA-P 登录后
+ * 打开 CCA-F 也要能接上。会话是共用的，所以两个标记一起写、一起清。 */
+const CLOUD_FLAGS = ['ccae.cloud', 'ccap.cloud'];
 const hadSession = () => {
-  try { return localStorage.getItem(CLOUD_FLAG) === '1'; } catch (_) { return false; }
+  try { return CLOUD_FLAGS.some((k) => localStorage.getItem(k) === '1'); } catch (_) { return false; }
 };
 const setSessionFlag = (v) => {
   try {
-    if (v) localStorage.setItem(CLOUD_FLAG, '1');
-    else localStorage.removeItem(CLOUD_FLAG);
+    for (const k of CLOUD_FLAGS) {
+      if (v) localStorage.setItem(k, '1');
+      else localStorage.removeItem(k);
+    }
   } catch (_) {}
 };
 

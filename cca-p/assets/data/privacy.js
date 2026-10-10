@@ -1,30 +1,175 @@
-/* 当前部署的数据存储说明；启用云同步前须同步更新。 */
-const PRIVACY_UPDATED = '2026-09-27';
+/* 隐私政策正文（中 / 英）
+ *
+ * ⚠️ 这是按 UK GDPR 常见要求拟的文本，**不构成法律意见**。
+ *    对外正式运营前建议对照 ICO 官网模板核一遍，或请懂英国数据保护的人过目。
+ *
+ * 事实性内容必须与实现保持一致 —— 改了同步逻辑就要回来改这里。
+ */
+const PRIVACY_UPDATED = '2026-10-10';
 const CONTACT_EMAIL = 'aicrazy@agent.qq.com';
 
 const PRIVACY = {
   zh: [
-    { t: 'p', v: 'cca-p-dojo 是 Claude Certified Architect – Professional 备考站。当前未启用云同步，学习数据只存在本机浏览器 localStorage，不上传到 Supabase。' },
-    { t: 'h', v: '本地存储' },
+    { t: 'p', v: '**一句话版本：不登录就什么都不收集。** 登录只是为了把你的做题进度存起来，方便换设备继续 —— 除此之外没有任何用途。没有广告、没有分析脚本、没有第三方追踪、不卖数据。' },
+
+    { t: 'h', v: '一、谁在处理你的数据' },
+    { t: 'p', v: `本站（cca-p-dojo，地址 signal0.net/cca-p/）是 Claude Certified Architect – Professional 备考站，由个人开发者运营，免费开源。它与同域名下的 CCA-F 备考站（signal0.net/cca-f/）由同一运营者提供，两站**共用同一套账号**，进度分开保存。就英国 GDPR 而言，运营者是**数据控制者**。` },
+    { t: 'p', v: `数据保护相关事宜联系：\`${CONTACT_EMAIL}\`` },
+
+    { t: 'h', v: '二、不登录的情况' },
+    { t: 'p', v: '**不收集任何个人数据。** 你的做题记录、错题、模考成绩、笔记进度，全部存在你自己浏览器的 localStorage 里，从不离开你的设备。本站没有服务端日志留存你的行为，也没有 cookie 横幅要点 —— 因为压根没设 cookie。' },
+    { t: 'p', v: '这也是默认状态。整站不登录就能完整使用。' },
+
+    { t: 'h', v: '三、登录后收集什么' },
+    { t: 'table', head: ['数据', '用途', '来源'], rows: [
+      ['邮箱地址', '识别你的账号、发送一次性登录验证码', '你主动填写'],
+      ['学习进度（做题记录、错题、模考成绩、笔记标记、界面偏好）', '跨设备同步', '你使用本站时产生'],
+      ['账号创建与最后登录时间', '账号管理、清理长期不活跃账号', '系统自动记录'],
+    ]},
+    { t: 'p', v: '**不收集**：姓名、地址、电话、支付信息、IP 画像、设备指纹、浏览行为分析。也不做任何形式的用户画像或自动化决策。' },
+
+    { t: 'h', v: '四、法律依据' },
+    { t: 'p', v: '处理上述数据的依据是**履行合同**（UK GDPR 第 6(1)(b) 条）—— 你要求本站为你同步进度，为此必须存储你的邮箱和进度数据。不依赖「同意」，因为这些处理是提供该功能所必需的，没有它功能就不存在。' },
+    { t: 'p', v: '你随时可以停止：登出即可，删除账号则彻底清除。' },
+
+    { t: 'h', v: '五、数据存在哪里 · 跨境传输' },
+    { t: 'p', v: '**本站面向全球用户免费开放，你在哪个国家都可以使用。** 但数据的存储位置是固定的 —— 无论你身在何处，登录后你的数据都会被传输并存储到下列地点：' },
+    { t: 'table', head: ['数据', '处理者', '所在地'], rows: [
+      ['学习进度、邮箱地址', 'Supabase', '英国 · AWS 伦敦区（eu-west-2）'],
+      ['登录邮件投递', 'Resend', '爱尔兰 · EEA'],
+      ['网站静态文件分发', 'Vercel', '全球 CDN 边缘节点（仅分发页面文件，不含你的个人数据）'],
+    ]},
+    { t: 'p', v: '**这对你意味着什么，取决于你在哪：**' },
     { t: 'list', v: [
-      '`ccap.v1` 保存作答记录、错题、模考成绩、笔记进度、收藏和界面偏好。',
-      '`ccap.theme` 保存深浅色主题偏好。',
-    ] },
-    { t: 'h', v: '管理数据' },
-    { t: 'p', v: '可在「管理进度」中导出、导入或清空学习进度。导出的文件由你自行保管；清除浏览器站点数据也会删除本机存储。' },
-    { t: 'h', v: '云同步状态' },
-    { t: 'p', v: '仓库 cca-p-dojo 保留同步代码和 supabase/schema.sql，但当前配置的 url 与 key 均为空，登录和云同步功能未启用。启用前需要配置独立的 Supabase 项目，并按实际部署更新本说明。' },
+      '**在英国** —— 数据留在本地，无跨境传输',
+      '**在欧洲经济区（EEA）** —— 数据传输至英国。英国已获欧盟充分性认定（adequacy decision），该传输在此基础上合法进行',
+      '**在其他国家 / 地区** —— 你的数据会被传输至英国与爱尔兰存储和处理。使用本站即表示你了解并接受这一点。若你所在司法辖区对数据出境另有强制要求，请自行评估后再决定是否登录',
+    ]},
+    { t: 'p', v: '登录邮件的内容**仅为一次性验证码**，不含任何学习数据。' },
+    { t: 'p', v: '**不想让数据离开你的设备？** 那就别登录 —— 本站全部功能在不登录的情况下都可用，进度只存在你自己的浏览器里。这是默认状态，也是推荐给注重隐私的用户的用法。' },
+
+    { t: 'h', v: '六、保留多久' },
+    { t: 'list', v: [
+      '账号存续期间：进度持续保留，方便你随时继续',
+      '你删除账号：**立即永久删除**，包括 CCA-P 与 CCA-F 两站的全部云端进度，不可恢复',
+      '长期不活跃：**连续 24 个月未登录**的账号及其数据将被清理',
+      '本机数据：由你自己控制，可随时在「管理进度」里清空',
+    ]},
+
+    { t: 'h', v: '七、你的权利' },
+    { t: 'p', v: '本站运营者在英国，因此适用**英国 GDPR**；由于本站也面向欧洲经济区用户提供服务，**欧盟 GDPR** 亦可能适用。无论适用哪一套，你享有的权利是相同的：' },
+    { t: 'table', head: ['权利', '怎么行使'], rows: [
+      ['访问 —— 知道本站存了你什么', '「管理进度」里可查看全部数据；邮箱即你登录用的那个'],
+      ['更正 —— 改正不准确的数据', '进度数据由你使用产生，可直接在站内修改或清空'],
+      ['删除 —— 抹掉全部', '「管理进度 → 删除账号」，即时生效'],
+      ['可携 —— 拿走你的数据', '「管理进度 → 下载文件」，导出标准 JSON'],
+      ['限制 / 反对处理', `发邮件到 \`${CONTACT_EMAIL}\``],
+    ]},
+    { t: 'p', v: `**投诉权**：如果你认为本站处理你的数据的方式不当，可以向监管机构投诉：` },
+    { t: 'list', v: [
+      '**英国用户** —— 英国信息专员办公室（ICO）：<https://ico.org.uk/make-a-complaint/>',
+      '**EEA 用户** —— 你所在成员国的数据保护监管机构（各国名录见 <https://edpb.europa.eu/about-edpb/about-edpb/members_en>）',
+      '**其他地区用户** —— 可向 ICO 投诉，或联系你当地的数据保护机构（如有）',
+    ]},
+    { t: 'p', v: `也欢迎先联系 \`${CONTACT_EMAIL}\`，多数问题可以直接解决。` },
+
+    { t: 'h', v: '八、本地存储说明' },
+    { t: 'p', v: '本站**不使用 cookie**。使用的是浏览器 localStorage，存放四类内容：' },
+    { t: 'list', v: [
+      '`ccap.v1` —— 你的学习进度与界面偏好（不登录也有，纯本地）',
+      '`ccae.auth` —— 登录后的会话令牌，用于保持登录状态。与 CCA-F 备考站共用，所以在任一站登录，两站都会生效',
+      '`ccap.cloud`、`ccae.cloud` —— 两个标记，仅表示「这台设备登录过」，用于决定要不要加载同步模块；不含任何个人数据',
+      '`signal0.theme` —— 深浅色主题偏好，signal0.net 下各站共用',
+    ]},
+    { t: 'p', v: '以上都属于**提供你主动要求的功能所必需**的存储，按 PECR 属于豁免情形，因此没有同意横幅。你随时可以在浏览器设置里清除。' },
+
+    { t: 'h', v: '九、安全' },
+    { t: 'p', v: '数据库启用了行级安全策略（RLS）：**每个账号只能读写自己那一行**，在数据库层面强制，不依赖前端代码。未登录角色对数据表零权限。传输全程 HTTPS。' },
+    { t: 'p', v: 'CCA-P 的进度存在单独的 `progress_ccap` 表，策略与 CCA-F 的 `progress` 表相同。配置是公开的，可在仓库的 `supabase/schema.sql` 与 `supabase/migrations/2026-10-10-progress-ccap.sql` 中查看并自行验证。' },
+
+    { t: 'h', v: '十、变更' },
+    { t: 'p', v: '本政策如有实质性变更，会更新页首日期；涉及处理方式的重大变化会在站内提示。' },
   ],
+
   en: [
-    { t: 'p', v: 'cca-p-dojo is a study site for Claude Certified Architect – Professional. Cloud sync is currently disabled. Study data stays in this browser’s localStorage and is not uploaded to Supabase.' },
-    { t: 'h', v: 'Local storage' },
+    { t: 'p', v: '**The short version: if you do not sign in, nothing is collected.** Signing in exists only so your practice progress can follow you between devices. No ads, no analytics, no third-party tracking, nothing sold.' },
+
+    { t: 'h', v: '1. Who processes your data' },
+    { t: 'p', v: 'This site (cca-p-dojo, at signal0.net/cca-p/) is a free, open-source study tool for Claude Certified Architect – Professional, run by an individual developer. It is run by the same operator as the CCA-F study site on the same domain (signal0.net/cca-f/); the two **share one account system** and keep progress separately. For the purposes of the UK GDPR, the operator is the **data controller**.' },
+    { t: 'p', v: `Data protection contact: \`${CONTACT_EMAIL}\`` },
+
+    { t: 'h', v: '2. If you do not sign in' },
+    { t: 'p', v: '**No personal data is collected at all.** Your answers, missed questions, mock exam scores and reading progress live in your own browser\'s localStorage and never leave your device. There are no server-side logs of your activity and no cookie banner — because no cookies are set.' },
+    { t: 'p', v: 'This is the default. The entire site works without an account.' },
+
+    { t: 'h', v: '3. What is collected if you do sign in' },
+    { t: 'table', head: ['Data', 'Purpose', 'Source'], rows: [
+      ['Email address', 'Identify your account, send one-time sign-in codes', 'You provide it'],
+      ['Study progress (answers, missed questions, mock scores, notes read, UI preferences)', 'Sync across devices', 'Generated as you use the site'],
+      ['Account creation and last sign-in timestamps', 'Account management, clearing dormant accounts', 'Recorded automatically'],
+    ]},
+    { t: 'p', v: '**Not collected**: name, address, phone number, payment details, IP-based profiling, device fingerprints, behavioural analytics. No profiling and no automated decision-making of any kind.' },
+
+    { t: 'h', v: '4. Lawful basis' },
+    { t: 'p', v: 'Processing rests on **performance of a contract** (UK GDPR Article 6(1)(b)) — you ask the site to sync your progress, which requires storing your email and that progress. It is not based on consent, because the processing is what the feature *is*; without it there is no feature.' },
+    { t: 'p', v: 'You can stop at any time: sign out to pause, delete your account to erase.' },
+
+    { t: 'h', v: '5. Where the data lives and international transfers' },
+    { t: 'p', v: '**This site is free and open to users anywhere in the world.** Storage locations, however, are fixed — wherever you are, signing in means your data is transferred to and stored in the following places:' },
+    { t: 'table', head: ['Data', 'Processor', 'Location'], rows: [
+      ['Study progress, email address', 'Supabase', 'United Kingdom · AWS London (eu-west-2)'],
+      ['Sign-in email delivery', 'Resend', 'Ireland · EEA'],
+      ['Static site delivery', 'Vercel', 'Global CDN edge (page files only — no personal data)'],
+    ]},
+    { t: 'p', v: '**What that means depends on where you are:**' },
     { t: 'list', v: [
-      '`ccap.v1` stores answers, missed questions, mock exam results, reading progress, bookmarks and interface preferences.',
-      '`ccap.theme` stores the light or dark theme preference.',
-    ] },
-    { t: 'h', v: 'Managing your data' },
-    { t: 'p', v: 'Use Manage progress to export, import or clear study progress. You control exported files. Clearing browser site data also removes local storage.' },
-    { t: 'h', v: 'Cloud sync status' },
-    { t: 'p', v: 'The cca-p-dojo repository retains sync code and supabase/schema.sql. Both configuration values, url and key, are currently empty, so sign-in and cloud sync are disabled. Enabling them requires a separate Supabase project and an updated description of the deployed service.' },
+      '**In the UK** — your data stays local; no international transfer',
+      '**In the European Economic Area** — your data is transferred to the UK. The UK holds an EU adequacy decision, which is the basis on which that transfer is lawful',
+      '**Anywhere else** — your data is transferred to the UK and Ireland for storage and processing. By using the site you understand and accept this. If your jurisdiction imposes its own data-export requirements, please assess them before signing in',
+    ]},
+    { t: 'p', v: 'Sign-in emails contain **a one-time code and nothing else** — never any study data.' },
+    { t: 'p', v: '**Would you rather nothing left your device?** Then do not sign in. Every feature works without an account, with progress kept solely in your own browser. That is the default, and the option we recommend if privacy matters to you.' },
+
+    { t: 'h', v: '6. How long it is kept' },
+    { t: 'list', v: [
+      'While your account exists: progress is retained so you can pick up where you left off',
+      'If you delete your account: **erased immediately and permanently**, including all cloud progress on both CCA-P and CCA-F',
+      'Dormancy: accounts with **no sign-in for 24 consecutive months** are cleared along with their data',
+      'Local data: entirely under your control — clear it any time from "Manage progress"',
+    ]},
+
+    { t: 'h', v: '7. Your rights' },
+    { t: 'p', v: 'The operator is based in the UK, so the **UK GDPR** applies. Because the site is also offered to people in the European Economic Area, the **EU GDPR** may apply as well. Either way your rights are the same:' },
+    { t: 'table', head: ['Right', 'How'], rows: [
+      ['Access — see what is held about you', 'Everything is visible under "Manage progress"; the email is the one you signed in with'],
+      ['Rectification — correct inaccurate data', 'Progress data is generated by your own use; change or clear it in the app'],
+      ['Erasure — delete everything', '"Manage progress → Delete my account", effective immediately'],
+      ['Portability — take your data with you', '"Manage progress → Download file" exports standard JSON'],
+      ['Restriction / objection', `Email \`${CONTACT_EMAIL}\``],
+    ]},
+    { t: 'p', v: `**Right to complain**: if you believe your data has been handled improperly, you can complain to a supervisory authority:` },
+    { t: 'list', v: [
+      '**In the UK** — the Information Commissioner\'s Office: <https://ico.org.uk/make-a-complaint/>',
+      '**In the EEA** — the data protection authority of your member state (directory: <https://edpb.europa.eu/about-edpb/about-edpb/members_en>)',
+      '**Elsewhere** — you may complain to the ICO, or to your local data protection authority where one exists',
+    ]},
+    { t: 'p', v: `You are also welcome to contact \`${CONTACT_EMAIL}\` first; most issues can be resolved directly.` },
+
+    { t: 'h', v: '8. Local storage' },
+    { t: 'p', v: 'This site sets **no cookies**. It uses browser localStorage for four things:' },
+    { t: 'list', v: [
+      '`ccap.v1` — your study progress and UI preferences (present even without an account; purely local)',
+      '`ccae.auth` — your session token after signing in, so you stay signed in. It is shared with the CCA-F site, so signing in on either site signs you in on both',
+      '`ccap.cloud`, `ccae.cloud` — flags recording only that this device has signed in before, used to decide whether to load the sync module; they hold no personal data',
+      '`signal0.theme` — your light / dark theme preference, shared by the sites on signal0.net',
+    ]},
+    { t: 'p', v: 'All of these are **strictly necessary to provide a service you explicitly requested**, which is exempt under PECR — hence no consent banner. You can clear them from your browser settings at any time.' },
+
+    { t: 'h', v: '9. Security' },
+    { t: 'p', v: 'The database enforces row-level security: **each account can only read and write its own row**, enforced in the database rather than trusted to front-end code. The unauthenticated role has zero privileges on the data table. All traffic is over HTTPS.' },
+    { t: 'p', v: 'CCA-P progress is stored in a separate `progress_ccap` table with the same policies as the CCA-F `progress` table. The configuration is public — read and verify it yourself in `supabase/schema.sql` and `supabase/migrations/2026-10-10-progress-ccap.sql` in the repository.' },
+
+    { t: 'h', v: '10. Changes' },
+    { t: 'p', v: 'Material changes update the date at the top of this page. Significant changes to how data is handled will also be flagged in the app.' },
   ],
 };

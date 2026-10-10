@@ -36,14 +36,20 @@ const CLOUD = {
 };
 
 /** 本地登录标记：决定"这次打开要不要加载 SDK" */
-const CLOUD_FLAG = 'ccap.cloud';
+/* CCA-P 与 CCA-F 共用同一个 Supabase 项目和会话（storageKey 都是 ccae.auth），
+ * 但进度分表：一个用户在 progress 和 progress_ccap 各有一行，互不覆盖。
+ * 两站的登录标记也要互认 —— 在 CCA-F 登录后打开 CCA-P，要能接上同一个会话；
+ * 会话本身是共用的，所以写入 / 清除时两个标记一起动。 */
+const CLOUD_FLAGS = ['ccap.cloud', 'ccae.cloud'];
 const hadSession = () => {
-  try { return localStorage.getItem(CLOUD_FLAG) === '1'; } catch (_) { return false; }
+  try { return CLOUD_FLAGS.some((k) => localStorage.getItem(k) === '1'); } catch (_) { return false; }
 };
 const setSessionFlag = (v) => {
   try {
-    if (v) localStorage.setItem(CLOUD_FLAG, '1');
-    else localStorage.removeItem(CLOUD_FLAG);
+    for (const k of CLOUD_FLAGS) {
+      if (v) localStorage.setItem(k, '1');
+      else localStorage.removeItem(k);
+    }
   } catch (_) {}
 };
 
@@ -85,7 +91,7 @@ async function loadSupabase() {
       detectSessionInUrl: true,
       persistSession: true,
       autoRefreshToken: true,
-      storageKey: 'ccap.auth',
+      storageKey: 'ccae.auth',   // 与 CCA-F 共用会话：同域名下登录一次，两个站都生效
     },
   });
   return CLOUD.sb;
@@ -110,7 +116,7 @@ async function cloudPull(gen = CLOUD.gen) {
   if (gen !== CLOUD.gen || !CLOUD.user) return;
   const userId = CLOUD.user.id;
   const { data, error } = await sb
-    .from('progress').select('data, updated_at, version')
+    .from('progress_ccap').select('data, updated_at, version')
     .eq('user_id', userId).maybeSingle();
   if (gen !== CLOUD.gen) return;
   if (error) throw error;
@@ -147,7 +153,7 @@ async function cloudPush(opts = {}) {
     if (CLOUD.version !== null) {
       const nextVersion = CLOUD.version + 1;
       const attemptSnapshot = stableStr(S);
-      const { data, error } = await sb.from('progress')
+      const { data, error } = await sb.from('progress_ccap')
         .update({ data: progressArchive(S) })
         .eq('user_id', CLOUD.user.id)
         .eq('version', CLOUD.version)
@@ -167,7 +173,7 @@ async function cloudPush(opts = {}) {
     if (gen !== CLOUD.gen) return;
     if (!remote) {
       const attemptSnapshot = stableStr(S);
-      const { data, error } = await sb.from('progress')
+      const { data, error } = await sb.from('progress_ccap')
         .insert({ user_id: CLOUD.user.id, data: progressArchive(S), version: 1 })
         .select('version');
       if (gen !== CLOUD.gen) return;

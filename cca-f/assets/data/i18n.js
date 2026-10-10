@@ -198,7 +198,7 @@ const I18N = {
 
     /* ── 云同步 ── */
     cloud_h: '云同步（可选）',
-    cloud_intro: '默认<b>不需要登录</b>，进度存在本机就够用。登录只是多一层备份，方便换设备时接着刷。',
+    cloud_intro: '默认<b>不需要登录</b>，进度存在本机就够用。登录只是多一层备份，方便换设备时接着刷。与 CCA-P 备考站共用同一个账号，登录一次两边都生效，两边的进度分开保存。',
     cloud_email_l: '邮箱',
     cloud_email_ph: 'you@example.com',
     cloud_send: '发送验证码',
@@ -246,9 +246,9 @@ const I18N = {
     cloud_col_cloud: '云端',
 
     cloud_danger_h: '删除账号',
-    cloud_danger_note: '会永久删除你的账号和云端进度，**不可撤销**。本机进度不受影响。',
+    cloud_danger_note: '会永久删除你的账号，以及 CCA-F 和 CCA-P **两个备考站**的云端进度，**不可撤销**。本机进度不受影响。',
     cloud_delete: '删除我的账号',
-    cloud_delete_confirm: '确定永久删除账号「{0}」及其云端进度？\n\n此操作不可撤销。本机进度会保留。',
+    cloud_delete_confirm: '确定永久删除账号「{0}」？\n\nCCA-F 和 CCA-P 两个备考站的云端进度都会一起删除，此操作不可撤销。本机进度会保留。',
     cloud_deleted: '账号已删除。本机进度仍然保留。',
     cloud_delete_fail: '删除失败：{0}',
 
@@ -469,7 +469,7 @@ const I18N = {
 
     /* ── Cloud sync ── */
     cloud_h: 'Cloud sync (optional)',
-    cloud_intro: 'You <b>do not need an account</b> — local storage is enough. Signing in just adds a backup so you can carry on from another device.',
+    cloud_intro: 'You <b>do not need an account</b> — local storage is enough. Signing in just adds a backup so you can carry on from another device. One account covers both CCA-F and CCA-P: sign in once and both sites sync, each keeping its own progress.',
     cloud_email_l: 'Email',
     cloud_email_ph: 'you@example.com',
     cloud_send: 'Send me a code',
@@ -517,9 +517,9 @@ const I18N = {
     cloud_col_cloud: 'Cloud',
 
     cloud_danger_h: 'Delete account',
-    cloud_danger_note: 'Permanently deletes your account and everything stored in the cloud. **This cannot be undone.** Local progress is untouched.',
+    cloud_danger_note: 'Permanently deletes your account and the cloud progress of **both** study sites, CCA-F and CCA-P. **This cannot be undone.** Local progress is untouched.',
     cloud_delete: 'Delete my account',
-    cloud_delete_confirm: 'Permanently delete the account "{0}" and all its cloud data?\n\nThis cannot be undone. Progress on this device will be kept.',
+    cloud_delete_confirm: 'Permanently delete the account "{0}"?\n\nCloud progress for both CCA-F and CCA-P will be deleted with it. This cannot be undone. Progress on this device will be kept.',
     cloud_deleted: 'Account deleted. Your local progress is still here.',
     cloud_delete_fail: 'Could not delete: {0}',
 
