@@ -71,47 +71,98 @@ footer { max-width: 1096px; margin: 0 auto; padding: 22px 0; border-top: 1px sol
   .card h3 { margin-top: 16px; }
   footer { margin: 0 20px; }
 }
+.course-card-heading { display:flex; justify-content:space-between; align-items:center; width:100%; gap:16px; }
+.course-lock svg { width:20px; height:20px; fill:none; stroke:var(--ink-3); stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.course-price { font-size:21px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+.course-card.is-upcoming { box-shadow:none; background:transparent; }
+.course-card.is-upcoming:hover { border-color:var(--line); }
+.status-soon { color:var(--ink-2); background:var(--paper-2); }
+.bundle-offer { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:26px 28px; margin-top:24px; border:1px solid var(--line); border-radius:var(--radius); background:var(--paper-2); }
+.bundle-offer h3 { margin:6px 0; font:500 24px/1.4 var(--serif); }
+.bundle-offer p { margin:0; }
+.bundle-description { color:var(--ink-2); font-size:14px; }
+.bundle-action { flex-shrink:0; text-align:right; }
+.bundle-price { font-size:24px; font-weight:600; }
+.bundle-price s { margin-left:10px; font-size:14px; font-weight:400; color:var(--ink-3); }
+.bundle-saving { display:block; font-size:12px; font-weight:400; color:var(--ink-2); margin:3px 0 10px; }
+.bundle-button { display:inline-flex; min-height:44px; align-items:center; padding:8px 16px; border-radius:8px; background:var(--accent); color:var(--paper); text-decoration:none; font-size:14px; }
+.course-card:focus-visible, .bundle-button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+@media(max-width:760px) { .bundle-offer { align-items:flex-start; flex-direction:column; padding:24px; } .bundle-action { text-align:left; } }
+.hub-menu-wrap { position:relative; }
+.hub-menu-wrap button.appswitch-opt { background:transparent; border:0; cursor:pointer; text-align:left; }
+.hub-menu-wrap button.appswitch-opt:hover { background:var(--paper-2); }
+.my-learning { display:inline-flex; align-items:center; justify-content:center; min-height:36px; padding:6px 10px; border-radius:20px; font-size:13px; white-space:nowrap; }
+.my-learning:hover { background:var(--paper-2); color:var(--ink); }
+@media(max-width:540px) {
+  .topbar { height:auto; min-height:60px; padding:12px 16px; flex-wrap:wrap; }
+  .topbar-tools { gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  .topbar-tools .appswitch-btn { padding:6px 9px; }
+}
+@media(max-width:390px) { .topbar-tools { width:100%; justify-content:space-between; } }
 </style>
 </head>
 <body>
 <header class="topbar">
   <a class="brand" href="/" aria-label="signal0 首页"><span class="brand-mark" aria-hidden="true">◆</span><span class="brand-text"><b>signal0</b></span></a>
   <div class="topbar-tools" style="margin-left:auto">
-  <a class="my-learning" href="/learn/#/me">我的学习</a>
-  <button class="icon-btn" id="themeBtn" type="button" aria-label="切换深浅色" title="切换深浅色">◐</button>
+  <a class="my-learning" id="hubAccount" href="/learn/#/me">登录</a>
+  <div class="appswitch-wrap">
+    <button class="appswitch-btn" id="appswitchBtn" type="button" aria-expanded="false" aria-controls="appswitchMenu"><span data-i18n="switchApp">切换应用</span><svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="appswitch-menu" id="appswitchMenu" hidden>
+      <a class="appswitch-opt on" href="/" aria-current="page" data-i18n="home">signal0 首页</a>
+      <a class="appswitch-opt" href="/cca-f/" data-i18n="foundation">CCA-F 备考站</a>
+      <a class="appswitch-opt" href="/cca-p/" data-i18n="professional">CCA-P 备考站</a>
+      <a class="appswitch-opt" href="/learn/" data-i18n="courses">AI 课程</a>
+    </div>
+  </div>
+  <div class="hub-menu-wrap" id="hubLangWrap">
+    <button class="appswitch-btn" id="hubLangBtn" type="button" aria-expanded="false" aria-controls="hubLangMenu"><span id="hubLangCur">中文</span><svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="appswitch-menu" id="hubLangMenu" hidden>
+      <button class="appswitch-opt" type="button" data-hub-lang="zh">中文</button>
+      <button class="appswitch-opt" type="button" data-hub-lang="en">English</button>
+    </div>
+  </div>
+  <div class="hub-menu-wrap" id="hubThemeWrap">
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="主题：跟随系统" title="主题：跟随系统" aria-expanded="false" aria-controls="themeMenu">◐</button>
+    <div class="appswitch-menu" id="themeMenu" hidden>
+      <button class="appswitch-opt" type="button" data-theme-choice="system" data-i18n="system">跟随系统</button>
+      <button class="appswitch-opt" type="button" data-theme-choice="light" data-i18n="light">浅色</button>
+      <button class="appswitch-opt" type="button" data-theme-choice="dark" data-i18n="dark">深色</button>
+    </div>
+  </div>
   </div>
 </header>
 <main>
-  <p class="eyebrow">SIGNAL0 / 学习与练习</p>
-  <h1>今天，学什么？</h1>
-  <p class="intro">准备认证考试，或学习 AI 课程。</p>
+  <p class="eyebrow" data-i18n="eyebrow">SIGNAL0 / 学习与练习</p>
+  <h1 data-i18n="heading">今天，学什么？</h1>
+  <p class="intro" data-i18n="intro">准备认证考试，或学习 AI 课程。</p>
   <section class="home-section" aria-labelledby="practiceHeading">
-    <h2 class="section-heading" id="practiceHeading">免费中文备考练习</h2>
-    <p class="section-description">依据 Anthropic 官方 Exam Guide 编写，提供中文练习、复习笔记与模拟考试。</p>
+    <h2 class="section-heading" id="practiceHeading" data-i18n="practiceHeading">免费中文备考练习</h2>
+    <p class="section-description" data-i18n="practiceDescription">依据 Anthropic 官方 Exam Guide 编写，提供中文练习、复习笔记与模拟考试。</p>
     <nav class="apps" id="practiceEntries" aria-label="免费中文备考练习">
       <a class="card" href="/cca-f/">
         <span class="number">CCA-F / FOUNDATIONS</span>
         <h3>Claude Certified Architect · Foundations</h3>
-        <p class="description">168 道原创情景题 · 复习笔记与模拟考试 · 中英双语</p>
-        <span class="card-bottom"><span class="status">免费练习</span><span class="enter">进入练习站 →</span></span>
+        <p class="description" data-i18n="foundationDescription">168 道原创情景题 · 复习笔记与模拟考试 · 中英双语</p>
+        <span class="card-bottom"><span class="status" data-i18n="freePractice">免费练习</span><span class="enter" data-i18n="enterPractice">进入练习站 →</span></span>
       </a>
       <a class="card" href="/cca-p/">
         <span class="number">CCA-P / PROFESSIONAL</span>
         <h3>Claude Certified Architect · Professional</h3>
-        <p class="description">190 道原创情景题 · 7 个考点领域 · 中英双语</p>
-        <span class="card-bottom"><span class="status">免费练习</span><span class="enter">进入练习站 →</span></span>
+        <p class="description" data-i18n="professionalDescription">190 道原创情景题 · 7 个考点领域 · 中英双语</p>
+        <span class="card-bottom"><span class="status" data-i18n="freePractice">免费练习</span><span class="enter" data-i18n="enterPractice">进入练习站 →</span></span>
       </a>
     </nav>
   </section>
   <section class="home-section" aria-labelledby="coursesHeading">
-    <h2 class="section-heading" id="coursesHeading">AI 课程</h2>
-    <p class="section-description">进入原课程，结合我们制作的中文精讲与习题学习。</p>
-    <p class="preview-note" id="coursePreviewNote" hidden>课程预览 · 下方包含尚未发布的草稿课程。</p>
+    <h2 class="section-heading" id="coursesHeading" data-i18n="courses">AI 课程</h2>
+    <p class="section-description" data-i18n="courseDescription">中英对照课程，配合视频、讲义与练习学习。</p>
     <nav class="apps course-apps" id="courseEntries" aria-label="AI 课程"></nav>
+    <div id="courseBundle"></div>
     <p class="catalog-state" id="courseCatalogState" role="status">正在加载 AI 课程…</p>
   </section>
 </main>
-<footer>signal0 · 开发者学习与测验</footer>
+<footer data-i18n="footer">signal0 · 开发者学习与测验</footer>
 <script>
 // 直接打开文件时，保留同目录下练习站的相对路径。
 if (location.protocol === 'file:') {
@@ -121,6 +172,9 @@ if (location.protocol === 'file:') {
   });
 }
 </script>
+<script src="/learn/assets/config.js"></script>
+<script src="/learn/assets/auth.js"></script>
+<script src="shared/hub.js"></script>
 <script src="shared/courses.js"></script>
 </body>
 </html>

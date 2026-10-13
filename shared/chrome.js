@@ -4,7 +4,7 @@
   const script = document.currentScript;
   const app = script.dataset.app;
   const siteRoot = new URL('../', script.src);
-  const isTheme = value => value === 'dark' || value === 'light';
+  const isTheme = value => value === 'dark' || value === 'light' || value === 'system';
   function readTheme(key) {
     try {
       const value = localStorage.getItem(key);
@@ -25,30 +25,36 @@
       if (theme) break;
     }
   }
-  if (!theme) {
-    try { theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
-    catch (_) { theme = 'light'; }
-  }
+  if (!theme) theme = 'system';
+  const media = matchMedia('(prefers-color-scheme: dark)');
+  const resolvedTheme = () => theme === 'system' ? (media.matches ? 'dark' : 'light') : theme;
   function applyTheme() {
-    document.documentElement.dataset.theme = theme;
+    const resolved = resolvedTheme();
+    document.documentElement.dataset.theme = resolved;
+    document.documentElement.dataset.themePreference = theme;
     const button = document.getElementById('themeBtn');
     if (button) {
-      button.textContent = theme === 'dark' ? '☀' : '◐';
-      button.setAttribute('aria-pressed', String(theme === 'dark'));
+      button.textContent = theme === 'system' ? '◐' : resolved === 'dark' ? '☾' : '☀';
+      if (!document.getElementById('themeMenu')) button.setAttribute('aria-pressed', String(resolved === 'dark'));
     }
   }
-  window.Signal0Chrome = { applyTheme, onThemeChange: null };
+  function setTheme(value) {
+    if (!isTheme(value)) return;
+    theme = value; writeTheme(theme); applyTheme();
+    try { window.Signal0Chrome.onThemeChange?.(resolvedTheme()); } catch (_) {}
+    dispatchEvent(new Event('signal0-theme-change'));
+  }
+  window.Signal0Chrome = { applyTheme, setTheme, get preference() { return theme; }, onThemeChange: null };
+  media.addEventListener('change', () => { if (theme === 'system') applyTheme(); });
+  addEventListener('storage', event => {
+    if(event.key === 'signal0.theme') { theme = readTheme('signal0.theme') || 'system'; applyTheme(); dispatchEvent(new Event('signal0-theme-change')); }
+  });
   applyTheme();
 
   document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
     const themeButton = document.getElementById('themeBtn');
-    if (themeButton) themeButton.onclick = () => {
-      theme = theme === 'dark' ? 'light' : 'dark';
-      writeTheme(theme);
-      try { window.Signal0Chrome.onThemeChange?.(theme); } catch (_) {}
-      applyTheme();
-    };
+    if (themeButton && !document.getElementById('themeMenu')) themeButton.onclick = () => setTheme(resolvedTheme() === 'dark' ? 'light' : 'dark');
     const homeBack = document.querySelector('.home-back');
     if (homeBack && location.protocol === 'file:') homeBack.href = new URL('index.html', siteRoot).href;
     const button = document.getElementById('appswitchBtn');

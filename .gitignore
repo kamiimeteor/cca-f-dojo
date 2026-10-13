@@ -21,3 +21,5 @@ supabase/.temp/
 
 # Codex 用 playwright 做浏览器验证时落的页面快照，属于工具产物
 .playwright-cli/
+.vercel
+.env*
