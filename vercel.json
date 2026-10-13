@@ -2,20 +2,20 @@
   "trailingSlash": true,
   "rewrites": [
     {
-      "source": "/tutorials/:path*/",
-      "destination": "https://haixue-courses.haixue.workers.dev/tutorials/:path*/"
-    },
-    {
-      "source": "/learn/:path*/",
-      "destination": "https://haixue-kappa.vercel.app/learn/:path*/"
-    },
-    {
       "source": "/learn",
       "destination": "https://haixue-kappa.vercel.app/learn/"
     },
     {
       "source": "/learn/",
       "destination": "https://haixue-kappa.vercel.app/learn/"
+    },
+    {
+      "source": "/tutorials/:path*/",
+      "destination": "https://haixue-courses.haixue.workers.dev/tutorials/:path*/"
+    },
+    {
+      "source": "/learn/:path*/",
+      "destination": "https://haixue-kappa.vercel.app/learn/:path*/"
     },
     {
       "source": "/assets/:path*",
