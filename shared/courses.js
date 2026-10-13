@@ -18,6 +18,20 @@
     path.setAttribute('d', 'M7 10V7a5 5 0 0 1 10 0v3M6 10h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Zm6 4v3');
     svg.append(path); wrap.append(svg); return wrap;
   };
+  const action = (tag, className, label, showArrow = true) => {
+    const el = node(tag, className, '');
+    el.append(node('span', '', label));
+    if (showArrow) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'cta-arrow'); svg.setAttribute('viewBox', '0 0 20 20');
+      svg.setAttribute('fill', 'none'); svg.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS(svg.namespaceURI, 'path');
+      path.setAttribute('d', 'M4 10h12m-5-5 5 5-5 5'); path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.7'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+      svg.append(path); el.append(svg);
+    }
+    return el;
+  };
   function render() {
     if (!catalog) return;
     const courses = catalog.products.filter(c => c.kind === 'course' && c.status !== 'draft');
@@ -35,7 +49,7 @@
       if (c.upcoming) bottom.append(node('span', 'status status-soon', t('soon')));
       else {
         bottom.append(node('span', unlocked ? 'status' : 'course-price', unlocked ? t('purchased') : `¥${yuan(c.price_cents)}`));
-        bottom.append(node('span', 'enter', !accountReady ? t('readingPurchase') : accountError ? t('checkPurchase') : unlocked ? t('continue') : t('buy')));
+        bottom.append(action('span', `enter${!accountReady ? ' enter--pending' : !unlocked && !accountError ? ' enter--purchase' : ''}`, !accountReady ? t('readingPurchase') : accountError ? t('checkPurchase') : unlocked ? t('continue') : t('buy'), accountReady));
       }
       card.append(heading, node('h3', '', c.companion?.name || c.title), node('p', 'description', c.upcoming ? t('preparing') : c.id === 'ai-coding' ? t('codingDescription') : t('uiDescription')), bottom);
       cards.append(card);
@@ -50,12 +64,12 @@
       const box = node('section', 'bundle-offer', '');
       const copy = node('div', '', '');
       copy.append(node('p', 'number', t('bundle')), node('h3', '', t('bundleTitle', promised.length)), node('p', 'bundle-description', t('bundleDescription',included.length,waiting.map(c=>c.title))));
-      const action = node('div', 'bundle-action', '');
+      const actions = node('div', 'bundle-action', '');
       const price = node('p', 'bundle-price', `¥${yuan(b.price_cents)}`);
       if (original > b.price_cents) price.append(node('s', '', `¥${yuan(original)}`), node('span', 'bundle-saving', t('saving',yuan(original-b.price_cents))));
-      const link = node('a', 'bundle-button', owned.has(b.id) ? t('ownedCourses') : t('viewBundle'));
+      const link = action('a', 'bundle-button', owned.has(b.id) ? t('ownedCourses') : t('viewBundle'));
       link.href = owned.has(b.id) ? '/learn/#/me' : `/learn/#/buy/${b.id}`;
-      action.append(price, link); box.append(copy, action); bundleArea.append(box);
+      actions.append(price, link); box.append(copy, actions); bundleArea.append(box);
     }
   }
   async function refreshAccount() {
